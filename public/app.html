@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LifeMed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial; background: #e8f5e9; margin: 0; padding-bottom: 70px; }
+        .header { background: #1a5d7a; color: white; padding: 15px; text-align: center; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px; }
+        .nav-item { text-align: center; cursor: pointer; padding: 5px; }
+        .nav-item.active { color: #1a5d7a; font-weight: bold; }
+        .section { display: none; padding: 15px; }
+        .section.active { display: block; }
+        .card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; }
+        .btn { background: #1a5d7a; color: white; border: none; padding: 10px; border-radius: 20px; width: 100%; margin-top: 10px; cursor: pointer; }
+        .contact { background: #1a5d7a; color: white; border-radius: 10px; padding: 15px; margin-top: 15px; text-align: center; }
+        .price { color: #2e7d64; font-size: 18px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>❤️ LifeMed Health Care</h2>
+    <small>Mysore - Rajivnagar</small>
+</div>
+
+<div id="home" class="section active">
+    <div id="products"></div>
+    <div class="contact">
+        📍 #123, Rajivnagar, Mysore - 570019<br>
+        📞 +91 8214514503
+    </div>
+</div>
+
+<div id="products" class="section">
+    <h3>All Products</h3>
+    <div id="allProducts"></div>
+</div>
+
+<div class="bottom-nav">
+    <div class="nav-item active" onclick="showTab('home')">🏠 Home</div>
+    <div class="nav-item" onclick="showTab('products')">📦 Products</div>
+</div>
+
+<script>
+    const API = 'http://localhost:5000/api';
+    
+    async function loadProducts() {
+        let res = await fetch(API+'/products');
+        let data = await res.json();
+        if(data.success) {
+            let html = '';
+            data.products.forEach(p => {
+                html += `<div class="card">
+                    <strong>${p.name}</strong>
+                    <div class="price">₹${p.pricePerUnit}</div>
+                    <small>${p.unitType} | Stock: ${p.totalStock}</small>
+                </div>`;
+            });
+            document.getElementById('products').innerHTML = html;
+            document.getElementById('allProducts').innerHTML = html;
+        }
+    }
+    
+    function showTab(tab) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(tab).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+    
+    loadProducts();
+</script>
+</body>
+</html>
