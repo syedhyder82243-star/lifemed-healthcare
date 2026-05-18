@@ -1,269 +1,149 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>LifeMed Health Care</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; padding-bottom: 70px; }
-
-        .header { background: linear-gradient(135deg, #1a5d7a, #2e7d64); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        body { font-family: Arial; background: #e8f5e9; padding-bottom: 70px; }
+        .header { background: #1a5d7a; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .logo-icon { background: #ffd700; border-radius: 50%; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; }
-        .logo-text span { color: #ffd700; }
-
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 100; }
         .nav-item { text-align: center; padding: 8px; cursor: pointer; border-radius: 10px; }
         .nav-item.active { background: #1a5d7a20; color: #1a5d7a; }
-        .nav-item .icon { font-size: 22px; }
-        .nav-item .label { font-size: 10px; }
-
         .section { display: none; padding: 15px; animation: fadeIn 0.3s; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #2e7d64; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .price { font-size: 18px; font-weight: bold; color: #2e7d64; }
         .badge { background: #ffd700; color: #1a5d7a; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
-        .btn { background: linear-gradient(135deg, #1a5d7a, #2e7d64); color: white; border: none; padding: 12px; border-radius: 25px; width: 100%; margin-top: 10px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        .btn-outline { background: white; border: 1px solid #1a5d7a; color: #1a5d7a; }
-        .btn-danger { background: #e76f51; }
-        .btn-small { padding: 6px 12px; font-size: 14px; width: auto; margin: 0; }
-        .btn-back { background: #6c757d; }
-
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; color: #1a5d7a; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; }
-
+        .btn { background: #1a5d7a; color: white; border: none; padding: 8px 12px; border-radius: 20px; width: 100%; margin-top: 8px; cursor: pointer; font-size: 14px; }
+        .btn-small { background: #2e7d64; padding: 5px 10px; font-size: 12px; width: auto; margin-top: 5px; }
+        .contact-card { background: #1a5d7a; color: white; border-radius: 12px; padding: 15px; margin-top: 15px; text-align: center; font-size: 12px; }
+        .row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .row .card { min-width: 200px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; max-height: 85vh; overflow-y: auto; }
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; display: none; z-index: 150; font-size: 14px; }
-
-        .cart-item, .order-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
-        .quantity-control { display: flex; align-items: center; gap: 8px; }
-        .quantity-btn { background: #ddd; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 16px; }
-        .quantity-btn:hover { background: #1a5d7a; color: white; }
-        .remove-btn { background: #e76f51; color: white; border: none; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; }
-        
-        .total-row { display: flex; justify-content: space-between; padding: 12px; font-weight: bold; border-top: 2px solid #ddd; margin-top: 10px; }
-        .step { display: none; }
-        .step.active-step { display: block; }
-        .step-header { display: flex; justify-content: space-between; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
-        .step-circle { width: 35px; height: 35px; border-radius: 50%; background: #ddd; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .step-circle.active { background: #2e7d64; color: white; }
-        .step-circle.completed { background: #ffd700; color: #1a5d7a; }
-        .payment-option { display: flex; align-items: center; gap: 15px; padding: 12px; border: 1px solid #ddd; border-radius: 12px; margin-bottom: 10px; cursor: pointer; }
-        .payment-option.selected { border-color: #2e7d64; background: #e8f5e9; }
-        .contact-card { background: linear-gradient(135deg, #1a5d7a, #2e7d64); color: white; border-radius: 12px; padding: 15px; margin-top: 15px; text-align: center; }
-        .flex-buttons { display: flex; gap: 10px; margin-top: 15px; }
-        .flex-buttons .btn { margin-top: 0; }
-        .hidden { display: none; }
+        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; max-height: 80vh; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #1a5d7a; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; }
+        .remove-btn { background: #e76f51; color: white; border: none; padding: 2px 8px; border-radius: 10px; cursor: pointer; }
+        .total-row { font-weight: bold; text-align: right; padding: 10px; border-top: 2px solid #ddd; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div>
-        <span class="logo-icon"><i class="fas fa-heartbeat"></i></span>
-        <span class="logo-text"><strong>LifeMed <span>Health Care</span></strong></span>
-    </div>
-    <div onclick="showCart()" style="cursor:pointer;"><i class="fas fa-shopping-cart"></i> <span id="cartCount">0</span></div>
+    <div><span class="logo-icon">❤️</span> <strong>LifeMed Health Care</strong></div>
+    <div onclick="showCart()">🛒 <span id="cartCount">0</span></div>
 </div>
 
-<!-- Home Section -->
+<!-- HOME SECTION -->
 <div id="home" class="section active">
-    <h3><i class="fas fa-home"></i> Welcome, <span id="userName">Guest</span>!</h3>
-    <div id="productsList"></div>
-    <div id="doctorsList"></div>
+    <h3>🛍️ Products</h3>
+    <div class="row" id="productsList"></div>
+    
+    <h3>👨‍⚕️ Top Doctors</h3>
+    <div class="row" id="doctorsList"></div>
+    
     <div class="contact-card">
-        <i class="fas fa-map-marker-alt"></i> #123, Rajivnagar, Mysore - 570019<br>
-        <i class="fas fa-phone"></i> +91 8214514503<br>
-        <i class="fas fa-clock"></i> Mon-Sat 9-9 | Sun 10-4
+        📍 #123, Rajivnagar, Mysore - 570019<br>
+        📞 +91 8214514503<br>
+        ⏰ Mon-Sat 9-9 | Sun 10-4
     </div>
 </div>
 
-<!-- Products Section -->
+<!-- PRODUCTS SECTION -->
 <div id="products" class="section">
-    <h3><i class="fas fa-boxes"></i> All Products</h3>
-    <input type="text" id="search" placeholder="🔍 Search products..." style="margin-bottom:15px; padding:10px; border-radius:25px; border:1px solid #ddd;">
+    <h3>📦 All Products</h3>
     <div id="allProductsList"></div>
 </div>
 
-<!-- Doctors Section -->
+<!-- DOCTORS SECTION -->
 <div id="doctors" class="section">
-    <h3><i class="fas fa-user-md"></i> Our Doctors</h3>
+    <h3>👨‍⚕️ Our Doctors</h3>
     <div id="allDoctorsList"></div>
 </div>
 
-<!-- Profile Section -->
+<!-- APPOINTMENTS SECTION -->
+<div id="appointments" class="section">
+    <h3>📅 My Appointments</h3>
+    <div id="myAppointmentsList"></div>
+</div>
+
+<!-- PROFILE SECTION -->
 <div id="profile" class="section">
-    <div class="card" style="text-align:center">
-        <div style="width:70px; height:70px; background:#1a5d7a; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px;"><i class="fas fa-user" style="font-size:35px; color:#ffd700;"></i></div>
-        <h3 id="profileName">Guest User</h3>
-        <p id="profileEmail">Not logged in</p>
-        <button class="btn btn-outline" onclick="showLoginModal()"><i class="fas fa-user-plus"></i> Login / Signup</button>
-        <button class="btn btn-outline" onclick="logout()" style="margin-top:5px;"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    </div>
-    <div class="card">
-        <h3><i class="fas fa-history"></i> My Orders</h3>
-        <div id="myOrdersList">No orders yet</div>
-    </div>
+    <h3>👤 My Profile</h3>
+    <div class="card"><strong>Name:</strong> Guest User</div>
+    <div class="card"><strong>Orders:</strong> <span id="orderCount">0</span></div>
+    <div class="card"><strong>Appointments:</strong> <span id="appointmentCount">0</span></div>
+    <button class="btn" onclick="logout()">Logout</button>
 </div>
 
-<!-- Bottom Navigation -->
+<!-- BOTTOM NAV -->
 <div class="bottom-nav">
-    <div class="nav-item active" onclick="showTab('home')"><div class="icon"><i class="fas fa-home"></i></div><div class="label">Home</div></div>
-    <div class="nav-item" onclick="showTab('products')"><div class="icon"><i class="fas fa-box"></i></div><div class="label">Products</div></div>
-    <div class="nav-item" onclick="showTab('doctors')"><div class="icon"><i class="fas fa-user-md"></i></div><div class="label">Doctors</div></div>
-    <div class="nav-item" onclick="showTab('profile')"><div class="icon"><i class="fas fa-user"></i></div><div class="label">Profile</div></div>
+    <div class="nav-item active" onclick="showTab('home')">🏠 Home</div>
+    <div class="nav-item" onclick="showTab('products')">📦 Products</div>
+    <div class="nav-item" onclick="showTab('doctors')">👨‍⚕️ Doctors</div>
+    <div class="nav-item" onclick="showTab('appointments')">📅 Appointments</div>
+    <div class="nav-item" onclick="showTab('profile')">👤 Profile</div>
 </div>
 
-<!-- Login Modal -->
-<div id="loginModal" class="modal">
-    <div class="modal-content">
-        <h3 style="text-align:center; color:#1a5d7a"><i class="fas fa-heartbeat"></i> LifeMed Account</h3>
-        <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="Enter your name"></div>
-        <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="Enter email"></div>
-        <div class="form-group"><label>Password</label><input type="password" id="regPassword" placeholder="Password (min 6 chars)"></div>
-        <div class="form-group"><label>Phone</label><input type="tel" id="regPhone" placeholder="Mobile number"></div>
-        <button class="btn" onclick="register()"><i class="fas fa-user-plus"></i> Sign Up / Login</button>
-        <button class="btn btn-outline" onclick="closeLoginModal()" style="margin-top:5px;">Cancel</button>
-    </div>
-</div>
-
-<!-- Cart Modal -->
+<!-- CART MODAL -->
 <div id="cartModal" class="modal">
     <div class="modal-content">
-        <h3><i class="fas fa-shopping-cart"></i> Your Cart</h3>
-        <div id="cartItemsList"></div>
-        <div id="cartTotalAmount"></div>
-        <div class="flex-buttons">
-            <button class="btn btn-outline" style="width:40%" onclick="closeCart()">Continue Shopping</button>
-            <button class="btn" style="width:60%" onclick="startCheckout()">Proceed to Checkout →</button>
-        </div>
+        <h3>🛒 Your Cart</h3>
+        <div id="cartItems"></div>
+        <div id="cartTotal" class="total-row"></div>
+        <button class="btn" onclick="checkout()">Proceed to Checkout</button>
+        <button class="btn" onclick="closeCart()" style="background:#ccc;">Close</button>
     </div>
 </div>
 
-<!-- Checkout Modal - Multi Step -->
-<div id="checkoutModal" class="modal">
+<!-- APPOINTMENT MODAL -->
+<div id="appointmentModal" class="modal">
     <div class="modal-content">
-        <!-- Step 1: Address Details -->
-        <div id="step1" class="step active-step">
-            <div class="step-header">
-                <div><div class="step-circle active">1</div><small>Address</small></div>
-                <div><div class="step-circle">2</div><small>Review</small></div>
-                <div><div class="step-circle">3</div><small>Payment</small></div>
-                <div><div class="step-circle">4</div><small>Confirm</small></div>
-            </div>
-            <h3><i class="fas fa-map-marker-alt"></i> Delivery Address</h3>
-            <div class="form-group"><label>Full Name</label><input type="text" id="deliveryName" placeholder="Full name"></div>
-            <div class="form-group"><label>Phone Number</label><input type="tel" id="deliveryPhone" placeholder="10 digit mobile number"></div>
-            <div class="form-group"><label>Street / House No.</label><input type="text" id="deliveryStreet" placeholder="House/Flat No., Building Name"></div>
-            <div class="form-group"><label>Area / Locality</label><input type="text" id="deliveryArea" placeholder="Area, Colony, Landmark"></div>
-            <div class="form-group"><label>City</label><input type="text" id="deliveryCity" placeholder="City" value="Mysore"></div>
-            <div class="form-group"><label>Pincode</label><input type="text" id="deliveryPincode" placeholder="6 digit pincode" maxlength="6"></div>
-            <div class="form-group"><label>Delivery Instructions (Optional)</label><textarea id="deliveryInstructions" rows="2" placeholder="Gate code, landmark, etc."></textarea></div>
-            <div class="flex-buttons">
-                <button class="btn btn-outline btn-back" style="width:40%" onclick="closeCheckout()"><i class="fas fa-arrow-left"></i> Back to Cart</button>
-                <button class="btn" style="width:60%" onclick="nextStep(2)">Continue →</button>
-            </div>
+        <h3>📅 Book Appointment</h3>
+        <div id="appointmentDoctorInfo" style="background:#e8f5e9; padding:10px; border-radius:10px; margin-bottom:15px;"></div>
+        <div class="form-group">
+            <label>Patient Name</label>
+            <input type="text" id="aptPatientName" placeholder="Enter patient name">
         </div>
-
-        <!-- Step 2: Order Review -->
-        <div id="step2" class="step">
-            <div class="step-header">
-                <div><div class="step-circle completed">1</div><small>Address</small></div>
-                <div><div class="step-circle active">2</div><small>Review</small></div>
-                <div><div class="step-circle">3</div><small>Payment</small></div>
-                <div><div class="step-circle">4</div><small>Confirm</small></div>
-            </div>
-            <h3><i class="fas fa-list-alt"></i> Order Summary</h3>
-            <div id="orderReviewItems"></div>
-            <div class="total-row" id="orderReviewTotal"></div>
-            <div class="flex-buttons">
-                <button class="btn btn-outline" style="width:40%" onclick="prevStep(1)">← Back to Address</button>
-                <button class="btn" style="width:60%" onclick="nextStep(3)">Proceed to Payment →</button>
-            </div>
+        <div class="form-group">
+            <label>Patient Age</label>
+            <input type="number" id="aptPatientAge" placeholder="Age">
         </div>
-
-        <!-- Step 3: Payment Selection -->
-        <div id="step3" class="step">
-            <div class="step-header">
-                <div><div class="step-circle completed">1</div><small>Address</small></div>
-                <div><div class="step-circle completed">2</div><small>Review</small></div>
-                <div><div class="step-circle active">3</div><small>Payment</small></div>
-                <div><div class="step-circle">4</div><small>Confirm</small></div>
-            </div>
-            <h3><i class="fas fa-credit-card"></i> Select Payment Method</h3>
-            <div class="payment-option" onclick="selectPaymentMethod('COD')" id="payCOD">
-                <i class="fas fa-money-bill-wave"></i> Cash on Delivery
-            </div>
-            <div class="payment-option" onclick="selectPaymentMethod('CARD')" id="payCARD">
-                <i class="fas fa-credit-card"></i> Credit/Debit Card
-            </div>
-            <div class="payment-option" onclick="selectPaymentMethod('UPI')" id="payUPI">
-                <i class="fas fa-mobile-alt"></i> UPI (Google Pay, PhonePe, Paytm)
-            </div>
-            <div class="flex-buttons">
-                <button class="btn btn-outline" style="width:40%" onclick="prevStep(2)">← Back to Review</button>
-                <button class="btn" style="width:60%" onclick="nextStep(4)">Review & Confirm →</button>
-            </div>
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="aptDate">
         </div>
-
-        <!-- Step 4: Final Confirmation -->
-        <div id="step4" class="step">
-            <div class="step-header">
-                <div><div class="step-circle completed">1</div><small>Address</small></div>
-                <div><div class="step-circle completed">2</div><small>Review</small></div>
-                <div><div class="step-circle completed">3</div><small>Payment</small></div>
-                <div><div class="step-circle active">4</div><small>Confirm</small></div>
-            </div>
-            <h3><i class="fas fa-check-circle"></i> Confirm Order</h3>
-            <div class="card" style="margin-bottom:10px;"><strong>Delivery Address:</strong><br><span id="confirmAddress"></span></div>
-            <div class="card" style="margin-bottom:10px;"><strong>Order Items:</strong><br><span id="confirmItems"></span></div>
-            <div class="card" style="margin-bottom:10px;"><strong>Payment Method:</strong><br><span id="confirmPayment"></span></div>
-            <div class="total-row" id="confirmTotal"></div>
-            <div style="background:#e8f5e9; padding:12px; border-radius:10px; margin:10px 0; text-align:center;">
-                <i class="fas fa-shield-alt"></i> 100% Secure<br>Free Delivery
-            </div>
-            <div class="flex-buttons">
-                <button class="btn btn-outline" style="width:40%" onclick="prevStep(3)">← Back to Payment</button>
-                <button class="btn" style="width:60%" onclick="finalPlaceOrder()">Confirm Order ✓</button>
-            </div>
+        <div class="form-group">
+            <label>Time</label>
+            <select id="aptTime">
+                <option>10:00 AM</option><option>11:00 AM</option><option>12:00 PM</option>
+                <option>02:00 PM</option><option>03:00 PM</option><option>04:00 PM</option><option>05:00 PM</option>
+            </select>
         </div>
+        <div class="form-group">
+            <label>Phone Number</label>
+            <input type="text" id="aptPhone" placeholder="Mobile number">
+        </div>
+        <div class="form-group">
+            <label>Symptoms (Optional)</label>
+            <textarea id="aptSymptoms" rows="2" placeholder="Any symptoms?"></textarea>
+        </div>
+        <button class="btn" onclick="submitAppointment()">Confirm Appointment</button>
+        <button class="btn" onclick="closeAppointmentModal()" style="background:#ccc; margin-top:5px;">Cancel</button>
     </div>
 </div>
-
-<!-- Success Modal -->
-<div id="successModal" class="modal">
-    <div class="modal-content" style="text-align:center">
-        <i class="fas fa-check-circle" style="font-size:60px; color:#2e7d64;"></i>
-        <h3>Order Placed Successfully!</h3>
-        <p id="orderIdDisplay"></p>
-        <div class="flex-buttons">
-            <button class="btn btn-outline" onclick="closeSuccessModal()">Continue Shopping</button>
-            <button class="btn" onclick="goToOrders()">Track Order</button>
-        </div>
-    </div>
-</div>
-
-<div id="toast" class="toast"></div>
 
 <script>
-    const API_BASE = 'http://localhost:5000/api';
+    const API = 'http://localhost:5000/api';
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    let user = JSON.parse(localStorage.getItem('user') || '{}');
-    let token = localStorage.getItem('token');
-    let selectedPayment = 'COD';
+    let selectedDoctor = null;
 
-    function showToast(msg) {
-        let t = document.getElementById('toast');
-        t.innerText = msg;
-        t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 2000);
-    }
-
+    // ========== CART FUNCTIONS ==========
     function updateCartCount() {
         let c = cart.reduce((s,i)=>s+i.qty,0);
         document.getElementById('cartCount').innerText = c;
@@ -271,247 +151,140 @@
     }
 
     function addToCart(p) {
-        let existing = cart.find(i => i.id === p._id);
+        let existing = cart.find(i => i.id === p.id);
         if(existing) existing.qty++;
-        else cart.push({id:p._id, name:p.name, price:p.discountedPrice || p.pricePerUnit, qty:1, unitType:p.unitType});
+        else cart.push({id:p.id, name:p.name, price:p.pricePerUnit, qty:1, unit:p.unitType});
         updateCartCount();
-        showToast('✓ Added to cart!');
-    }
-
-    function updateQuantity(index, delta) {
-        let newQty = cart[index].qty + delta;
-        if(newQty < 1) return;
-        cart[index].qty = newQty;
-        updateCartCount();
-        showCart();
-    }
-
-    function removeItem(index) {
-        cart.splice(index, 1);
-        updateCartCount();
-        showCart();
+        alert('✓ Added to cart!');
     }
 
     function showCart() {
-        let container = document.getElementById('cartItemsList');
-        if(cart.length === 0) container.innerHTML = '<p style="text-align:center">Your cart is empty</p>';
+        let container = document.getElementById('cartItems');
+        if(cart.length === 0) container.innerHTML = '<p style="text-align:center">Cart is empty</p>';
         else {
             container.innerHTML = '';
             cart.forEach((item, idx) => {
-                container.innerHTML += `
-                    <div class="cart-item">
-                        <div><strong>${item.name}</strong><br><small>₹${item.price} per ${item.unitType || 'unit'}</small></div>
-                        <div style="text-align:right">
-                            <div class="quantity-control">
-                                <button class="quantity-btn" onclick="updateQuantity(${idx}, -1)">-</button>
-                                <span style="min-width:30px; text-align:center">${item.qty}</span>
-                                <button class="quantity-btn" onclick="updateQuantity(${idx}, 1)">+</button>
-                            </div>
-                            <div>₹${item.price * item.qty}</div>
-                            <button class="remove-btn" onclick="removeItem(${idx})">Remove</button>
-                        </div>
-                    </div>
-                `;
+                container.innerHTML += `<div class="cart-item">
+                    <div><strong>${item.name}</strong><br>₹${item.price} x ${item.qty}</div>
+                    <div>₹${item.price * item.qty} <button class="remove-btn" onclick="removeItem(${idx})">X</button></div>
+                </div>`;
             });
         }
         let total = cart.reduce((s,i)=>s+(i.price*i.qty),0);
-        document.getElementById('cartTotalAmount').innerHTML = `<div class="total-row">Total: ₹${total}</div>`;
+        document.getElementById('cartTotal').innerHTML = `Total: ₹${total}`;
         document.getElementById('cartModal').style.display = 'flex';
     }
 
     function closeCart() { document.getElementById('cartModal').style.display = 'none'; }
-    function closeCheckout() { document.getElementById('checkoutModal').style.display = 'none'; }
+    function removeItem(idx) { cart.splice(idx,1); updateCartCount(); showCart(); }
+    function checkout() { closeCart(); alert('Checkout feature - Address form will appear here'); }
 
-    function startCheckout() {
-        if(cart.length === 0) { showToast('Cart is empty!'); return; }
-        closeCart();
-        document.getElementById('checkoutModal').style.display = 'flex';
-        resetSteps();
-        if(user.name) document.getElementById('deliveryName').value = user.name || '';
-        if(user.phone) document.getElementById('deliveryPhone').value = user.phone || '';
+    // ========== APPOINTMENT FUNCTIONS ==========
+    function bookAppointment(doctor) {
+        selectedDoctor = doctor;
+        document.getElementById('appointmentDoctorInfo').innerHTML = `
+            <strong>${doctor.name}</strong><br>
+            ${doctor.specialty}<br>
+            Fees: ₹${doctor.fees}
+        `;
+        document.getElementById('aptPatientName').value = '';
+        document.getElementById('aptPatientAge').value = '';
+        document.getElementById('aptDate').value = '';
+        document.getElementById('aptPhone').value = '';
+        document.getElementById('aptSymptoms').value = '';
+        document.getElementById('appointmentModal').style.display = 'flex';
     }
 
-    function resetSteps() {
-        document.querySelectorAll('.step').forEach(s => s.classList.remove('active-step'));
-        document.getElementById('step1').classList.add('active-step');
-        selectedPayment = 'COD';
-        selectPaymentMethod('COD');
+    function closeAppointmentModal() {
+        document.getElementById('appointmentModal').style.display = 'none';
+        selectedDoctor = null;
     }
 
-    function selectPaymentMethod(method) {
-        selectedPayment = method;
-        document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
-        document.getElementById(`pay${method}`).classList.add('selected');
-    }
+    async function submitAppointment() {
+        const patientName = document.getElementById('aptPatientName').value;
+        const patientAge = document.getElementById('aptPatientAge').value;
+        const date = document.getElementById('aptDate').value;
+        const time = document.getElementById('aptTime').value;
+        const phone = document.getElementById('aptPhone').value;
+        const symptoms = document.getElementById('aptSymptoms').value;
 
-    function validateStep1() {
-        let name = document.getElementById('deliveryName').value;
-        let phone = document.getElementById('deliveryPhone').value;
-        let street = document.getElementById('deliveryStreet').value;
-        let area = document.getElementById('deliveryArea').value;
-        let city = document.getElementById('deliveryCity').value;
-        let pincode = document.getElementById('deliveryPincode').value;
-        
-        if(!name) { showToast('Please enter full name'); return false; }
-        if(!phone || phone.length < 10) { showToast('Please enter valid 10-digit phone number'); return false; }
-        if(!street) { showToast('Please enter street/house number'); return false; }
-        if(!area) { showToast('Please enter area/locality'); return false; }
-        if(!city) { showToast('Please enter city'); return false; }
-        if(!pincode || pincode.length !== 6) { showToast('Please enter 6-digit pincode'); return false; }
-        return true;
-    }
+        if(!patientName || !patientAge || !date || !phone) {
+            alert('Please fill all required fields');
+            return;
+        }
 
-    function updateOrderReview() {
-        let itemsHtml = '';
-        cart.forEach(item => {
-            itemsHtml += `<div class="cart-item"><div>${item.name} (${item.unitType || 'unit'}) x ${item.qty}</div><div>₹${item.price * item.qty}</div></div>`;
-        });
-        document.getElementById('orderReviewItems').innerHTML = itemsHtml;
-        let total = cart.reduce((s,i)=>s+(i.price*i.qty),0);
-        document.getElementById('orderReviewTotal').innerHTML = `<div class="total-row">Total Amount: ₹${total}</div>`;
-    }
-
-    function updateConfirmPage() {
-        let address = `${document.getElementById('deliveryName').value}, ${document.getElementById('deliveryPhone').value}<br>${document.getElementById('deliveryStreet').value}, ${document.getElementById('deliveryArea').value}<br>${document.getElementById('deliveryCity').value} - ${document.getElementById('deliveryPincode').value}`;
-        document.getElementById('confirmAddress').innerHTML = address;
-        let items = '';
-        cart.forEach(item => { items += `${item.name} x ${item.qty} = ₹${item.price * item.qty}<br>`; });
-        document.getElementById('confirmItems').innerHTML = items;
-        let paymentNames = {COD:'Cash on Delivery', CARD:'Credit/Debit Card', UPI:'UPI'};
-        document.getElementById('confirmPayment').innerHTML = paymentNames[selectedPayment];
-        let total = cart.reduce((s,i)=>s+(i.price*i.qty),0);
-        document.getElementById('confirmTotal').innerHTML = `<div class="total-row">Total: ₹${total}</div>`;
-    }
-
-    function nextStep(step) {
-        if(step === 2 && !validateStep1()) return;
-        if(step === 2) updateOrderReview();
-        if(step === 4) updateConfirmPage();
-        document.querySelectorAll('.step').forEach(s => s.classList.remove('active-step'));
-        document.getElementById(`step${step}`).classList.add('active-step');
-    }
-
-    function prevStep(step) {
-        document.querySelectorAll('.step').forEach(s => s.classList.remove('active-step'));
-        document.getElementById(`step${step}`).classList.add('active-step');
-    }
-
-    async function finalPlaceOrder() {
-        let total = cart.reduce((s,i)=>s+(i.price*i.qty),0);
-        let address = `${document.getElementById('deliveryStreet').value}, ${document.getElementById('deliveryArea').value}, ${document.getElementById('deliveryCity').value} - ${document.getElementById('deliveryPincode').value}`;
-        
-        let orderData = {
-            userId: user._id || 'guest_' + Date.now(),
-            userName: document.getElementById('deliveryName').value,
-            userPhone: document.getElementById('deliveryPhone').value,
-            products: cart.map(i => ({productId:i.id, productName:i.name, quantity:i.qty, pricePerUnit:i.price, totalPrice:i.price*i.qty})),
-            totalAmount: total,
-            shippingAddress: address,
-            paymentMethod: selectedPayment,
-            status: 'confirmed'
+        const appointmentData = {
+            doctorId: selectedDoctor.id,
+            doctorName: selectedDoctor.name,
+            specialty: selectedDoctor.specialty,
+            fees: selectedDoctor.fees,
+            patientName: patientName,
+            patientAge: parseInt(patientAge),
+            date: date,
+            time: time,
+            phone: phone,
+            symptoms: symptoms,
+            status: 'pending'
         };
 
-        let orders = JSON.parse(localStorage.getItem('orders') || '[]');
-        orders.unshift({...orderData, _id: 'ORD' + Date.now(), orderDate: new Date()});
-        localStorage.setItem('orders', JSON.stringify(orders));
-        
-        cart = [];
-        updateCartCount();
-        document.getElementById('checkoutModal').style.display = 'none';
-        document.getElementById('orderIdDisplay').innerHTML = `Order ID: ORD${Date.now()}`;
-        document.getElementById('successModal').style.display = 'flex';
-        showToast('Order placed successfully!');
-    }
-
-    function closeSuccessModal() {
-        document.getElementById('successModal').style.display = 'none';
-        showTab('home');
-    }
-
-    function goToOrders() {
-        document.getElementById('successModal').style.display = 'none';
-        showTab('profile');
-        loadMyOrders();
-    }
-
-    async function register() {
-        let name = document.getElementById('regName').value;
-        let email = document.getElementById('regEmail').value;
-        let password = document.getElementById('regPassword').value;
-        let phone = document.getElementById('regPhone').value;
-        if(!name || !email || !password) { showToast('Please fill all fields'); return; }
-        if(password.length < 6) { showToast('Password must be at least 6 characters'); return; }
-
-        let response = await fetch(`${API_BASE}/auth/register`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password, phone })
-        });
-        let data = await response.json();
-        if(data.success) {
-            token = data.token; user = data.user;
-            localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user));
-            updateProfileUI(); closeLoginModal(); showToast('Welcome, ' + user.name + '!');
-        } else {
-            let loginRes = await fetch(`${API_BASE}/auth/login`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            let loginData = await loginRes.json();
-            if(loginData.success) {
-                token = loginData.token; user = loginData.user;
-                localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user));
-                updateProfileUI(); closeLoginModal(); showToast('Welcome back, ' + user.name + '!');
-            } else { showToast('Registration failed'); }
-        }
-    }
-
-    function logout() {
-        localStorage.removeItem('token'); localStorage.removeItem('user');
-        token = null; user = {};
-        updateProfileUI(); showToast('Logged out'); showTab('home');
-    }
-
-    function updateProfileUI() {
-        if(user.name) {
-            document.getElementById('userName').innerText = user.name.split(' ')[0];
-            document.getElementById('profileName').innerText = user.name;
-            document.getElementById('profileEmail').innerText = user.email || 'No email';
-        } else {
-            document.getElementById('userName').innerText = 'Guest';
-            document.getElementById('profileName').innerText = 'Guest User';
-            document.getElementById('profileEmail').innerText = 'Not logged in';
-        }
-    }
-
-    function showLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
-    function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
-
-    async function loadMyOrders() {
-        let orders = JSON.parse(localStorage.getItem('orders') || '[]');
-        let userOrders = orders.filter(o => o.userId === user._id || (user._id && o.userId === 'guest_' + Date.now()));
-        if(userOrders.length === 0) document.getElementById('myOrdersList').innerHTML = '<div class="card">No orders yet</div>';
-        else {
-            let html = '';
-            userOrders.forEach(o => {
-                html += `<div class="card"><strong>Order #${o._id.slice(-8)}</strong><br>Total: ₹${o.totalAmount}<br><span class="badge">${o.status}</span><br><small>${new Date(o.orderDate).toLocaleDateString()}</small></div>`;
-            });
-            document.getElementById('myOrdersList').innerHTML = html;
-        }
-    }
-
-    async function loadProducts() {
         try {
-            let res = await fetch(`${API_BASE}/products`);
+            let res = await fetch(API+'/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(appointmentData)
+            });
             let data = await res.json();
             if(data.success) {
+                alert('✅ Appointment booked successfully!');
+                closeAppointmentModal();
+                loadMyAppointments();
+            } else {
+                alert('❌ Booking failed. Try again.');
+            }
+        } catch(e) {
+            alert('Error: ' + e.message);
+        }
+    }
+
+    async function loadMyAppointments() {
+        try {
+            let res = await fetch(API+'/appointments');
+            let data = await res.json();
+            if(data.success && data.appointments) {
+                let html = '';
+                if(data.appointments.length === 0) html = '<div class="card">No appointments yet</div>';
+                else {
+                    data.appointments.slice().reverse().forEach(a => {
+                        html += `<div class="card">
+                            <strong>${a.doctorName}</strong><br>
+                            ${a.specialty}<br>
+                            Date: ${a.date} | Time: ${a.time}<br>
+                            Patient: ${a.patientName} (Age: ${a.patientAge})<br>
+                            Status: <span class="badge">${a.status}</span>
+                        </div>`;
+                    });
+                }
+                document.getElementById('myAppointmentsList').innerHTML = html;
+                document.getElementById('appointmentCount').innerText = data.appointments.length;
+            }
+        } catch(e) { console.log('Appointments error:', e); }
+    }
+
+    // ========== LOAD DATA ==========
+    async function loadProducts() {
+        try {
+            let res = await fetch(API+'/products');
+            let data = await res.json();
+            if(data.success && data.products) {
                 let html = '';
                 data.products.slice(0,4).forEach(p => {
-                    html += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.discountedPrice || p.pricePerUnit}</div><span class="badge">${p.unitType || 'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
+                    html += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.pricePerUnit}</div><span class="badge">${p.unitType || 'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
                 });
                 document.getElementById('productsList').innerHTML = html;
+                
                 let allHtml = '';
                 data.products.forEach(p => {
-                    allHtml += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.discountedPrice || p.pricePerUnit}</div><span class="badge">${p.unitType || 'unit'} | Stock:${p.totalStock}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
+                    allHtml += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.pricePerUnit}</div><span class="badge">${p.unitType || 'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
                 });
                 document.getElementById('allProductsList').innerHTML = allHtml;
             }
@@ -520,45 +293,56 @@
 
     async function loadDoctors() {
         try {
-            let res = await fetch(`${API_BASE}/doctors`);
+            let res = await fetch(API+'/doctors');
             let data = await res.json();
-            if(data.success) {
+            if(data.success && data.doctors) {
                 let html = '';
                 data.doctors.slice(0,3).forEach(d => {
-                    html += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br>Fees: ₹${d.fees}</div>`;
+                    html += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br>Fees: ₹${d.fees}<br><button class="btn btn-small" onclick='bookAppointment(${JSON.stringify(d)})'>📅 Book Appointment</button></div>`;
                 });
                 document.getElementById('doctorsList').innerHTML = html;
+                
                 let allHtml = '';
                 data.doctors.forEach(d => {
-                    allHtml += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br>Fees: ₹${d.fees}</div>`;
+                    allHtml += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br>Fees: ₹${d.fees}<br><button class="btn btn-small" onclick='bookAppointment(${JSON.stringify(d)})'>📅 Book Appointment</button></div>`;
                 });
                 document.getElementById('allDoctorsList').innerHTML = allHtml;
             }
         } catch(e) { console.log('Doctors error:', e); }
     }
 
+    async function loadOrders() {
+        try {
+            let res = await fetch(API+'/orders');
+            let data = await res.json();
+            if(data.success) {
+                document.getElementById('orderCount').innerText = data.orders.length;
+            }
+        } catch(e) { console.log('Orders error:', e); }
+    }
+
+    // ========== TAB NAVIGATION ==========
     function showTab(tab) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById(tab).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        event.target.closest('.nav-item').classList.add('active');
-        if(tab === 'profile') loadMyOrders();
+        event.target.classList.add('active');
+        if(tab === 'appointments') loadMyAppointments();
+        if(tab === 'profile') loadOrders();
     }
 
-    function filterProducts() {
-        let search = document.getElementById('search').value.toLowerCase();
-        let cards = document.querySelectorAll('#allProductsList .card');
-        cards.forEach(card => {
-            let name = card.querySelector('strong').innerText.toLowerCase();
-            card.style.display = name.includes(search) ? 'block' : 'none';
-        });
+    function logout() {
+        localStorage.clear();
+        cart = [];
+        updateCartCount();
+        alert('Logged out');
+        location.reload();
     }
 
-    updateProfileUI();
+    // ========== INIT ==========
     loadProducts();
     loadDoctors();
     updateCartCount();
-    selectPaymentMethod('COD');
 </script>
 </body>
 </html>

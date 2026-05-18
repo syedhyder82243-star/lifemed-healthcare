@@ -1,0 +1,38 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Baby Pampers",
+      "category": "baby",
+      "pricePerUnit": 850,
+      "totalStock": 100,
+      "unitType": "pack"
+    },
+    {
+      "id": 2,
+      "name": "Panadol",
+      "category": "medicine",
+      "pricePerUnit": 120,
+      "totalStock": 500,
+      "unitType": "strip"
+    }
+  ],
+  "doctors": [
+    {
+      "id": 1,
+      "name": "Dr. Ahmed",
+      "specialty": "Cardiologist",
+      "fees": 1500
+    },
+    {
+      "id": 2,
+      "name": "Dr. Fatima",
+      "specialty": "Dermatologist",
+      "fees": 1200
+    }
+  ],
+  "orders": [],
+  "appointments": [],
+  "labTests": [],
+  "labBookings": []
+}

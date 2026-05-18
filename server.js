@@ -1,14 +1,7 @@
-// LifeMed Health Care - Complete Server
-// Features: Login System, Payment (Razorpay), Location/Maps
-
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const multer = require('multer');
-const path = require('path');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
@@ -16,425 +9,173 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
-// JWT Secret
-const JWT_SECRET = 'lifemed_secret_key_2026';
+// Create data folder
+if (!fs.existsSync('./data')) fs.mkdirSync('./data');
 
-// Image Upload Setup
-const fs = require('fs');
-const uploadDir = './uploads';
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+// Database file path
+const DB_PATH = './data/db.json';
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
-});
-const upload = multer({ storage });
+// Init database
+if (!fs.existsSync(DB_PATH)) {
+    fs.writeFileSync(DB_PATH, JSON.stringify({
+        products: [],
+        doctors: [],
+        orders: [],
+        appointments: [],
+        labTests: [],
+        labBookings: []
+    }));
+}
 
-// MongoDB Connection
-mongoose.connect('mongodb://127.0.0.1:27017/lifemed')
-.then(() => console.log('✅ MongoDB connected'))
-.catch(err => console.log('❌ MongoDB error:', err));
+// Helper functions
+const getDB = () => JSON.parse(fs.readFileSync(DB_PATH));
+const saveDB = (data) => fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
 
-// ========== USER SCHEMA (Login System) ==========
-const userSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    phone: String,
-    address: String,
-    city: String,
-    pincode: String,
-    role: { type: String, default: 'user' }, // admin, user
-    createdAt: { type: Date, default: Date.now }
-});
+// Add sample data
+let db = getDB();
+if (db.products.length === 0) {
+    db.products = [
+        { id: 1, name: "Baby Pampers", category: "baby", pricePerUnit: 850, totalStock: 100, unitType: "pack" },
+        { id: 2, name: "Panadol", category: "medicine", pricePerUnit: 120, totalStock: 500, unitType: "strip" }
+    ];
+    db.doctors = [
+        { id: 1, name: "Dr. Ahmed", specialty: "Cardiologist", fees: 1500 },
+        { id: 2, name: "Dr. Fatima", specialty: "Dermatologist", fees: 1200 }
+    ];
+    saveDB(db);
+    console.log("Sample data added");
+}
 
-const User = mongoose.model('User', userSchema);
+// ========== API ROUTES ==========
 
-// ========== DOCTOR SCHEMA ==========
-const doctorSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    specialty: { type: String, required: true },
-    qualification: String,
-    experience: String,
-    fees: { type: Number, required: true },
-    availableDays: [String],
-    availableTime: String,
-    contactNumber: String,
-    imageUrl: String,
-    isAvailable: { type: Boolean, default: true }
+// Products
+app.get('/api/products', (req, res) => {
+    const db = getDB();
+    res.json({ success: true, products: db.products });
 });
 
-const Doctor = mongoose.model('Doctor', doctorSchema);
-
-// ========== PRODUCT SCHEMA ==========
-const productSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    category: { type: String, required: true },
-    subCategory: String,
-    unitType: { type: String, enum: ['box', 'strip', 'piece', 'bottle', 'pack'] },
-    quantityPerUnit: { type: Number, default: 1 },
-    packSize: String,
-    pricePerUnit: { type: Number, required: true },
-    discount: { type: Number, default: 0 },
-    discountedPrice: Number,
-    totalStock: { type: Number, required: true },
-    batchNumber: String,
-    expiryDate: Date,
-    manufacturer: String,
-    description: String,
-    imageUrl: String
+app.post('/api/products', (req, res) => {
+    const db = getDB();
+    const newProduct = { id: Date.now(), ...req.body };
+    db.products.push(newProduct);
+    saveDB(db);
+    res.json({ success: true, product: newProduct });
 });
 
-productSchema.pre('save', function(next) {
-    this.discountedPrice = this.discount > 0 ? this.pricePerUnit - (this.pricePerUnit * this.discount / 100) : this.pricePerUnit;
-    next();
+app.delete('/api/products/:id', (req, res) => {
+    const db = getDB();
+    db.products = db.products.filter(p => p.id != req.params.id);
+    saveDB(db);
+    res.json({ success: true });
 });
 
-const Product = mongoose.model('Product', productSchema);
-
-// ========== ORDER SCHEMA (with Location) ==========
-const orderSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    products: [{
-        productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-        productName: String,
-        quantity: Number,
-        unitType: String,
-        pricePerUnit: Number,
-        totalPrice: Number
-    }],
-    totalAmount: Number,
-    deliveryLocation: {
-        lat: Number,
-        lng: Number,
-        address: String,
-        city: String,
-        pincode: String
-    },
-    paymentMethod: { type: String, enum: ['COD', 'Razorpay'], default: 'COD' },
-    paymentStatus: { type: String, default: 'pending' },
-    razorpayOrderId: String,
-    status: { type: String, default: 'pending' },
-    orderDate: { type: Date, default: Date.now },
-    phoneNumber: String
+// Doctors
+app.get('/api/doctors', (req, res) => {
+    const db = getDB();
+    res.json({ success: true, doctors: db.doctors });
 });
 
-const Order = mongoose.model('Order', orderSchema);
-
-// ========== APPOINTMENT SCHEMA ==========
-const appointmentSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    patientName: String,
-    patientAge: Number,
-    doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
-    doctorName: String,
-    specialty: String,
-    date: Date,
-    time: String,
-    fees: Number,
-    status: { type: String, default: 'pending' }
+app.post('/api/doctors', (req, res) => {
+    const db = getDB();
+    const newDoctor = { id: Date.now(), ...req.body };
+    db.doctors.push(newDoctor);
+    saveDB(db);
+    res.json({ success: true, doctor: newDoctor });
 });
 
-const Appointment = mongoose.model('Appointment', appointmentSchema);
-
-// ========== LAB TEST SCHEMA ==========
-const labTestSchema = new mongoose.Schema({
-    name: String,
-    category: String,
-    price: Number,
-    discount: { type: Number, default: 0 },
-    discountedPrice: Number,
-    isAvailable: { type: Boolean, default: true }
+app.delete('/api/doctors/:id', (req, res) => {
+    const db = getDB();
+    db.doctors = db.doctors.filter(d => d.id != req.params.id);
+    saveDB(db);
+    res.json({ success: true });
 });
 
-labTestSchema.pre('save', function(next) {
-    this.discountedPrice = this.discount > 0 ? this.price - (this.price * this.discount / 100) : this.price;
-    next();
+// Orders
+app.get('/api/orders', (req, res) => {
+    const db = getDB();
+    res.json({ success: true, orders: db.orders.reverse() });
 });
 
-const LabTest = mongoose.model('LabTest', labTestSchema);
-
-// ========== LAB BOOKING SCHEMA ==========
-const labBookingSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    patientName: String,
-    tests: [{ testId: String, testName: String, price: Number }],
-    totalAmount: Number,
-    status: { type: String, default: 'pending' },
-    bookingDate: { type: Date, default: Date.now },
-    phoneNumber: String
+app.post('/api/orders', (req, res) => {
+    const db = getDB();
+    const order = { id: Date.now(), ...req.body, orderDate: new Date(), status: "confirmed" };
+    db.orders.unshift(order);
+    saveDB(db);
+    res.json({ success: true, order });
 });
 
-const LabBooking = mongoose.model('LabBooking', labBookingSchema);
+// Appointments
+app.get('/api/appointments', (req, res) => {
+    const db = getDB();
+    res.json({ success: true, appointments: db.appointments });
+});
 
-// ========== AUTH MIDDLEWARE ==========
-const authenticate = async (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-        return res.status(401).json({ success: false, error: 'Unauthorized' });
-    }
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.userId = decoded.userId;
-        req.userRole = decoded.role;
-        next();
-    } catch (error) {
-        res.status(401).json({ success: false, error: 'Invalid token' });
-    }
-};
+app.post('/api/appointments', (req, res) => {
+    const db = getDB();
+    const apt = { id: Date.now(), ...req.body };
+    db.appointments.push(apt);
+    saveDB(db);
+    res.json({ success: true, appointment: apt });
+});
 
-// ========== AUTH APIs ==========
-// Register
-app.post('/api/auth/register', async (req, res) => {
-    try {
-        const { name, email, password, phone, address, city, pincode } = req.body;
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ success: false, error: 'Email already exists' });
+// Lab Tests
+app.get('/api/lab-tests', (req, res) => {
+    const db = getDB();
+    res.json({ success: true, labTests: db.labTests });
+});
+
+app.post('/api/lab-tests', (req, res) => {
+    const db = getDB();
+    const test = { id: Date.now(), ...req.body };
+    db.labTests.push(test);
+    saveDB(db);
+    res.json({ success: true, labTest: test });
+});
+
+// Lab Bookings
+app.get('/api/lab-bookings', (req, res) => {
+    const db = getDB();
+    res.json({ success: true, bookings: db.labBookings });
+});
+
+app.post('/api/lab-bookings', (req, res) => {
+    const db = getDB();
+    const booking = { id: Date.now(), ...req.body };
+    db.labBookings.push(booking);
+    saveDB(db);
+    res.json({ success: true, booking });
+});
+
+// Stats
+app.get('/api/stats', (req, res) => {
+    const db = getDB();
+    res.json({
+        success: true,
+        stats: {
+            totalProducts: db.products.length,
+            totalDoctors: db.doctors.length,
+            totalOrders: db.orders.length,
+            totalAppointments: db.appointments.length,
+            totalLabBookings: db.labBookings.length,
+            lowStock: db.products.filter(p => p.totalStock < 10).length
         }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new User({ name, email, password: hashedPassword, phone, address, city, pincode });
-        await user.save();
-        const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
+    });
 });
 
-// Login
-app.post('/api/auth/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ success: false, error: 'Invalid credentials' });
-        }
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ success: false, error: 'Invalid credentials' });
-        }
-        const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
+// Low stock
+app.get('/api/low-stock', (req, res) => {
+    const db = getDB();
+    res.json({ success: true, products: db.products.filter(p => p.totalStock < 10) });
 });
 
-// Get User Profile
-app.get('/api/auth/me', authenticate, async (req, res) => {
-    try {
-        const user = await User.findById(req.userId).select('-password');
-        res.json({ success: true, user });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ========== PRODUCT APIs ==========
-app.post('/api/products', async (req, res) => {
-    try {
-        const product = new Product(req.body);
-        await product.save();
-        res.json({ success: true, product });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/products', async (req, res) => {
-    try {
-        const products = await Product.find();
-        res.json({ success: true, products });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.put('/api/products/:id/stock', async (req, res) => {
-    try {
-        const { stock } = req.body;
-        const product = await Product.findByIdAndUpdate(req.params.id, { totalStock: stock }, { new: true });
-        res.json({ success: true, product });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.delete('/api/products/:id', async (req, res) => {
-    try {
-        await Product.findByIdAndDelete(req.params.id);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ========== ORDER APIs (with Location) ==========
-app.post('/api/orders', authenticate, async (req, res) => {
-    try {
-        // Deduct stock
-        for (const item of req.body.products) {
-            const product = await Product.findById(item.productId);
-            if (product) {
-                const newStock = product.totalStock - item.quantity;
-                if (newStock < 0) {
-                    return res.status(400).json({ success: false, error: `Insufficient stock for ${product.name}` });
-                }
-                await Product.findByIdAndUpdate(item.productId, { totalStock: newStock });
-            }
-        }
-        const order = new Order({ ...req.body, userId: req.userId });
-        await order.save();
-        res.status(201).json({ success: true, order });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/orders', authenticate, async (req, res) => {
-    try {
-        const orders = await Order.find({ userId: req.userId }).sort({ orderDate: -1 });
-        res.json({ success: true, orders });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ========== DOCTOR APIs ==========
-app.post('/api/doctors', async (req, res) => {
-    try {
-        const doctor = new Doctor(req.body);
-        await doctor.save();
-        res.json({ success: true, doctor });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/doctors', async (req, res) => {
-    try {
-        const doctors = await Doctor.find();
-        res.json({ success: true, doctors });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.delete('/api/doctors/:id', async (req, res) => {
-    try {
-        await Doctor.findByIdAndDelete(req.params.id);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ========== APPOINTMENT APIs ==========
-app.post('/api/appointments', authenticate, async (req, res) => {
-    try {
-        const appointment = new Appointment({ ...req.body, userId: req.userId });
-        await appointment.save();
-        res.json({ success: true, appointment });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/appointments', authenticate, async (req, res) => {
-    try {
-        const appointments = await Appointment.find({ userId: req.userId });
-        res.json({ success: true, appointments });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ========== LAB TEST APIs ==========
-app.post('/api/lab-tests', async (req, res) => {
-    try {
-        const test = new LabTest(req.body);
-        await test.save();
-        res.json({ success: true, labTest: test });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/lab-tests', async (req, res) => {
-    try {
-        const tests = await LabTest.find();
-        res.json({ success: true, labTests: tests });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.delete('/api/lab-tests/:id', async (req, res) => {
-    try {
-        await LabTest.findByIdAndDelete(req.params.id);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ========== LAB BOOKING APIs ==========
-app.post('/api/lab-bookings', authenticate, async (req, res) => {
-    try {
-        const booking = new LabBooking({ ...req.body, userId: req.userId });
-        await booking.save();
-        res.json({ success: true, booking });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/lab-bookings', authenticate, async (req, res) => {
-    try {
-        const bookings = await LabBooking.find({ userId: req.userId });
-        res.json({ success: true, bookings });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ========== STATS API ==========
-app.get('/api/stats', async (req, res) => {
-    try {
-        const totalProducts = await Product.countDocuments();
-        const totalOrders = await Order.countDocuments();
-        const totalDoctors = await Doctor.countDocuments();
-        const totalAppointments = await Appointment.countDocuments();
-        const lowStock = await Product.countDocuments({ totalStock: { $lt: 10 } });
-        
-        res.json({
-            success: true,
-            stats: { totalProducts, totalOrders, totalDoctors, totalAppointments, lowStock }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/low-stock', async (req, res) => {
-    try {
-        const products = await Product.find({ totalStock: { $lt: 10 } });
-        res.json({ success: true, products });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
+// Upload
+const upload = multer({ dest: 'uploads/' });
 app.post('/api/upload', upload.single('image'), (req, res) => {
     res.json({ success: true, imageUrl: `/uploads/${req.file.filename}` });
 });
 
-// Start Server
+// Start server
 const PORT = 5000;
 app.listen(PORT, () => {
-    console.log(`🚀 LifeMed Server running on http://localhost:${PORT}`);
-    console.log(`✅ Login System: Active`);
-    console.log(`✅ Location/Delivery: Active`);
-    console.log(`✅ Payment Ready: COD + Razorpay`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
