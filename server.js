@@ -9,7 +9,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Database setup
 const DB_PATH = './data/db.json';
 if (!fs.existsSync('./data')) fs.mkdirSync('./data');
 
@@ -24,39 +23,40 @@ if (!fs.existsSync(DB_PATH)) {
 const readDB = () => JSON.parse(fs.readFileSync(DB_PATH));
 const writeDB = (data) => fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
 
-// Create admin
 const createAdmin = async () => {
     let db = readDB();
     if (!db.users.find(u => u.role === 'admin')) {
-        db.users.push({
-            id: Date.now(),
-            name: 'Admin',
-            email: 'admin@lifemed.com',
-            password: await bcrypt.hash('admin123', 10),
-            role: 'admin'
-        });
+        db.users.push({ id: Date.now(), name: 'Admin', email: 'admin@lifemed.com', password: await bcrypt.hash('admin123', 10), role: 'admin' });
         writeDB(db);
         console.log('Admin created');
     }
 };
 createAdmin();
 
-// Auth middleware
 const auth = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ success: false, message: 'Unauthorized' });
-    try {
-        req.user = jwt.verify(token, 'secret');
-        next();
-    } catch { res.status(403).json({ success: false, message: 'Invalid token' }); }
+    if (!token) return res.status(401).json({ success: false });
+    try { req.user = jwt.verify(token, 'secret'); next(); } catch { res.status(403).json({ success: false }); }
 };
 
-// Login
+// Register API
+app.post('/api/auth/register', async (req, res) => {
+    let db = readDB();
+    const { name, email, password, phone } = req.body;
+    if (db.users.find(u => u.email === email)) return res.status(400).json({ success: false, message: 'Email already exists' });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = { id: Date.now(), name, email, password: hashedPassword, phone, role: 'user' };
+    db.users.push(newUser);
+    writeDB(db);
+    const token = jwt.sign({ id: newUser.id, role: newUser.role }, 'secret');
+    res.json({ success: true, token, user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role } });
+});
+
+// Login API
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     const user = readDB().users.find(u => u.email === email);
-    if (!user || !(await bcrypt.compare(password, user.password)))
-        return res.status(401).json({ success: false });
+    if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ success: false });
     res.json({ success: true, token: jwt.sign({ id: user.id, role: user.role }, 'secret'), role: user.role, name: user.name });
 });
 
@@ -68,10 +68,7 @@ app.get('/api/doctors', (req, res) => res.json({ success: true, doctors: readDB(
 app.post('/api/orders', (req, res) => {
     let db = readDB();
     const order = { id: Date.now(), ...req.body, orderDate: new Date(), status: 'confirmed' };
-    order.products.forEach(item => {
-        let p = db.products.find(p => p.id === item.id);
-        if (p) p.totalStock -= item.qty;
-    });
+    order.products.forEach(item => { let p = db.products.find(p => p.id === item.id); if (p) p.totalStock -= item.qty; });
     db.orders.unshift(order);
     writeDB(db);
     res.json({ success: true, order });
@@ -80,31 +77,23 @@ app.post('/api/orders', (req, res) => {
 app.get('/api/orders', (req, res) => res.json({ success: true, orders: readDB().orders.reverse() }));
 app.post('/api/appointments', (req, res) => {
     let db = readDB();
-    const apt = { id: Date.now(), ...req.body };
-    db.appointments.push(apt);
+    db.appointments.push({ id: Date.now(), ...req.body });
     writeDB(db);
     res.json({ success: true });
 });
 
 app.get('/api/stats', (req, res) => {
     let db = readDB();
-    res.json({ success: true, stats: {
-        totalProducts: db.products.length,
-        totalDoctors: db.doctors.length,
-        totalOrders: db.orders.length,
-        totalAppointments: db.appointments.length,
-        lowStock: db.products.filter(p => p.totalStock < 10).length
-    } });
+    res.json({ success: true, stats: { totalProducts: db.products.length, totalDoctors: db.doctors.length, totalOrders: db.orders.length, totalAppointments: db.appointments.length, lowStock: db.products.filter(p => p.totalStock < 10).length } });
 });
 
-// Protected admin routes
+// Admin APIs
 app.get('/api/admin/products', auth, (req, res) => res.json({ success: true, products: readDB().products }));
 app.post('/api/admin/products', auth, (req, res) => {
     let db = readDB();
-    const product = { id: Date.now(), ...req.body };
-    db.products.push(product);
+    db.products.push({ id: Date.now(), ...req.body });
     writeDB(db);
-    res.json({ success: true, product });
+    res.json({ success: true });
 });
 app.delete('/api/admin/products/:id', auth, (req, res) => {
     let db = readDB();
@@ -116,10 +105,9 @@ app.delete('/api/admin/products/:id', auth, (req, res) => {
 app.get('/api/admin/doctors', auth, (req, res) => res.json({ success: true, doctors: readDB().doctors }));
 app.post('/api/admin/doctors', auth, (req, res) => {
     let db = readDB();
-    const doctor = { id: Date.now(), ...req.body };
-    db.doctors.push(doctor);
+    db.doctors.push({ id: Date.now(), ...req.body });
     writeDB(db);
-    res.json({ success: true, doctor });
+    res.json({ success: true });
 });
 app.delete('/api/admin/doctors/:id', auth, (req, res) => {
     let db = readDB();
