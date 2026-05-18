@@ -1,153 +1,298 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>LifeMed Health Care</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>LifeMed Health Care</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-<<<<<<< HEAD
-        body { font-family: Arial; background: #e8f5e9; padding-bottom: 70px; }
-=======
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #e8f5e9; padding-bottom: 70px; }
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
-        .header { background: #1a5d7a; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; }
-        .logo-icon { background: #ffd700; border-radius: 50%; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        .nav-item { text-align: center; padding: 8px; cursor: pointer; border-radius: 10px; }
+        body { font-family: 'Poppins', 'Segoe UI', sans-serif; background: #f0f7f0; padding-bottom: 70px; }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a5d7a, #2e7d64);
+            color: white;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .logo { display: flex; align-items: center; gap: 10px; }
+        .logo-icon {
+            background: #ffd700;
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #1a5d7a;
+        }
+        .logo-text h1 { font-size: 18px; font-weight: 700; }
+        .logo-text span { color: #ffd700; }
+        .logo-text p { font-size: 9px; opacity: 0.9; }
+        .cart-badge {
+            background: #ffd700;
+            color: #1a5d7a;
+            padding: 8px 14px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .cart-badge:hover { transform: scale(1.05); }
+        
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        .nav-item {
+            text-align: center;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 30px;
+            transition: 0.3s;
+        }
         .nav-item.active { background: #1a5d7a20; color: #1a5d7a; }
-        .section { display: none; padding: 15px; }
+        .nav-item i { font-size: 22px; }
+        .nav-item span { font-size: 11px; display: block; margin-top: 4px; }
+        
+        /* Sections */
+        .section { display: none; padding: 20px; animation: fadeIn 0.4s; }
         .section.active { display: block; }
-        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #ffd700; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .price { font-size: 18px; font-weight: bold; color: #1a7a6e; }
-        .badge { background: #ffd700; color: #1a5d7a; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
-        .btn { background: #1a5d7a; color: white; border: none; padding: 8px; border-radius: 20px; width: 100%; margin-top: 8px; cursor: pointer; }
-<<<<<<< HEAD
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-left: 4px solid #ffd700;
+            transition: 0.3s;
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .price { font-size: 20px; font-weight: 800; color: #2e7d64; }
+        .badge {
+            background: #ffd700;
+            color: #1a5d7a;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .btn {
+            background: linear-gradient(135deg, #1a5d7a, #2e7d64);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 30px;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
         .btn-outline { background: white; border: 1px solid #1a5d7a; color: #1a5d7a; }
-=======
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
-        .contact-card { background: #1a5d7a; color: white; border-radius: 12px; padding: 15px; margin-top: 15px; text-align: center; font-size: 12px; }
-        .row { display: flex; gap: 10px; overflow-x: auto; }
-        .row .card { min-width: 200px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 90%; max-width: 380px; border-radius: 15px; padding: 20px; }
-        .form-group { margin-bottom: 12px; }
-<<<<<<< HEAD
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 16px; border-radius: 20px; display: none; }
-        .qty-btn { background: #ddd; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; }
-        .total-row { font-weight: bold; text-align: right; padding: 10px; border-top: 2px solid #ddd; margin-top: 10px; }
-=======
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 16px; border-radius: 20px; display: none; }
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
+        .btn:hover { transform: scale(1.02); }
+        
+        /* Forms & Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 28px;
+            padding: 25px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #1a5d7a; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .qty-btn {
+            background: #ddd;
+            border: none;
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .total-row {
+            font-weight: bold;
+            text-align: right;
+            padding: 12px;
+            border-top: 2px solid #eee;
+            margin-top: 10px;
+        }
+        .contact-card {
+            background: linear-gradient(135deg, #1a5d7a, #2e7d64);
+            color: white;
+            border-radius: 20px;
+            padding: 18px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            display: none;
+            z-index: 150;
+            font-size: 14px;
+        }
+        .row-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+        .row-scroll .card { min-width: 200px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div><span class="logo-icon">❤️</span> <strong>LifeMed Health Care</strong></div>
-    <div onclick="showCart()">🛒 <span id="cartCount">0</span></div>
+    <div class="logo">
+        <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+        <div class="logo-text">
+            <h1>LifeMed <span>Health</span></h1>
+            <p>Together In Health, Together For Life</p>
+        </div>
+    </div>
+    <div class="cart-badge" onclick="showCart()">
+        <i class="fas fa-shopping-cart"></i> <span id="cartCount">0</span>
+    </div>
 </div>
 
+<!-- HOME SECTION -->
 <div id="home" class="section active">
-    <h3>🛍️ Products</h3>
-    <div class="row" id="productsList"></div>
-    <h3>👨‍⚕️ Top Doctors</h3>
-    <div class="row" id="doctorsList"></div>
-    <div class="contact-card">📍 #123, Rajivnagar, Mysore - 570019<br>📞 +91 8214514503<br>⏰ Mon-Sat 9-9 | Sun 10-4</div>
+    <h3 style="color:#1a5d7a; margin-bottom:15px;"><i class="fas fa-home"></i> Welcome, <span id="userName">Guest</span>!</h3>
+    <div class="row-scroll" id="productsList"></div>
+    <div class="row-scroll" id="doctorsList"></div>
+    <div class="contact-card">
+        <i class="fas fa-map-marker-alt"></i> #123, Rajivnagar, Mysore - 570019<br>
+        <i class="fas fa-phone"></i> +91 8214514503<br>
+        <i class="fas fa-clock"></i> Mon-Sat 9-9 | Sun 10-4
+    </div>
 </div>
 
+<!-- PRODUCTS SECTION -->
 <div id="products" class="section">
-    <h3>📦 All Products</h3>
+    <h3 style="color:#1a5d7a;"><i class="fas fa-boxes"></i> All Products</h3>
+    <input type="text" id="searchProd" placeholder="🔍 Search products..." style="width:100%; padding:12px; margin:15px 0; border-radius:30px; border:1px solid #ddd;">
     <div id="allProductsList"></div>
 </div>
 
+<!-- DOCTORS SECTION -->
 <div id="doctors" class="section">
-    <h3>👨‍⚕️ Our Doctors</h3>
+    <h3 style="color:#1a5d7a;"><i class="fas fa-user-md"></i> Our Doctors</h3>
     <div id="allDoctorsList"></div>
 </div>
 
+<!-- LAB TESTS SECTION -->
+<div id="labtests" class="section">
+    <h3 style="color:#1a5d7a;"><i class="fas fa-flask"></i> Lab Tests</h3>
+    <div id="labTestsList"></div>
+</div>
+
+<!-- PROFILE SECTION -->
 <div id="profile" class="section">
-    <div class="card"><strong>Name:</strong> <span id="userName">Guest</span></div>
-    <div class="card"><strong>Status:</strong> <span id="userStatus">Not logged in</span></div>
-    <button class="btn" onclick="showLoginModal()">Login / Signup</button>
-    <button class="btn" onclick="logout()" style="background:#ccc; color:#333;">Logout</button>
+    <div class="card" style="text-align:center">
+        <div style="width:70px; height:70px; background:#1a5d7a; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px;">
+            <i class="fas fa-user" style="font-size:35px; color:#ffd700;"></i>
+        </div>
+        <h3 id="profileName">Guest User</h3>
+        <p id="profileEmail">Not logged in</p>
+        <button class="btn btn-outline" onclick="showLoginModal()"><i class="fas fa-sign-in-alt"></i> Login / Signup</button>
+        <button class="btn btn-outline" onclick="logout()" style="margin-top:10px;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+    <div class="card"><h3><i class="fas fa-shopping-bag"></i> My Orders</h3><div id="myOrdersList">No orders yet</div></div>
+    <div class="card"><h3><i class="fas fa-calendar-check"></i> My Appointments</h3><div id="myAppointmentsList">No appointments yet</div></div>
+    <div class="card"><h3><i class="fas fa-flask"></i> My Lab Bookings</h3><div id="myLabBookingsList">No lab bookings yet</div></div>
 </div>
 
+<!-- BOTTOM NAV -->
 <div class="bottom-nav">
-    <div class="nav-item active" onclick="showTab('home')">🏠 Home</div>
-    <div class="nav-item" onclick="showTab('products')">📦 Products</div>
-    <div class="nav-item" onclick="showTab('doctors')">👨‍⚕️ Doctors</div>
-    <div class="nav-item" onclick="showTab('profile')">👤 Profile</div>
+    <div class="nav-item active" onclick="showTab('home')"><i class="fas fa-home"></i><span>Home</span></div>
+    <div class="nav-item" onclick="showTab('products')"><i class="fas fa-box"></i><span>Products</span></div>
+    <div class="nav-item" onclick="showTab('doctors')"><i class="fas fa-user-md"></i><span>Doctors</span></div>
+    <div class="nav-item" onclick="showTab('labtests')"><i class="fas fa-flask"></i><span>Lab</span></div>
+    <div class="nav-item" onclick="showTab('profile')"><i class="fas fa-user"></i><span>Profile</span></div>
 </div>
 
-<<<<<<< HEAD
-<!-- Login Modal -->
-=======
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
+<!-- LOGIN MODAL -->
 <div id="loginModal" class="modal">
     <div class="modal-content">
-        <h3>Login / Signup</h3>
-        <div class="form-group"><input type="text" id="regName" placeholder="Full Name"></div>
-        <div class="form-group"><input type="email" id="regEmail" placeholder="Email"></div>
-        <div class="form-group"><input type="password" id="regPassword" placeholder="Password"></div>
-        <div class="form-group"><input type="text" id="regPhone" placeholder="Phone"></div>
-        <button class="btn" onclick="register()">Sign Up / Login</button>
-<<<<<<< HEAD
-        <button class="btn btn-outline" onclick="closeLoginModal()">Cancel</button>
+        <h3 style="text-align:center; color:#1a5d7a;"><i class="fas fa-heartbeat"></i> LifeMed Account</h3>
+        <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="Enter your name"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="Enter email"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="regPassword" placeholder="Password (min 6 chars)"></div>
+        <div class="form-group"><label>Phone</label><input type="text" id="regPhone" placeholder="Mobile number"></div>
+        <button class="btn" onclick="register()"><i class="fas fa-user-plus"></i> Sign Up / Login</button>
+        <button class="btn btn-outline" onclick="closeLoginModal()" style="margin-top:10px;">Cancel</button>
     </div>
 </div>
 
-<!-- Cart Modal -->
+<!-- CART MODAL -->
 <div id="cartModal" class="modal">
-    <div class="modal-content">
-        <h3>Your Cart</h3>
-        <div id="cartItemsList"></div>
-        <div id="cartTotalAmount" class="total-row"></div>
-        <button class="btn" onclick="showCheckout()">Proceed to Checkout</button>
-        <button class="btn btn-outline" onclick="closeCart()">Continue Shopping</button>
-    </div>
+    <div class="modal-content"><h3><i class="fas fa-shopping-cart"></i> Your Cart</h3><div id="cartItemsList"></div><div id="cartTotalAmount" class="total-row"></div><button class="btn" onclick="showCheckout()">Proceed to Checkout</button><button class="btn btn-outline" onclick="closeCart()">Continue Shopping</button></div>
 </div>
 
-<!-- Checkout Modal -->
+<!-- CHECKOUT MODAL -->
 <div id="checkoutModal" class="modal">
-    <div class="modal-content">
-        <h3>Order Summary</h3>
-        <div id="orderSummaryItems"></div>
-        <div class="form-group"><label>Delivery Address</label><textarea id="orderAddress" rows="2" placeholder="Enter full address"></textarea></div>
-        <div class="form-group"><label>Phone</label><input type="text" id="orderPhone" placeholder="Phone number"></div>
-        <div id="orderFinalTotal" class="total-row"></div>
-        <button class="btn" onclick="placeOrder()">Confirm Order</button>
-        <button class="btn btn-outline" onclick="closeCheckout()">Back</button>
-    </div>
-</div>
-=======
-        <button class="btn" onclick="closeLoginModal()" style="background:#ccc;">Cancel</button>
-    </div>
+    <div class="modal-content"><h3><i class="fas fa-truck"></i> Checkout</h3><div id="orderSummaryItems"></div><div class="form-group"><label>Delivery Address</label><textarea id="orderAddress" rows="2" placeholder="Enter full address"></textarea></div><div class="form-group"><label>Phone</label><input type="text" id="orderPhone" placeholder="Phone number"></div><div id="orderFinalTotal" class="total-row"></div><button class="btn" onclick="placeOrder()">Confirm Order</button><button class="btn btn-outline" onclick="closeCheckout()">Back</button></div>
 </div>
 
-<div id="cartModal" class="modal">
-    <div class="modal-content">
-        <h3>Your Cart</h3>
-        <div id="cartItems"></div>
-        <div id="cartTotal"></div>
-        <button class="btn" onclick="checkout()">Checkout</button>
-        <button class="btn" onclick="closeCart()">Close</button>
-    </div>
+<!-- APPOINTMENT MODAL -->
+<div id="appointmentModal" class="modal">
+    <div class="modal-content"><h3><i class="fas fa-calendar-check"></i> Book Appointment</h3><div id="aptDoctorInfo"></div><div class="form-group"><label>Patient Name</label><input type="text" id="aptPatientName"></div><div class="form-group"><label>Date</label><input type="date" id="aptDate"></div><div class="form-group"><label>Time</label><select id="aptTime"><option>10:00 AM</option><option>11:00 AM</option><option>12:00 PM</option><option>02:00 PM</option><option>03:00 PM</option><option>04:00 PM</option></select></div><div class="form-group"><label>Symptoms</label><textarea id="aptSymptoms" rows="2"></textarea></div><button class="btn" onclick="submitAppointment()">Book Appointment</button><button class="btn btn-outline" onclick="closeAppointmentModal()">Cancel</button></div>
 </div>
 
-<div id="toast" class="toast"></div>
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
-
-<div id="successModal" class="modal">
-    <div class="modal-content" style="text-align:center">
-        <h2>✅ Order Placed!</h2>
-        <p>Your order has been confirmed.</p>
-        <button class="btn" onclick="closeSuccess()">Continue Shopping</button>
-    </div>
+<!-- LAB BOOKING MODAL -->
+<div id="labBookingModal" class="modal">
+    <div class="modal-content"><h3><i class="fas fa-flask"></i> Book Lab Test</h3><div id="labTestInfo"></div><div class="form-group"><label>Patient Name</label><input type="text" id="labPatientName"></div><div class="form-group"><label>Preferred Date</label><input type="date" id="labDate"></div><div class="form-group"><label>Time</label><select id="labTime"><option>Morning (9-12)</option><option>Afternoon (12-4)</option><option>Evening (4-8)</option></select></div><button class="btn" onclick="submitLabBooking()">Book Test</button><button class="btn btn-outline" onclick="closeLabBookingModal()">Cancel</button></div>
 </div>
 
+<div id="successModal" class="modal"><div class="modal-content" style="text-align:center"><i class="fas fa-check-circle" style="font-size:60px; color:#2e7d64;"></i><h3>Order Placed!</h3><p>Your order has been confirmed</p><button class="btn" onclick="closeSuccess()">Continue Shopping</button></div></div>
 <div id="toast" class="toast"></div>
 
 <script>
@@ -155,291 +300,138 @@
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     let user = JSON.parse(localStorage.getItem('user') || '{}');
     let token = localStorage.getItem('token');
+    let selectedDoctor = null, selectedLabTest = null;
 
-    function showToast(msg) {
-        let t = document.getElementById('toast');
-        t.innerText = msg;
-        t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 2000);
-    }
-
-    function updateCartCount() {
-        let c = cart.reduce((s,i)=>s+i.qty,0);
-        document.getElementById('cartCount').innerText = c;
-        localStorage.setItem('cart', JSON.stringify(cart));
-    }
-
-    function updateQuantity(index, delta) {
-        let newQty = cart[index].qty + delta;
-        if (newQty < 1) return;
-        cart[index].qty = newQty;
-        updateCartCount();
-        showCart(); // refresh cart view
-    }
-
-    function removeItem(index) {
-        cart.splice(index,1);
-        updateCartCount();
-        showCart();
-    }
-
+    function showToast(msg) { let t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
+    function updateCartCount() { let c = cart.reduce((s,i)=>s+i.qty,0); document.getElementById('cartCount').innerText = c; localStorage.setItem('cart', JSON.stringify(cart)); }
+    
     function addToCart(p) {
         let existing = cart.find(i => i.id === p.id);
-<<<<<<< HEAD
-        if (existing) existing.qty++;
+        if(existing) existing.qty++;
         else cart.push({id:p.id, name:p.name, price:p.pricePerUnit, qty:1});
         updateCartCount();
         showToast('✓ Added to cart');
     }
-
+    
+    function updateQuantity(idx, delta) { let newQty = cart[idx].qty + delta; if(newQty<1) return; cart[idx].qty = newQty; updateCartCount(); showCart(); }
+    function removeItem(idx) { cart.splice(idx,1); updateCartCount(); showCart(); }
+    
     function showCart() {
         let container = document.getElementById('cartItemsList');
-        if (cart.length === 0) container.innerHTML = '<p>Cart is empty</p>';
+        if(cart.length===0) container.innerHTML = '<p>Cart is empty</p>';
         else {
             container.innerHTML = '';
-            cart.forEach((item, idx) => {
-                container.innerHTML += `
-                    <div class="cart-item">
-                        <div><strong>${item.name}</strong><br>₹${item.price} x ${item.qty}</div>
-                        <div>
-                            <button class="qty-btn" onclick="updateQuantity(${idx}, -1)">-</button>
-                            <span style="min-width:25px; display:inline-block; text-align:center">${item.qty}</span>
-                            <button class="qty-btn" onclick="updateQuantity(${idx}, 1)">+</button>
-                            <button onclick="removeItem(${idx})" style="background:#e76f51; border:none; border-radius:20px; padding:5px 12px; margin-left:8px; color:white;">X</button>
-                        </div>
-                    </div>
-                `;
+            cart.forEach((item,idx) => {
+                container.innerHTML += `<div class="cart-item"><div><strong>${item.name}</strong><br>₹${item.price} x ${item.qty}</div><div><button class="qty-btn" onclick="updateQuantity(${idx},-1)">-</button> <span style="min-width:25px; display:inline-block; text-align:center">${item.qty}</span> <button class="qty-btn" onclick="updateQuantity(${idx},1)">+</button> <button onclick="removeItem(${idx})" style="background:#e76f51; border:none; border-radius:20px; padding:5px 12px; color:white; margin-left:8px;">X</button></div></div>`;
             });
         }
         let total = cart.reduce((s,i)=>s+(i.price*i.qty),0);
         document.getElementById('cartTotalAmount').innerHTML = `Total: ₹${total}`;
-=======
-        if(existing) existing.qty++;
-        else cart.push({id:p.id, name:p.name, price:p.pricePerUnit, qty:1});
-        updateCartCount();
-        showToast('Added to cart!');
-    }
-
-    function showCart() {
-        let container = document.getElementById('cartItems');
-        if(cart.length === 0) container.innerHTML = '<p>Cart empty</p>';
-        else {
-            container.innerHTML = '';
-            cart.forEach((item, idx) => {
-                container.innerHTML += `<div style="padding:8px; border-bottom:1px solid #ddd;">
-                    ${item.name} x${item.qty} = ₹${item.price * item.qty}
-                    <button onclick="removeItem(${idx})">X</button>
-                </div>`;
-            });
-        }
-        let total = cart.reduce((s,i)=>s+(i.price*i.qty),0);
-        document.getElementById('cartTotal').innerHTML = `<strong>Total: ₹${total}</strong>`;
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
         document.getElementById('cartModal').style.display = 'flex';
     }
-
     function closeCart() { document.getElementById('cartModal').style.display = 'none'; }
-<<<<<<< HEAD
-
-    function showCheckout() {
-        closeCart();
-        let container = document.getElementById('orderSummaryItems');
-        container.innerHTML = '';
-        cart.forEach(item => {
-            container.innerHTML += `<div class="cart-item"><div>${item.name} x${item.qty}</div><div>₹${item.price * item.qty}</div></div>`;
-        });
-        let total = cart.reduce((s,i)=>s+(i.price*i.qty),0);
-        document.getElementById('orderFinalTotal').innerHTML = `Total: ₹${total}`;
-        document.getElementById('checkoutModal').style.display = 'flex';
-    }
-
+    
+    function showCheckout() { closeCart(); let container = document.getElementById('orderSummaryItems'); container.innerHTML = ''; cart.forEach(item => { container.innerHTML += `<div class="cart-item"><div>${item.name} x${item.qty}</div><div>₹${item.price * item.qty}</div></div>`; }); let total = cart.reduce((s,i)=>s+(i.price*i.qty),0); document.getElementById('orderFinalTotal').innerHTML = `Total: ₹${total}`; document.getElementById('checkoutModal').style.display = 'flex'; }
     function closeCheckout() { document.getElementById('checkoutModal').style.display = 'none'; }
-
+    
     async function placeOrder() {
         let address = document.getElementById('orderAddress').value;
         let phone = document.getElementById('orderPhone').value;
-        if (!address || !phone) { showToast('Enter address and phone'); return; }
-        
-        let orderData = {
-            userId: user.id || 'guest',
-            products: cart.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })),
-            totalAmount: cart.reduce((s,i)=>s+(i.price*i.qty),0),
-            shippingAddress: address,
-            phoneNumber: phone
-        };
-        
-        let res = await fetch(API+'/orders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderData)
-        });
+        if(!address || !phone) { showToast('Enter address and phone'); return; }
+        let orderData = { userId: user.id || 'guest', products: cart.map(i=>({id:i.id, name:i.name, qty:i.qty, price:i.price})), totalAmount: cart.reduce((s,i)=>s+(i.price*i.qty),0), shippingAddress: address, phoneNumber: phone };
+        let res = await fetch(API+'/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) });
         let data = await res.json();
-        if (data.success) {
-            cart = [];
-            updateCartCount();
-            closeCheckout();
-            document.getElementById('successModal').style.display = 'flex';
-            showToast('Order placed successfully!');
-        } else showToast('Order failed');
+        if(data.success) { cart = []; updateCartCount(); closeCheckout(); document.getElementById('successModal').style.display = 'flex'; showToast('Order placed!'); }
+        else showToast('Order failed');
     }
-
     function closeSuccess() { document.getElementById('successModal').style.display = 'none'; }
-
-    // Auth functions
+    
+    // Auth
     function showLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
     function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
-
-=======
-    function removeItem(idx) { cart.splice(idx,1); updateCartCount(); showCart(); }
-    function checkout() { closeCart(); showToast('Order placed!'); cart = []; updateCartCount(); }
-
-    function showLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
-    function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
-
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
+    
     async function register() {
-        let name = document.getElementById('regName').value;
-        let email = document.getElementById('regEmail').value;
-        let password = document.getElementById('regPassword').value;
-<<<<<<< HEAD
-        if (!name || !email || !password) { showToast('Fill all fields'); return; }
-=======
+        let name = document.getElementById('regName').value, email = document.getElementById('regEmail').value, password = document.getElementById('regPassword').value, phone = document.getElementById('regPhone').value;
         if(!name || !email || !password) { showToast('Fill all fields'); return; }
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
-        
-        let res = await fetch(API+'/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password, phone: document.getElementById('regPhone').value })
-        });
+        let res = await fetch(API+'/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, phone }) });
         let data = await res.json();
-<<<<<<< HEAD
-        if (data.success) {
-=======
-        if(data.success) {
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
-            token = data.token; user = data.user;
-            localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user));
-            updateUI(); closeLoginModal(); showToast('Welcome ' + user.name);
-        } else {
-            let loginRes = await fetch(API+'/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
+        if(data.success) { token = data.token; user = data.user; localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user)); updateUI(); closeLoginModal(); showToast('Welcome ' + user.name); }
+        else {
+            let loginRes = await fetch(API+'/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
             let loginData = await loginRes.json();
-<<<<<<< HEAD
-            if (loginData.success) {
-                token = loginData.token; user = loginData.user;
-                localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user));
-                updateUI(); closeLoginModal(); showToast('Welcome back ' + user.name);
-            } else showToast('Login failed');
-=======
-            if(loginData.success) {
-                token = loginData.token; user = loginData.user;
-                localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user));
-                updateUI(); closeLoginModal(); showToast('Welcome back ' + user.name);
-            } else { showToast('Login failed'); }
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
+            if(loginData.success) { token = loginData.token; user = loginData.user; localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user)); updateUI(); closeLoginModal(); showToast('Welcome back ' + user.name); }
+            else showToast('Login failed');
         }
     }
-
-    function logout() {
-        localStorage.removeItem('token'); localStorage.removeItem('user');
-        token = null; user = {};
-        updateUI(); showToast('Logged out');
-<<<<<<< HEAD
-    }
-
-    function updateUI() {
-        document.getElementById('userName').innerText = user.name || 'Guest';
-        document.getElementById('userStatus').innerText = user.name ? 'Logged in' : 'Not logged in';
-    }
-
-    // Load data
-    async function loadProducts() {
-        let res = await fetch(API+'/products');
+    
+    function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); token=null; user={}; updateUI(); showToast('Logged out'); }
+    function updateUI() { document.getElementById('userName').innerText = user.name || 'Guest'; document.getElementById('profileName').innerText = user.name || 'Guest User'; document.getElementById('profileEmail').innerText = user.email || 'Not logged in'; }
+    
+    // Appointment
+    function bookDoctor(doctor) { if(!user.name) { showToast('Please login first'); showLoginModal(); return; } selectedDoctor=doctor; document.getElementById('aptDoctorInfo').innerHTML = `<div class="card"><strong>${doctor.name}</strong><br>${doctor.specialty}<br>Fees: ₹${doctor.fees}</div>`; document.getElementById('aptPatientName').value = user.name; document.getElementById('aptDate').value = ''; document.getElementById('aptSymptoms').value = ''; document.getElementById('appointmentModal').style.display = 'flex'; }
+    function closeAppointmentModal() { document.getElementById('appointmentModal').style.display = 'none'; selectedDoctor=null; }
+    async function submitAppointment() {
+        let apt = { doctorId: selectedDoctor.id, doctorName: selectedDoctor.name, specialty: selectedDoctor.specialty, fees: selectedDoctor.fees, patientName: document.getElementById('aptPatientName').value, date: document.getElementById('aptDate').value, time: document.getElementById('aptTime').value, symptoms: document.getElementById('aptSymptoms').value, status: 'pending', userId: user.id };
+        let res = await fetch(API+'/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(apt) });
         let data = await res.json();
-        if (data.success) {
-            let html = '', allHtml = '';
-            data.products.slice(0,4).forEach(p => {
-                html += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.pricePerUnit}</div><span class="badge">${p.unitType || 'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
-            });
-            data.products.forEach(p => {
-                allHtml += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.pricePerUnit}</div><span class="badge">${p.unitType || 'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
-            });
-            document.getElementById('productsList').innerHTML = html;
-=======
+        if(data.success) { showToast('✓ Appointment booked!'); closeAppointmentModal(); loadMyAppointments(); }
+        else showToast('Booking failed');
     }
-
-    function updateUI() {
-        if(user.name) {
-            document.getElementById('userName').innerText = user.name;
-            document.getElementById('userStatus').innerText = 'Logged in';
-        } else {
-            document.getElementById('userName').innerText = 'Guest';
-            document.getElementById('userStatus').innerText = 'Not logged in';
-        }
-    }
-
-    async function loadProducts() {
-        let res = await fetch(API+'/products');
+    
+    // Lab Test
+    function bookLabTest(test) { if(!user.name) { showToast('Please login first'); showLoginModal(); return; } selectedLabTest=test; document.getElementById('labTestInfo').innerHTML = `<div class="card"><strong>${test.name}</strong><br>Price: ₹${test.price}</div>`; document.getElementById('labPatientName').value = user.name; document.getElementById('labDate').value = ''; document.getElementById('labBookingModal').style.display = 'flex'; }
+    function closeLabBookingModal() { document.getElementById('labBookingModal').style.display = 'none'; selectedLabTest=null; }
+    async function submitLabBooking() {
+        let booking = { testId: selectedLabTest.id, testName: selectedLabTest.name, price: selectedLabTest.price, patientName: document.getElementById('labPatientName').value, date: document.getElementById('labDate').value, time: document.getElementById('labTime').value, status: 'pending', userId: user.id };
+        let res = await fetch(API+'/lab-bookings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(booking) });
         let data = await res.json();
+        if(data.success) { showToast('✓ Lab test booked!'); closeLabBookingModal(); loadMyLabBookings(); }
+        else showToast('Booking failed');
+    }
+    
+    // Load Data
+    async function loadProducts() {
+        let res = await fetch(API+'/products'); let data = await res.json();
         if(data.success) {
-            let html = '';
-            data.products.slice(0,4).forEach(p => {
-                html += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.pricePerUnit}</div><span class="badge">${p.unitType || 'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
-            });
-            document.getElementById('productsList').innerHTML = html;
-            let allHtml = '';
-            data.products.forEach(p => {
-                allHtml += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.pricePerUnit}</div><span class="badge">${p.unitType || 'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
-            });
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
-            document.getElementById('allProductsList').innerHTML = allHtml;
+            let html = '', allHtml = '';
+            data.products.slice(0,4).forEach(p => { html += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.pricePerUnit}</div><span class="badge">${p.unitType||'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`; });
+            data.products.forEach(p => { allHtml += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.pricePerUnit}</div><span class="badge">${p.unitType||'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`; });
+            document.getElementById('productsList').innerHTML = html; document.getElementById('allProductsList').innerHTML = allHtml;
         }
     }
-
+    function filterProducts() { let search = document.getElementById('searchProd').value.toLowerCase(); let cards = document.querySelectorAll('#allProductsList .card'); cards.forEach(c => { let name = c.querySelector('strong').innerText.toLowerCase(); c.style.display = name.includes(search) ? 'block' : 'none'; }); }
+    document.getElementById('searchProd')?.addEventListener('keyup', filterProducts);
+    
     async function loadDoctors() {
-        let res = await fetch(API+'/doctors');
-        let data = await res.json();
-<<<<<<< HEAD
-        if (data.success) {
-            let html = '', allHtml = '';
-            data.doctors.slice(0,3).forEach(d => {
-                html += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br>₹${d.fees}</div>`;
-            });
-            data.doctors.forEach(d => {
-                allHtml += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br>₹${d.fees}</div>`;
-            });
-            document.getElementById('doctorsList').innerHTML = html;
-=======
+        let res = await fetch(API+'/doctors'); let data = await res.json();
         if(data.success) {
-            let html = '';
-            data.doctors.slice(0,3).forEach(d => {
-                html += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br>₹${d.fees}</div>`;
-            });
-            document.getElementById('doctorsList').innerHTML = html;
-            let allHtml = '';
-            data.doctors.forEach(d => {
-                allHtml += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br>₹${d.fees}</div>`;
-            });
->>>>>>> cd80e5366809848c95312659be248ab3f209f10a
-            document.getElementById('allDoctorsList').innerHTML = allHtml;
+            let html = '', allHtml = '';
+            data.doctors.slice(0,3).forEach(d => { html += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br><span class="price">₹${d.fees}</span><button class="btn btn-outline" onclick='bookDoctor(${JSON.stringify(d)})'>Book Appointment</button></div>`; });
+            data.doctors.forEach(d => { allHtml += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br><span class="price">₹${d.fees}</span><button class="btn btn-outline" onclick='bookDoctor(${JSON.stringify(d)})'>Book Appointment</button></div>`; });
+            document.getElementById('doctorsList').innerHTML = html; document.getElementById('allDoctorsList').innerHTML = allHtml;
         }
     }
-
-    function showTab(tab) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(tab).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        event.target.classList.add('active');
+    
+    async function loadLabTests() {
+        let res = await fetch(API+'/lab-tests'); let data = await res.json();
+        if(data.success && data.labTests) {
+            let html = '';
+            data.labTests.forEach(t => { html += `<div class="card"><strong>${t.name}</strong><div class="price">₹${t.price}</div><button class="btn btn-outline" onclick='bookLabTest(${JSON.stringify(t)})'>Book Test</button></div>`; });
+            document.getElementById('labTestsList').innerHTML = html;
+        }
     }
-
-    loadProducts();
-    loadDoctors();
-    updateCartCount();
-    updateUI();
+    
+    async function loadMyOrders() { let res = await fetch(API+'/orders'); let data = await res.json(); if(data.success && user.id) { let myOrders = data.orders.filter(o => o.userId === user.id); document.getElementById('myOrdersList').innerHTML = myOrders.length ? myOrders.map(o => `<div class="cart-item">Order #${o.id.slice(-6)} - ₹${o.totalAmount} - ${o.status}</div>`).join('') : 'No orders'; } }
+    async function loadMyAppointments() { let res = await fetch(API+'/appointments'); let data = await res.json(); if(data.success && user.id) { let myAppts = data.appointments.filter(a => a.userId === user.id); document.getElementById('myAppointmentsList').innerHTML = myAppts.length ? myAppts.map(a => `<div class="cart-item">${a.doctorName} on ${a.date} - ${a.status}</div>`).join('') : 'No appointments'; } }
+    async function loadMyLabBookings() { let res = await fetch(API+'/lab-bookings'); let data = await res.json(); if(data.success && user.id) { let myBookings = data.bookings.filter(b => b.userId === user.id); document.getElementById('myLabBookingsList').innerHTML = myBookings.length ? myBookings.map(b => `<div class="cart-item">${b.testName} on ${b.date} - ${b.status}</div>`).join('') : 'No lab bookings'; } }
+    
+    function showTab(tab) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.getElementById(tab).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); event.target.classList.add('active');
+        if(tab === 'profile') { loadMyOrders(); loadMyAppointments(); loadMyLabBookings(); }
+    }
+    
+    loadProducts(); loadDoctors(); loadLabTests(); updateCartCount(); updateUI();
 </script>
 </body>
 </html>
