@@ -12,10 +12,9 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
-// ========== CREATE UPLOADS FOLDER ==========
+// ========== IMAGE UPLOAD ==========
 if (!fs.existsSync('./uploads')) fs.mkdirSync('./uploads');
 
-// ========== IMAGE UPLOAD ==========
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
@@ -46,8 +45,8 @@ if (db.products.length === 0) {
         { id: 2, name: "Panadol", pricePerUnit: 120, totalStock: 500, unitType: "strip", imageUrl: "" }
     ];
     db.doctors = [
-        { id: 1, name: "Dr. Ahmed", specialty: "Cardiologist", fees: 1500 },
-        { id: 2, name: "Dr. Fatima", specialty: "Dermatologist", fees: 1200 }
+        { id: 1, name: "Dr. Ahmed", specialty: "Cardiologist", fees: 1500, imageUrl: "" },
+        { id: 2, name: "Dr. Fatima", specialty: "Dermatologist", fees: 1200, imageUrl: "" }
     ];
     db.labTests = [
         { id: 1, name: "CBC", price: 500 },
@@ -89,14 +88,7 @@ app.post('/api/auth/register', async (req, res) => {
     let db = readDB();
     const { name, email, password, phone } = req.body;
     if (db.users.find(u => u.email === email)) return res.status(400).json({ success: false });
-    const user = {
-        id: Date.now(),
-        name,
-        email,
-        password: await bcrypt.hash(password, 10),
-        phone,
-        role: 'user'
-    };
+    const user = { id: Date.now(), name, email, password: await bcrypt.hash(password, 10), phone, role: 'user' };
     db.users.push(user);
     writeDB(db);
     const token = jwt.sign({ id: user.id, role: user.role }, 'secret');
@@ -120,12 +112,7 @@ app.get('/api/lab-tests', (req, res) => res.json({ success: true, labTests: read
 
 app.post('/api/orders', (req, res) => {
     let db = readDB();
-    const order = {
-        id: Date.now(),
-        ...req.body,
-        orderDate: new Date(),
-        status: 'confirmed'
-    };
+    const order = { id: Date.now(), ...req.body, orderDate: new Date(), status: 'confirmed' };
     order.products?.forEach(item => {
         const p = db.products.find(p => p.id === item.id);
         if (p) p.totalStock -= item.qty;
@@ -217,7 +204,6 @@ app.delete('/api/admin/doctors/:id', auth, (req, res) => {
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-// ========== START SERVER ==========
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Server on port ${PORT}`);
