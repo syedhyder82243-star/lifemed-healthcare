@@ -1,65 +1,39 @@
 const express = require('express');
 const cors = require('cors');
-const multer = require('multer');
 const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
-app.use('/uploads', express.static('uploads'));
 
-// Create data folder
+// Database setup
+const DB_PATH = './data/db.json';
 if (!fs.existsSync('./data')) fs.mkdirSync('./data');
 
-// Database file path
-const DB_PATH = './data/db.json';
-
-// Init database
 if (!fs.existsSync(DB_PATH)) {
     fs.writeFileSync(DB_PATH, JSON.stringify({
-        products: [],
-        doctors: [],
-        orders: [],
-        appointments: [],
-        labTests: [],
-        labBookings: []
+        products: [{ id: 1, name: "Baby Pampers", pricePerUnit: 850, totalStock: 100, unitType: "pack" }],
+        doctors: [{ id: 1, name: "Dr. Ahmed", specialty: "Cardiologist", fees: 1500 }],
+        orders: [], appointments: [], labTests: [], labBookings: []
     }));
 }
 
-// Helper functions
 const getDB = () => JSON.parse(fs.readFileSync(DB_PATH));
 const saveDB = (data) => fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
 
-// Add sample data
-let db = getDB();
-if (db.products.length === 0) {
-    db.products = [
-        { id: 1, name: "Baby Pampers", category: "baby", pricePerUnit: 850, totalStock: 100, unitType: "pack" },
-        { id: 2, name: "Panadol", category: "medicine", pricePerUnit: 120, totalStock: 500, unitType: "strip" }
-    ];
-    db.doctors = [
-        { id: 1, name: "Dr. Ahmed", specialty: "Cardiologist", fees: 1500 },
-        { id: 2, name: "Dr. Fatima", specialty: "Dermatologist", fees: 1200 }
-    ];
-    saveDB(db);
-    console.log("Sample data added");
-}
-
-// ========== API ROUTES ==========
-
-// Products
+// Products API
 app.get('/api/products', (req, res) => {
-    const db = getDB();
-    res.json({ success: true, products: db.products });
+    res.json({ success: true, products: getDB().products });
 });
 
 app.post('/api/products', (req, res) => {
     const db = getDB();
-    const newProduct = { id: Date.now(), ...req.body };
-    db.products.push(newProduct);
+    const product = { id: Date.now(), ...req.body };
+    db.products.push(product);
     saveDB(db);
-    res.json({ success: true, product: newProduct });
+    res.json({ success: true, product });
 });
 
 app.delete('/api/products/:id', (req, res) => {
@@ -69,18 +43,17 @@ app.delete('/api/products/:id', (req, res) => {
     res.json({ success: true });
 });
 
-// Doctors
+// Doctors API
 app.get('/api/doctors', (req, res) => {
-    const db = getDB();
-    res.json({ success: true, doctors: db.doctors });
+    res.json({ success: true, doctors: getDB().doctors });
 });
 
 app.post('/api/doctors', (req, res) => {
     const db = getDB();
-    const newDoctor = { id: Date.now(), ...req.body };
-    db.doctors.push(newDoctor);
+    const doctor = { id: Date.now(), ...req.body };
+    db.doctors.push(doctor);
     saveDB(db);
-    res.json({ success: true, doctor: newDoctor });
+    res.json({ success: true, doctor });
 });
 
 app.delete('/api/doctors/:id', (req, res) => {
@@ -90,10 +63,9 @@ app.delete('/api/doctors/:id', (req, res) => {
     res.json({ success: true });
 });
 
-// Orders
+// Orders API
 app.get('/api/orders', (req, res) => {
-    const db = getDB();
-    res.json({ success: true, orders: db.orders.reverse() });
+    res.json({ success: true, orders: getDB().orders.reverse() });
 });
 
 app.post('/api/orders', (req, res) => {
@@ -104,10 +76,9 @@ app.post('/api/orders', (req, res) => {
     res.json({ success: true, order });
 });
 
-// Appointments
+// Appointments API
 app.get('/api/appointments', (req, res) => {
-    const db = getDB();
-    res.json({ success: true, appointments: db.appointments });
+    res.json({ success: true, appointments: getDB().appointments });
 });
 
 app.post('/api/appointments', (req, res) => {
@@ -118,32 +89,14 @@ app.post('/api/appointments', (req, res) => {
     res.json({ success: true, appointment: apt });
 });
 
-// Lab Tests
-app.get('/api/lab-tests', (req, res) => {
+app.put('/api/appointments/:id/status', (req, res) => {
     const db = getDB();
-    res.json({ success: true, labTests: db.labTests });
-});
-
-app.post('/api/lab-tests', (req, res) => {
-    const db = getDB();
-    const test = { id: Date.now(), ...req.body };
-    db.labTests.push(test);
-    saveDB(db);
-    res.json({ success: true, labTest: test });
-});
-
-// Lab Bookings
-app.get('/api/lab-bookings', (req, res) => {
-    const db = getDB();
-    res.json({ success: true, bookings: db.labBookings });
-});
-
-app.post('/api/lab-bookings', (req, res) => {
-    const db = getDB();
-    const booking = { id: Date.now(), ...req.body };
-    db.labBookings.push(booking);
-    saveDB(db);
-    res.json({ success: true, booking });
+    const index = db.appointments.findIndex(a => a.id == req.params.id);
+    if (index !== -1) {
+        db.appointments[index].status = req.body.status;
+        saveDB(db);
+    }
+    res.json({ success: true });
 });
 
 // Stats
@@ -162,20 +115,16 @@ app.get('/api/stats', (req, res) => {
     });
 });
 
-// Low stock
 app.get('/api/low-stock', (req, res) => {
-    const db = getDB();
-    res.json({ success: true, products: db.products.filter(p => p.totalStock < 10) });
+    res.json({ success: true, products: getDB().products.filter(p => p.totalStock < 10) });
 });
 
-// Upload
-const upload = multer({ dest: 'uploads/' });
-app.post('/api/upload', upload.single('image'), (req, res) => {
-    res.json({ success: true, imageUrl: `/uploads/${req.file.filename}` });
+// Health check for Railway
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
 });
 
-// Start server
-const PORT = 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
 });
