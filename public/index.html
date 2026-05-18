@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+<<<<<<< HEAD
         body { font-family: Arial; background: #e8f5e9; padding-bottom: 70px; }
+=======
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #e8f5e9; padding-bottom: 70px; }
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
         .header { background: #1a5d7a; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; }
         .logo-icon { background: #ffd700; border-radius: 50%; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
@@ -17,18 +21,26 @@
         .price { font-size: 18px; font-weight: bold; color: #1a7a6e; }
         .badge { background: #ffd700; color: #1a5d7a; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
         .btn { background: #1a5d7a; color: white; border: none; padding: 8px; border-radius: 20px; width: 100%; margin-top: 8px; cursor: pointer; }
+<<<<<<< HEAD
         .btn-outline { background: white; border: 1px solid #1a5d7a; color: #1a5d7a; }
+=======
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
         .contact-card { background: #1a5d7a; color: white; border-radius: 12px; padding: 15px; margin-top: 15px; text-align: center; font-size: 12px; }
         .row { display: flex; gap: 10px; overflow-x: auto; }
         .row .card { min-width: 200px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
         .modal-content { background: white; width: 90%; max-width: 380px; border-radius: 15px; padding: 20px; }
         .form-group { margin-bottom: 12px; }
+<<<<<<< HEAD
         .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
         .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 16px; border-radius: 20px; display: none; }
         .qty-btn { background: #ddd; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; }
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; }
         .total-row { font-weight: bold; text-align: right; padding: 10px; border-top: 2px solid #ddd; margin-top: 10px; }
+=======
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 16px; border-radius: 20px; display: none; }
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
     </style>
 </head>
 <body>
@@ -70,7 +82,10 @@
     <div class="nav-item" onclick="showTab('profile')">👤 Profile</div>
 </div>
 
+<<<<<<< HEAD
 <!-- Login Modal -->
+=======
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
 <div id="loginModal" class="modal">
     <div class="modal-content">
         <h3>Login / Signup</h3>
@@ -79,6 +94,7 @@
         <div class="form-group"><input type="password" id="regPassword" placeholder="Password"></div>
         <div class="form-group"><input type="text" id="regPhone" placeholder="Phone"></div>
         <button class="btn" onclick="register()">Sign Up / Login</button>
+<<<<<<< HEAD
         <button class="btn btn-outline" onclick="closeLoginModal()">Cancel</button>
     </div>
 </div>
@@ -106,6 +122,23 @@
         <button class="btn btn-outline" onclick="closeCheckout()">Back</button>
     </div>
 </div>
+=======
+        <button class="btn" onclick="closeLoginModal()" style="background:#ccc;">Cancel</button>
+    </div>
+</div>
+
+<div id="cartModal" class="modal">
+    <div class="modal-content">
+        <h3>Your Cart</h3>
+        <div id="cartItems"></div>
+        <div id="cartTotal"></div>
+        <button class="btn" onclick="checkout()">Checkout</button>
+        <button class="btn" onclick="closeCart()">Close</button>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
 
 <div id="successModal" class="modal">
     <div class="modal-content" style="text-align:center">
@@ -152,6 +185,7 @@
 
     function addToCart(p) {
         let existing = cart.find(i => i.id === p.id);
+<<<<<<< HEAD
         if (existing) existing.qty++;
         else cart.push({id:p.id, name:p.name, price:p.pricePerUnit, qty:1});
         updateCartCount();
@@ -179,10 +213,33 @@
         }
         let total = cart.reduce((s,i)=>s+(i.price*i.qty),0);
         document.getElementById('cartTotalAmount').innerHTML = `Total: ₹${total}`;
+=======
+        if(existing) existing.qty++;
+        else cart.push({id:p.id, name:p.name, price:p.pricePerUnit, qty:1});
+        updateCartCount();
+        showToast('Added to cart!');
+    }
+
+    function showCart() {
+        let container = document.getElementById('cartItems');
+        if(cart.length === 0) container.innerHTML = '<p>Cart empty</p>';
+        else {
+            container.innerHTML = '';
+            cart.forEach((item, idx) => {
+                container.innerHTML += `<div style="padding:8px; border-bottom:1px solid #ddd;">
+                    ${item.name} x${item.qty} = ₹${item.price * item.qty}
+                    <button onclick="removeItem(${idx})">X</button>
+                </div>`;
+            });
+        }
+        let total = cart.reduce((s,i)=>s+(i.price*i.qty),0);
+        document.getElementById('cartTotal').innerHTML = `<strong>Total: ₹${total}</strong>`;
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
         document.getElementById('cartModal').style.display = 'flex';
     }
 
     function closeCart() { document.getElementById('cartModal').style.display = 'none'; }
+<<<<<<< HEAD
 
     function showCheckout() {
         closeCart();
@@ -232,11 +289,23 @@
     function showLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
     function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
 
+=======
+    function removeItem(idx) { cart.splice(idx,1); updateCartCount(); showCart(); }
+    function checkout() { closeCart(); showToast('Order placed!'); cart = []; updateCartCount(); }
+
+    function showLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
+    function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
     async function register() {
         let name = document.getElementById('regName').value;
         let email = document.getElementById('regEmail').value;
         let password = document.getElementById('regPassword').value;
+<<<<<<< HEAD
         if (!name || !email || !password) { showToast('Fill all fields'); return; }
+=======
+        if(!name || !email || !password) { showToast('Fill all fields'); return; }
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
         
         let res = await fetch(API+'/auth/register', {
             method: 'POST',
@@ -244,7 +313,11 @@
             body: JSON.stringify({ name, email, password, phone: document.getElementById('regPhone').value })
         });
         let data = await res.json();
+<<<<<<< HEAD
         if (data.success) {
+=======
+        if(data.success) {
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
             token = data.token; user = data.user;
             localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user));
             updateUI(); closeLoginModal(); showToast('Welcome ' + user.name);
@@ -255,11 +328,19 @@
                 body: JSON.stringify({ email, password })
             });
             let loginData = await loginRes.json();
+<<<<<<< HEAD
             if (loginData.success) {
                 token = loginData.token; user = loginData.user;
                 localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user));
                 updateUI(); closeLoginModal(); showToast('Welcome back ' + user.name);
             } else showToast('Login failed');
+=======
+            if(loginData.success) {
+                token = loginData.token; user = loginData.user;
+                localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user));
+                updateUI(); closeLoginModal(); showToast('Welcome back ' + user.name);
+            } else { showToast('Login failed'); }
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
         }
     }
 
@@ -267,6 +348,7 @@
         localStorage.removeItem('token'); localStorage.removeItem('user');
         token = null; user = {};
         updateUI(); showToast('Logged out');
+<<<<<<< HEAD
     }
 
     function updateUI() {
@@ -287,6 +369,33 @@
                 allHtml += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.pricePerUnit}</div><span class="badge">${p.unitType || 'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
             });
             document.getElementById('productsList').innerHTML = html;
+=======
+    }
+
+    function updateUI() {
+        if(user.name) {
+            document.getElementById('userName').innerText = user.name;
+            document.getElementById('userStatus').innerText = 'Logged in';
+        } else {
+            document.getElementById('userName').innerText = 'Guest';
+            document.getElementById('userStatus').innerText = 'Not logged in';
+        }
+    }
+
+    async function loadProducts() {
+        let res = await fetch(API+'/products');
+        let data = await res.json();
+        if(data.success) {
+            let html = '';
+            data.products.slice(0,4).forEach(p => {
+                html += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.pricePerUnit}</div><span class="badge">${p.unitType || 'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
+            });
+            document.getElementById('productsList').innerHTML = html;
+            let allHtml = '';
+            data.products.forEach(p => {
+                allHtml += `<div class="card"><strong>${p.name}</strong><div class="price">₹${p.pricePerUnit}</div><span class="badge">${p.unitType || 'unit'}</span><button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
+            });
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
             document.getElementById('allProductsList').innerHTML = allHtml;
         }
     }
@@ -294,6 +403,7 @@
     async function loadDoctors() {
         let res = await fetch(API+'/doctors');
         let data = await res.json();
+<<<<<<< HEAD
         if (data.success) {
             let html = '', allHtml = '';
             data.doctors.slice(0,3).forEach(d => {
@@ -303,6 +413,18 @@
                 allHtml += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br>₹${d.fees}</div>`;
             });
             document.getElementById('doctorsList').innerHTML = html;
+=======
+        if(data.success) {
+            let html = '';
+            data.doctors.slice(0,3).forEach(d => {
+                html += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br>₹${d.fees}</div>`;
+            });
+            document.getElementById('doctorsList').innerHTML = html;
+            let allHtml = '';
+            data.doctors.forEach(d => {
+                allHtml += `<div class="card"><strong>${d.name}</strong><br>${d.specialty}<br>₹${d.fees}</div>`;
+            });
+>>>>>>> cd80e5366809848c95312659be248ab3f209f10a
             document.getElementById('allDoctorsList').innerHTML = allHtml;
         }
     }
