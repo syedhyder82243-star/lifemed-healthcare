@@ -1,0 +1,56 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Baby Pampers",
+      "pricePerUnit": 850,
+      "totalStock": 100,
+      "unitType": "pack"
+    },
+    {
+      "id": 2,
+      "name": "Panadol",
+      "pricePerUnit": 120,
+      "totalStock": 500,
+      "unitType": "strip"
+    }
+  ],
+  "doctors": [
+    {
+      "id": 1,
+      "name": "Dr. Ahmed",
+      "specialty": "Cardiologist",
+      "fees": 1500
+    },
+    {
+      "id": 2,
+      "name": "Dr. Fatima",
+      "specialty": "Dermatologist",
+      "fees": 1200
+    }
+  ],
+  "orders": [],
+  "appointments": [],
+  "labTests": [
+    {
+      "id": 1,
+      "name": "CBC",
+      "price": 500
+    },
+    {
+      "id": 2,
+      "name": "Blood Sugar",
+      "price": 200
+    }
+  ],
+  "labBookings": [],
+  "users": [
+    {
+      "id": 1779123226065,
+      "name": "Admin",
+      "email": "admin@lifemed.com",
+      "password": "$2a$10$P9pbqSAYC6QSwd2pEwouOeUA957bMq1LKaluakd/N/M6MoqZQhVU6",
+      "role": "admin"
+    }
+  ]
+}
