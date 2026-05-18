@@ -1,50 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Login - LifeMed</title>
+    <title>Admin Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial; background: #e8f5e9; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .login-box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); width: 350px; text-align: center; }
-        h2 { color: #1a5d7a; margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
-        button { background: #1a5d7a; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-size: 16px; }
-        button:hover { background: #2e7d64; }
+        body { font-family: Arial; background: #e8f5e9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: white; padding: 30px; border-radius: 15px; width: 320px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background: #1a5d7a; color: white; border: none; border-radius: 5px; cursor: pointer; }
         .error { color: red; margin-top: 10px; }
-        .logo { font-size: 24px; font-weight: bold; color: #1a5d7a; margin-bottom: 20px; }
-        .logo span { color: #ffd700; }
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <div class="logo">LifeMed <span>Health Care</span></div>
+    <div class="box">
         <h2>Admin Login</h2>
-        <input type="email" id="email" placeholder="Email" value="admin@lifemed.com">
-        <input type="password" id="password" placeholder="Password" value="admin123">
+        <input type="email" id="email" placeholder="admin@lifemed.com" value="admin@lifemed.com">
+        <input type="password" id="password" placeholder="admin123" value="admin123">
         <button onclick="login()">Login</button>
-        <div id="errorMsg" class="error"></div>
+        <div id="error" class="error"></div>
     </div>
-
     <script>
         const API = 'https://lifemed-healthcare.onrender.com/api';
-        
         async function login() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            const response = await fetch(`${API}/auth/login`, {
+            let res = await fetch(API+'/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email: document.getElementById('email').value, password: document.getElementById('password').value })
             });
-            const data = await response.json();
-            
-            if (data.success) {
+            let data = await res.json();
+            if(data.success) {
                 localStorage.setItem('adminToken', data.token);
-                localStorage.setItem('adminRole', data.role);
-                window.location.href = '/admin.html';
+                window.location.href = 'admin.html';
             } else {
-                document.getElementById('errorMsg').innerText = data.message || 'Login failed';
+                document.getElementById('error').innerText = 'Invalid credentials';
             }
         }
     </script>
