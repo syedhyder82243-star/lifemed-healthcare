@@ -146,5 +146,50 @@ app.put('/api/auth/profile', auth, async (req, res) => {
 app.get('/api/low-stock', (req, res) => res.json({ success: true, products: readDB().products.filter(p => p.totalStock < 10) }));
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+// ========== CHANGE PASSWORD ==========
+app.put('/api/auth/change-password', auth, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    let db = readDB();
+    const userIndex = db.users.findIndex(u => u.id === req.user.id);
+    if (userIndex === -1) return res.status(404).json({ success: false, message: 'User not found' });
+    
+    const isValid = await bcrypt.compare(currentPassword, db.users[userIndex].password);
+    if (!isValid) return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    
+    db.users[userIndex].password = await bcrypt.hash(newPassword, 10);
+    writeDB(db);
+    res.json({ success: true, message: 'Password changed successfully' });
+});
+
+// ========== USER MANAGEMENT (Admin Only) ==========
+app.get('/api/admin/users', auth, adminAuth, (req, res) => {
+    const db = readDB();
+    const users = db.users.filter(u => u.role !== 'admin');
+    res.json({ success: true, users });
+});
+
+app.put('/api/admin/users/:id/status', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const index = db.users.findIndex(u => u.id == req.params.id);
+    if (index !== -1) {
+        db.users[index].status = req.body.status;
+        writeDB(db);
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ success: false });
+    }
+});
+
+app.delete('/api/admin/users/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.users = db.users.filter(u => u.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
+
+// Update stats to include users count
+// Modify existing /api/stats route - add totalUsers
+// In the stats route, add: totalUsers: db.users.filter(u => u.role !== 'admin').length
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => console.log(`✅ Server on port ${PORT}`));
