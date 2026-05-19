@@ -7,195 +7,47 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Poppins', 'Segoe UI', sans-serif; background: #f0f7f0; padding-bottom: 70px; }
-        
-        .header {
-            background: linear-gradient(135deg, #1a5d7a, #2e7d64);
-            color: white;
-            padding: 18px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; padding-bottom: 70px; }
+        .header { background: linear-gradient(135deg, #1a5d7a, #2e7d64); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .logo { display: flex; align-items: center; gap: 10px; }
-        .logo-icon {
-            background: #ffd700;
-            width: 42px; height: 42px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            color: #1a5d7a;
-        }
-        .logo-text h1 { font-size: 18px; font-weight: 700; }
+        .logo-icon { background: #ffd700; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1a5d7a; }
+        .logo-text h1 { font-size: 18px; }
         .logo-text span { color: #ffd700; }
-        .logo-text p { font-size: 9px; opacity: 0.9; }
-        .cart-badge {
-            background: #ffd700;
-            color: #1a5d7a;
-            padding: 8px 14px;
-            border-radius: 30px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .cart-badge:hover { transform: scale(1.05); }
-        
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-            z-index: 100;
-        }
-        .nav-item {
-            text-align: center;
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 30px;
-            transition: 0.3s;
-        }
+        .cart-badge { background: #ffd700; color: #1a5d7a; padding: 8px 14px; border-radius: 30px; cursor: pointer; font-weight: bold; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 100; }
+        .nav-item { text-align: center; cursor: pointer; padding: 5px; border-radius: 10px; }
         .nav-item.active { background: #1a5d7a20; color: #1a5d7a; }
         .nav-item i { font-size: 22px; }
-        .nav-item span { font-size: 11px; display: block; margin-top: 4px; }
-        
-        .section { display: none; padding: 20px; animation: fadeIn 0.4s; }
+        .nav-item span { font-size: 10px; display: block; }
+        .section { display: none; padding: 15px; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border-left: 4px solid #ffd700;
-            transition: 0.3s;
-            text-align: center;
-        }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        .product-img {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-bottom: 10px;
-        }
-        .doctor-img {
-            width: 70px;
-            height: 70px;
-            object-fit: cover;
-            border-radius: 50%;
-            margin-bottom: 10px;
-        }
-        .price { font-size: 20px; font-weight: 800; color: #2e7d64; }
-        .badge {
-            background: #ffd700;
-            color: #1a5d7a;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-block;
-        }
-        .btn {
-            background: linear-gradient(135deg, #1a5d7a, #2e7d64);
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 30px;
-            width: 100%;
-            margin-top: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-        .btn-outline { background: white; border: 1px solid #1a5d7a; color: #1a5d7a; }
-        .btn:hover { transform: scale(1.02); }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
-            z-index: 200;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background: white;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 28px;
-            padding: 25px;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #1a5d7a; }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            font-size: 14px;
-        }
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-        }
-        .qty-btn {
-            background: #ddd;
-            border: none;
-            width: 30px; height: 30px;
-            border-radius: 50%;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .total-row {
-            font-weight: bold;
-            text-align: right;
-            padding: 12px;
-            border-top: 2px solid #eee;
-            margin-top: 10px;
-        }
-        .contact-card {
-            background: linear-gradient(135deg, #1a5d7a, #2e7d64);
-            color: white;
-            border-radius: 20px;
-            padding: 18px;
-            text-align: center;
-            margin-top: 20px;
-        }
-        .toast {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 40px;
-            display: none;
-            z-index: 150;
-            font-size: 14px;
-        }
+        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .product-card { background: white; border-radius: 12px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: 0.3s; }
+        .product-card:hover { transform: translateY(-3px); }
+        .product-img { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; background: #f0f0f0; }
+        .product-title { font-size: 14px; font-weight: 600; margin: 8px 0; }
+        .product-price { font-size: 16px; font-weight: 800; color: #2e7d64; }
+        .product-unit { font-size: 11px; color: #888; }
+        .add-btn { background: linear-gradient(135deg, #1a5d7a, #2e7d64); color: white; border: none; padding: 8px; border-radius: 20px; width: 100%; margin-top: 8px; cursor: pointer; font-weight: 600; }
+        .doctor-card { background: white; border-radius: 12px; padding: 12px; text-align: center; }
+        .doctor-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto 8px; display: block; }
+        .doctor-name { font-weight: 700; }
+        .doctor-specialty { font-size: 12px; color: #666; }
+        .doctor-fees { font-size: 14px; font-weight: 700; color: #2e7d64; margin: 5px 0; }
         .row-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
-        .row-scroll .card { min-width: 200px; }
+        .row-scroll .product-card { min-width: 160px; }
+        .row-scroll .doctor-card { min-width: 140px; }
+        .contact-card { background: linear-gradient(135deg, #1a5d7a, #2e7d64); color: white; border-radius: 12px; padding: 15px; text-align: center; margin-top: 15px; font-size: 11px; }
+        .btn { background: #1a5d7a; color: white; border: none; padding: 10px; border-radius: 25px; width: 100%; cursor: pointer; }
+        .btn-outline { background: white; border: 1px solid #1a5d7a; color: #1a5d7a; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .cart-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; align-items: center; }
+        .qty-btn { background: #ddd; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 16px; border-radius: 20px; display: none; z-index: 150; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -203,20 +55,15 @@
 <div class="header">
     <div class="logo">
         <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
-        <div class="logo-text">
-            <h1>LifeMed <span>Health</span></h1>
-            <p>Together In Health, Together For Life</p>
-        </div>
+        <div class="logo-text"><h1>LifeMed <span>Health</span></h1><p>Together In Health, Together For Life</p></div>
     </div>
-    <div class="cart-badge" onclick="showCart()">
-        <i class="fas fa-shopping-cart"></i> <span id="cartCount">0</span>
-    </div>
+    <div class="cart-badge" onclick="showCart()"><i class="fas fa-shopping-cart"></i> <span id="cartCount">0</span></div>
 </div>
 
-<!-- HOME SECTION -->
 <div id="home" class="section active">
-    <h3 style="color:#1a5d7a; margin-bottom:15px;"><i class="fas fa-home"></i> Welcome, <span id="userName">Guest</span>!</h3>
+    <h3 style="margin-bottom:10px;">🛍️ Products</h3>
     <div class="row-scroll" id="productsList"></div>
+    <h3 style="margin:15px 0 10px;">👨‍⚕️ Top Doctors</h3>
     <div class="row-scroll" id="doctorsList"></div>
     <div class="contact-card">
         <i class="fas fa-map-marker-alt"></i> #123, Rajivnagar, Mysore - 570019<br>
@@ -225,42 +72,35 @@
     </div>
 </div>
 
-<!-- PRODUCTS SECTION -->
 <div id="products" class="section">
-    <h3 style="color:#1a5d7a;"><i class="fas fa-boxes"></i> All Products</h3>
-    <input type="text" id="searchProd" placeholder="🔍 Search products..." style="width:100%; padding:12px; margin:15px 0; border-radius:30px; border:1px solid #ddd;">
-    <div id="allProductsList"></div>
+    <h3>📦 All Products</h3>
+    <input type="text" id="searchProd" placeholder="🔍 Search products..." style="width:100%; padding:10px; margin:10px 0; border-radius:25px; border:1px solid #ddd;">
+    <div class="product-grid" id="allProductsList"></div>
 </div>
 
-<!-- DOCTORS SECTION -->
 <div id="doctors" class="section">
-    <h3 style="color:#1a5d7a;"><i class="fas fa-user-md"></i> Our Doctors</h3>
-    <div id="allDoctorsList"></div>
+    <h3>👨‍⚕️ Our Doctors</h3>
+    <div class="product-grid" id="allDoctorsList"></div>
 </div>
 
-<!-- LAB TESTS SECTION -->
 <div id="labtests" class="section">
-    <h3 style="color:#1a5d7a;"><i class="fas fa-flask"></i> Lab Tests</h3>
-    <div id="labTestsList"></div>
+    <h3>🔬 Lab Tests</h3>
+    <div class="product-grid" id="labTestsList"></div>
 </div>
 
-<!-- PROFILE SECTION -->
 <div id="profile" class="section">
-    <div class="card" style="text-align:center">
-        <div style="width:70px; height:70px; background:#1a5d7a; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px;">
-            <i class="fas fa-user" style="font-size:35px; color:#ffd700;"></i>
-        </div>
+    <div style="background:white; border-radius:12px; padding:15px; text-align:center;">
+        <div style="width:70px; height:70px; background:#1a5d7a; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto;"><i class="fas fa-user" style="font-size:35px; color:#ffd700;"></i></div>
         <h3 id="profileName">Guest User</h3>
         <p id="profileEmail">Not logged in</p>
-        <button class="btn btn-outline" onclick="showLoginModal()"><i class="fas fa-sign-in-alt"></i> Login / Signup</button>
-        <button class="btn btn-outline" onclick="logout()" style="margin-top:10px;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        <button class="btn btn-outline" onclick="showLoginModal()">Login / Signup</button>
+        <button class="btn btn-outline" onclick="logout()" style="margin-top:10px;">Logout</button>
     </div>
-    <div class="card"><h3><i class="fas fa-shopping-bag"></i> My Orders</h3><div id="myOrdersList">No orders yet</div></div>
-    <div class="card"><h3><i class="fas fa-calendar-check"></i> My Appointments</h3><div id="myAppointmentsList">No appointments yet</div></div>
-    <div class="card"><h3><i class="fas fa-flask"></i> My Lab Bookings</h3><div id="myLabBookingsList">No lab bookings yet</div></div>
+    <div style="background:white; border-radius:12px; padding:15px; margin-top:12px;"><h3>My Orders</h3><div id="myOrdersList">No orders</div></div>
+    <div style="background:white; border-radius:12px; padding:15px; margin-top:12px;"><h3>My Appointments</h3><div id="myAppointmentsList">No appointments</div></div>
+    <div style="background:white; border-radius:12px; padding:15px; margin-top:12px;"><h3>My Lab Bookings</h3><div id="myLabBookingsList">No lab bookings</div></div>
 </div>
 
-<!-- BOTTOM NAV -->
 <div class="bottom-nav">
     <div class="nav-item active" onclick="showTab('home')"><i class="fas fa-home"></i><span>Home</span></div>
     <div class="nav-item" onclick="showTab('products')"><i class="fas fa-box"></i><span>Products</span></div>
@@ -269,40 +109,17 @@
     <div class="nav-item" onclick="showTab('profile')"><i class="fas fa-user"></i><span>Profile</span></div>
 </div>
 
-<!-- LOGIN MODAL -->
-<div id="loginModal" class="modal">
-    <div class="modal-content">
-        <h3 style="text-align:center; color:#1a5d7a;"><i class="fas fa-heartbeat"></i> LifeMed Account</h3>
-        <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="Enter your name"></div>
-        <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="Enter email"></div>
-        <div class="form-group"><label>Password</label><input type="password" id="regPassword" placeholder="Password (min 6 chars)"></div>
-        <div class="form-group"><label>Phone</label><input type="text" id="regPhone" placeholder="Mobile number"></div>
-        <button class="btn" onclick="register()"><i class="fas fa-user-plus"></i> Sign Up / Login</button>
-        <button class="btn btn-outline" onclick="closeLoginModal()" style="margin-top:10px;">Cancel</button>
-    </div>
-</div>
+<div id="loginModal" class="modal"><div class="modal-content"><h3>Login / Signup</h3><div class="form-group"><input type="text" id="regName" placeholder="Full Name"></div><div class="form-group"><input type="email" id="regEmail" placeholder="Email"></div><div class="form-group"><input type="password" id="regPassword" placeholder="Password"></div><div class="form-group"><input type="text" id="regPhone" placeholder="Phone"></div><button class="btn" onclick="register()">Sign Up / Login</button><button class="btn btn-outline" onclick="closeLoginModal()">Cancel</button></div></div>
 
-<!-- CART MODAL -->
-<div id="cartModal" class="modal">
-    <div class="modal-content"><h3><i class="fas fa-shopping-cart"></i> Your Cart</h3><div id="cartItemsList"></div><div id="cartTotalAmount" class="total-row"></div><button class="btn" onclick="showCheckout()">Proceed to Checkout</button><button class="btn btn-outline" onclick="closeCart()">Continue Shopping</button></div>
-</div>
+<div id="cartModal" class="modal"><div class="modal-content"><h3>Cart</h3><div id="cartItemsList"></div><div id="cartTotalAmount" style="font-weight:bold; margin:10px 0;"></div><button class="btn" onclick="showCheckout()">Checkout</button><button class="btn btn-outline" onclick="closeCart()">Close</button></div></div>
 
-<!-- CHECKOUT MODAL -->
-<div id="checkoutModal" class="modal">
-    <div class="modal-content"><h3><i class="fas fa-truck"></i> Checkout</h3><div id="orderSummaryItems"></div><div class="form-group"><label>Delivery Address</label><textarea id="orderAddress" rows="2" placeholder="Enter full address"></textarea></div><div class="form-group"><label>Phone</label><input type="text" id="orderPhone" placeholder="Phone number"></div><div id="orderFinalTotal" class="total-row"></div><button class="btn" onclick="placeOrder()">Confirm Order</button><button class="btn btn-outline" onclick="closeCheckout()">Back</button></div>
-</div>
+<div id="checkoutModal" class="modal"><div class="modal-content"><h3>Checkout</h3><div id="orderSummaryItems"></div><div class="form-group"><label>Address</label><textarea id="orderAddress" rows="2"></textarea></div><div class="form-group"><label>Phone</label><input type="text" id="orderPhone"></div><div id="orderFinalTotal" style="font-weight:bold"></div><button class="btn" onclick="placeOrder()">Place Order</button><button class="btn btn-outline" onclick="closeCheckout()">Back</button></div></div>
 
-<!-- APPOINTMENT MODAL -->
-<div id="appointmentModal" class="modal">
-    <div class="modal-content"><h3><i class="fas fa-calendar-check"></i> Book Appointment</h3><div id="aptDoctorInfo"></div><div class="form-group"><label>Patient Name</label><input type="text" id="aptPatientName"></div><div class="form-group"><label>Date</label><input type="date" id="aptDate"></div><div class="form-group"><label>Time</label><select id="aptTime"><option>10:00 AM</option><option>11:00 AM</option><option>12:00 PM</option><option>02:00 PM</option><option>03:00 PM</option><option>04:00 PM</option></select></div><div class="form-group"><label>Symptoms</label><textarea id="aptSymptoms" rows="2"></textarea></div><button class="btn" onclick="submitAppointment()">Book Appointment</button><button class="btn btn-outline" onclick="closeAppointmentModal()">Cancel</button></div>
-</div>
+<div id="appointmentModal" class="modal"><div class="modal-content"><h3>Book Appointment</h3><div id="aptDoctorInfo"></div><div class="form-group"><label>Patient Name</label><input type="text" id="aptPatientName"></div><div class="form-group"><label>Date</label><input type="date" id="aptDate"></div><div class="form-group"><label>Time</label><select id="aptTime"><option>10:00 AM</option><option>11:00 AM</option><option>12:00 PM</option><option>02:00 PM</option><option>03:00 PM</option><option>04:00 PM</option></select></div><button class="btn" onclick="submitAppointment()">Book</button><button class="btn btn-outline" onclick="closeAppointmentModal()">Cancel</button></div></div>
 
-<!-- LAB BOOKING MODAL -->
-<div id="labBookingModal" class="modal">
-    <div class="modal-content"><h3><i class="fas fa-flask"></i> Book Lab Test</h3><div id="labTestInfo"></div><div class="form-group"><label>Patient Name</label><input type="text" id="labPatientName"></div><div class="form-group"><label>Preferred Date</label><input type="date" id="labDate"></div><div class="form-group"><label>Time</label><select id="labTime"><option>Morning (9-12)</option><option>Afternoon (12-4)</option><option>Evening (4-8)</option></select></div><button class="btn" onclick="submitLabBooking()">Book Test</button><button class="btn btn-outline" onclick="closeLabBookingModal()">Cancel</button></div>
-</div>
+<div id="labBookingModal" class="modal"><div class="modal-content"><h3>Book Lab Test</h3><div id="labTestInfo"></div><div class="form-group"><label>Patient Name</label><input type="text" id="labPatientName"></div><div class="form-group"><label>Date</label><input type="date" id="labDate"></div><button class="btn" onclick="submitLabBooking()">Book</button><button class="btn btn-outline" onclick="closeLabBookingModal()">Cancel</button></div></div>
 
-<div id="successModal" class="modal"><div class="modal-content" style="text-align:center"><i class="fas fa-check-circle" style="font-size:60px; color:#2e7d64;"></i><h3>Order Placed!</h3><p>Your order has been confirmed</p><button class="btn" onclick="closeSuccess()">Continue Shopping</button></div></div>
+<div id="successModal" class="modal"><div class="modal-content" style="text-align:center"><i class="fas fa-check-circle" style="font-size:50px; color:#2e7d64;"></i><h3>Order Placed!</h3><button class="btn" onclick="closeSuccess()">OK</button></div></div>
 <div id="toast" class="toast"></div>
 
 <script>
@@ -319,8 +136,7 @@
         let existing = cart.find(i => i.id === p.id);
         if(existing) existing.qty++;
         else cart.push({id:p.id, name:p.name, price:p.pricePerUnit, qty:1});
-        updateCartCount();
-        showToast('✓ Added to cart');
+        updateCartCount(); showToast('✓ Added');
     }
     
     function updateQuantity(idx, delta) { let newQty = cart[idx].qty + delta; if(newQty<1) return; cart[idx].qty = newQty; updateCartCount(); showCart(); }
@@ -328,11 +144,11 @@
     
     function showCart() {
         let container = document.getElementById('cartItemsList');
-        if(cart.length===0) container.innerHTML = '<p>Cart is empty</p>';
+        if(cart.length===0) container.innerHTML = '<p>Cart empty</p>';
         else {
             container.innerHTML = '';
             cart.forEach((item,idx) => {
-                container.innerHTML += `<div class="cart-item"><div><strong>${item.name}</strong><br>₹${item.price} x ${item.qty}</div><div><button class="qty-btn" onclick="updateQuantity(${idx},-1)">-</button> <span style="min-width:25px; display:inline-block; text-align:center">${item.qty}</span> <button class="qty-btn" onclick="updateQuantity(${idx},1)">+</button> <button onclick="removeItem(${idx})" style="background:#e76f51; border:none; border-radius:20px; padding:5px 12px; color:white; margin-left:8px;">X</button></div></div>`;
+                container.innerHTML += `<div class="cart-item"><div><strong>${item.name}</strong><br>₹${item.price} x ${item.qty}</div><div><button class="qty-btn" onclick="updateQuantity(${idx},-1)">-</button> ${item.qty} <button class="qty-btn" onclick="updateQuantity(${idx},1)">+</button> <button onclick="removeItem(${idx})" style="background:#e76f51; border:none; border-radius:15px; padding:5px 10px; margin-left:8px;">X</button></div></div>`;
             });
         }
         let total = cart.reduce((s,i)=>s+(i.price*i.qty),0);
@@ -341,7 +157,7 @@
     }
     function closeCart() { document.getElementById('cartModal').style.display = 'none'; }
     
-    function showCheckout() { closeCart(); let container = document.getElementById('orderSummaryItems'); container.innerHTML = ''; cart.forEach(item => { container.innerHTML += `<div class="cart-item"><div>${item.name} x${item.qty}</div><div>₹${item.price * item.qty}</div></div>`; }); let total = cart.reduce((s,i)=>s+(i.price*i.qty),0); document.getElementById('orderFinalTotal').innerHTML = `Total: ₹${total}`; document.getElementById('checkoutModal').style.display = 'flex'; }
+    function showCheckout() { closeCart(); let container = document.getElementById('orderSummaryItems'); container.innerHTML = ''; cart.forEach(item => { container.innerHTML += `<div class="cart-item"><div>${item.name} x${item.qty}</div><div>₹${item.price*item.qty}</div></div>`; }); let total = cart.reduce((s,i)=>s+(i.price*i.qty),0); document.getElementById('orderFinalTotal').innerHTML = `Total: ₹${total}`; document.getElementById('checkoutModal').style.display = 'flex'; }
     function closeCheckout() { document.getElementById('checkoutModal').style.display = 'none'; }
     
     async function placeOrder() {
@@ -349,144 +165,64 @@
         let phone = document.getElementById('orderPhone').value;
         if(!address || !phone) { showToast('Enter address and phone'); return; }
         let orderData = { userId: user.id || 'guest', products: cart.map(i=>({id:i.id, name:i.name, qty:i.qty, price:i.price})), totalAmount: cart.reduce((s,i)=>s+(i.price*i.qty),0), shippingAddress: address, phoneNumber: phone };
-        let res = await fetch(API+'/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) });
+        let res = await fetch(API+'/orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(orderData) });
         let data = await res.json();
         if(data.success) { cart = []; updateCartCount(); closeCheckout(); document.getElementById('successModal').style.display = 'flex'; showToast('Order placed!'); }
-        else showToast('Order failed');
+        else showToast('Failed');
     }
     function closeSuccess() { document.getElementById('successModal').style.display = 'none'; }
     
-    // Auth
     function showLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
     function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
     
     async function register() {
-        let name = document.getElementById('regName').value, email = document.getElementById('regEmail').value, password = document.getElementById('regPassword').value, phone = document.getElementById('regPhone').value;
-        if(!name || !email || !password) { showToast('Fill all fields'); return; }
-        let res = await fetch(API+'/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, phone }) });
+        let name=document.getElementById('regName').value, email=document.getElementById('regEmail').value, password=document.getElementById('regPassword').value, phone=document.getElementById('regPhone').value;
+        if(!name||!email||!password) { showToast('Fill all fields'); return; }
+        let res = await fetch(API+'/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name,email,password,phone}) });
         let data = await res.json();
-        if(data.success) { token = data.token; user = data.user; localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user)); updateUI(); closeLoginModal(); showToast('Welcome ' + user.name); }
+        if(data.success) { token=data.token; user=data.user; localStorage.setItem('token',token); localStorage.setItem('user',JSON.stringify(user)); updateUI(); closeLoginModal(); showToast('Welcome '+user.name); }
         else {
-            let loginRes = await fetch(API+'/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+            let loginRes = await fetch(API+'/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
             let loginData = await loginRes.json();
-            if(loginData.success) { token = loginData.token; user = loginData.user; localStorage.setItem('token', token); localStorage.setItem('user', JSON.stringify(user)); updateUI(); closeLoginModal(); showToast('Welcome back ' + user.name); }
+            if(loginData.success) { token=loginData.token; user=loginData.user; localStorage.setItem('token',token); localStorage.setItem('user',JSON.stringify(user)); updateUI(); closeLoginModal(); showToast('Welcome back'); }
             else showToast('Login failed');
         }
     }
     
     function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); token=null; user={}; updateUI(); showToast('Logged out'); }
-    function updateUI() { document.getElementById('userName').innerText = user.name || 'Guest'; document.getElementById('profileName').innerText = user.name || 'Guest User'; document.getElementById('profileEmail').innerText = user.email || 'Not logged in'; }
+    function updateUI() { document.getElementById('profileName').innerText = user.name || 'Guest User'; document.getElementById('profileEmail').innerText = user.email || 'Not logged in'; }
     
-    // Appointment
-    function bookDoctor(doctor) { if(!user.name) { showToast('Please login first'); showLoginModal(); return; } selectedDoctor=doctor; document.getElementById('aptDoctorInfo').innerHTML = `<div class="card"><strong>${doctor.name}</strong><br>${doctor.specialty}<br>Fees: ₹${doctor.fees}</div>`; document.getElementById('aptPatientName').value = user.name; document.getElementById('aptDate').value = ''; document.getElementById('aptSymptoms').value = ''; document.getElementById('appointmentModal').style.display = 'flex'; }
-    function closeAppointmentModal() { document.getElementById('appointmentModal').style.display = 'none'; selectedDoctor=null; }
+    function bookDoctor(doctor) { if(!user.name) { showToast('Login first'); showLoginModal(); return; } selectedDoctor=doctor; document.getElementById('aptDoctorInfo').innerHTML = `<strong>${doctor.name}</strong><br>${doctor.specialty}<br>₹${doctor.fees}`; document.getElementById('aptPatientName').value = user.name; document.getElementById('aptDate').value = ''; document.getElementById('appointmentModal').style.display = 'flex'; }
+    function closeAppointmentModal() { document.getElementById('appointmentModal').style.display = 'none'; }
     async function submitAppointment() {
-        let apt = { doctorId: selectedDoctor.id, doctorName: selectedDoctor.name, specialty: selectedDoctor.specialty, fees: selectedDoctor.fees, patientName: document.getElementById('aptPatientName').value, date: document.getElementById('aptDate').value, time: document.getElementById('aptTime').value, symptoms: document.getElementById('aptSymptoms').value, status: 'pending', userId: user.id };
-        let res = await fetch(API+'/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(apt) });
+        let apt = { doctorId:selectedDoctor.id, doctorName:selectedDoctor.name, specialty:selectedDoctor.specialty, fees:selectedDoctor.fees, patientName:document.getElementById('aptPatientName').value, date:document.getElementById('aptDate').value, time:document.getElementById('aptTime').value, status:'pending', userId:user.id };
+        let res = await fetch(API+'/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(apt) });
         let data = await res.json();
         if(data.success) { showToast('✓ Appointment booked!'); closeAppointmentModal(); loadMyAppointments(); }
         else showToast('Booking failed');
     }
     
-    // Lab Test
-    function bookLabTest(test) { if(!user.name) { showToast('Please login first'); showLoginModal(); return; } selectedLabTest=test; document.getElementById('labTestInfo').innerHTML = `<div class="card"><strong>${test.name}</strong><br>Price: ₹${test.price}</div>`; document.getElementById('labPatientName').value = user.name; document.getElementById('labDate').value = ''; document.getElementById('labBookingModal').style.display = 'flex'; }
-    function closeLabBookingModal() { document.getElementById('labBookingModal').style.display = 'none'; selectedLabTest=null; }
+    function bookLabTest(test) { if(!user.name) { showToast('Login first'); showLoginModal(); return; } selectedLabTest=test; document.getElementById('labTestInfo').innerHTML = `<strong>${test.name}</strong><br>₹${test.price}`; document.getElementById('labPatientName').value = user.name; document.getElementById('labDate').value = ''; document.getElementById('labBookingModal').style.display = 'flex'; }
+    function closeLabBookingModal() { document.getElementById('labBookingModal').style.display = 'none'; }
     async function submitLabBooking() {
-        let booking = { testId: selectedLabTest.id, testName: selectedLabTest.name, price: selectedLabTest.price, patientName: document.getElementById('labPatientName').value, date: document.getElementById('labDate').value, time: document.getElementById('labTime').value, status: 'pending', userId: user.id };
-        let res = await fetch(API+'/lab-bookings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(booking) });
+        let booking = { testId:selectedLabTest.id, testName:selectedLabTest.name, price:selectedLabTest.price, patientName:document.getElementById('labPatientName').value, date:document.getElementById('labDate').value, status:'pending', userId:user.id };
+        let res = await fetch(API+'/lab-bookings', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(booking) });
         let data = await res.json();
         if(data.success) { showToast('✓ Lab test booked!'); closeLabBookingModal(); loadMyLabBookings(); }
         else showToast('Booking failed');
     }
     
-    // Load Data with Images
     async function loadProducts() {
-        let res = await fetch(API+'/products'); 
-        let data = await res.json();
+        let res = await fetch(API+'/products'); let data = await res.json();
         if(data.success) {
             let html = '', allHtml = '';
-            data.products.slice(0,4).forEach(p => {
-                let imgUrl = p.imageUrl && p.imageUrl.startsWith('/uploads') ? p.imageUrl : '';
-                html += `<div class="card">
-                    ${imgUrl ? `<img src="${imgUrl}" class="product-img" onerror="this.style.display='none'">` : '<div class="product-img" style="background:#ffd700; display:flex; align-items:center; justify-content:center; font-size:30px;">📦</div>'}
-                    <strong>${p.name}</strong>
-                    <div class="price">₹${p.pricePerUnit}</div>
-                    <span class="badge">${p.unitType||'unit'}</span>
-                    <button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button>
-                </div>`;
+            data.products.slice(0,6).forEach(p => {
+                html += `<div class="product-card"><img src="${p.imageUrl || 'https://placehold.co/200x150?text='+encodeURIComponent(p.name)}" class="product-img" onerror="this.src='https://placehold.co/200x150?text=Product'"><div class="product-title">${p.name}</div><div class="product-price">₹${p.pricePerUnit}</div><div class="product-unit">${p.unitType||'unit'}</div><button class="add-btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
             });
             data.products.forEach(p => {
-                let imgUrl = p.imageUrl && p.imageUrl.startsWith('/uploads') ? p.imageUrl : '';
-                allHtml += `<div class="card">
-                    ${imgUrl ? `<img src="${imgUrl}" class="product-img" onerror="this.style.display='none'">` : '<div class="product-img" style="background:#ffd700; display:flex; align-items:center; justify-content:center; font-size:30px;">📦</div>'}
-                    <strong>${p.name}</strong>
-                    <div class="price">₹${p.pricePerUnit}</div>
-                    <span class="badge">${p.unitType||'unit'}</span>
-                    <button class="btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button>
-                </div>`;
+                allHtml += `<div class="product-card"><img src="${p.imageUrl || 'https://placehold.co/200x150?text='+encodeURIComponent(p.name)}" class="product-img" onerror="this.src='https://placehold.co/200x150?text=Product'"><div class="product-title">${p.name}</div><div class="product-price">₹${p.pricePerUnit}</div><div class="product-unit">${p.unitType||'unit'}</div><button class="add-btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
             });
-            document.getElementById('productsList').innerHTML = html; 
-            document.getElementById('allProductsList').innerHTML = allHtml;
+            document.getElementById('productsList').innerHTML = html; document.getElementById('allProductsList').innerHTML = allHtml;
         }
     }
-    
-    function filterProducts() { let search = document.getElementById('searchProd').value.toLowerCase(); let cards = document.querySelectorAll('#allProductsList .card'); cards.forEach(c => { let name = c.querySelector('strong').innerText.toLowerCase(); c.style.display = name.includes(search) ? 'block' : 'none'; }); }
-    document.getElementById('searchProd')?.addEventListener('keyup', filterProducts);
-    
-    async function loadDoctors() {
-        let res = await fetch(API+'/doctors'); 
-        let data = await res.json();
-        if(data.success) {
-            let html = '', allHtml = '';
-            data.doctors.slice(0,3).forEach(d => {
-                let imgUrl = d.imageUrl && d.imageUrl.startsWith('/uploads') ? d.imageUrl : '';
-                html += `<div class="card">
-                    ${imgUrl ? `<img src="${imgUrl}" class="doctor-img" onerror="this.style.display='none'">` : '<div class="doctor-img" style="background:#ffd700; display:flex; align-items:center; justify-content:center; font-size:25px;">👨‍⚕️</div>'}
-                    <strong>${d.name}</strong><br>${d.specialty}<br><span class="price">₹${d.fees}</span>
-                    <button class="btn btn-outline" onclick='bookDoctor(${JSON.stringify(d)})'>Book Appointment</button>
-                </div>`;
-            });
-            data.doctors.forEach(d => {
-                let imgUrl = d.imageUrl && d.imageUrl.startsWith('/uploads') ? d.imageUrl : '';
-                allHtml += `<div class="card">
-                    ${imgUrl ? `<img src="${imgUrl}" class="doctor-img" onerror="this.style.display='none'">` : '<div class="doctor-img" style="background:#ffd700; display:flex; align-items:center; justify-content:center; font-size:25px;">👨‍⚕️</div>'}
-                    <strong>${d.name}</strong><br>${d.specialty}<br><span class="price">₹${d.fees}</span>
-                    <button class="btn btn-outline" onclick='bookDoctor(${JSON.stringify(d)})'>Book Appointment</button>
-                </div>`;
-            });
-            document.getElementById('doctorsList').innerHTML = html; 
-            document.getElementById('allDoctorsList').innerHTML = allHtml;
-        }
-    }
-    
-    async function loadLabTests() {
-        let res = await fetch(API+'/lab-tests'); 
-        let data = await res.json();
-        if(data.success && data.labTests) {
-            let html = '';
-            data.labTests.forEach(t => { 
-                html += `<div class="card">
-                    <div style="font-size:30px;">🔬</div>
-                    <strong>${t.name}</strong>
-                    <div class="price">₹${t.price}</div>
-                    <button class="btn btn-outline" onclick='bookLabTest(${JSON.stringify(t)})'>Book Test</button>
-                </div>`; 
-            });
-            document.getElementById('labTestsList').innerHTML = html;
-        }
-    }
-    
-    async function loadMyOrders() { let res = await fetch(API+'/orders'); let data = await res.json(); if(data.success && user.id) { let myOrders = data.orders.filter(o => o.userId === user.id); document.getElementById('myOrdersList').innerHTML = myOrders.length ? myOrders.map(o => `<div class="cart-item">Order #${o.id.slice(-6)} - ₹${o.totalAmount} - ${o.status}</div>`).join('') : 'No orders'; } }
-    async function loadMyAppointments() { let res = await fetch(API+'/appointments'); let data = await res.json(); if(data.success && user.id) { let myAppts = data.appointments.filter(a => a.userId === user.id); document.getElementById('myAppointmentsList').innerHTML = myAppts.length ? myAppts.map(a => `<div class="cart-item">${a.doctorName} on ${a.date} - ${a.status}</div>`).join('') : 'No appointments'; } }
-    async function loadMyLabBookings() { let res = await fetch(API+'/lab-bookings'); let data = await res.json(); if(data.success && user.id) { let myBookings = data.bookings.filter(b => b.userId === user.id); document.getElementById('myLabBookingsList').innerHTML = myBookings.length ? myBookings.map(b => `<div class="cart-item">${b.testName} on ${b.date} - ${b.status}</div>`).join('') : 'No lab bookings'; } }
-    
-    function showTab(tab) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.getElementById(tab).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); event.target.classList.add('active');
-        if(tab === 'profile') { loadMyOrders(); loadMyAppointments(); loadMyLabBookings(); }
-    }
-    
-    loadProducts(); loadDoctors(); loadLabTests(); updateCartCount(); updateUI();
-</script>
-</body>
-</html>
+    function filterProducts() { let s=document.getElementById('searchProd').value.toLowerCase(); let cards=document.querySelectorAll('#allProductsList .product-card'); cards.forEach(c=>{ let name=c.querySelector('.product

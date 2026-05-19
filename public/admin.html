@@ -13,22 +13,20 @@
         .sidebar-item.active { background: #ffd700; color: #1a5d7a; }
         .main-content { margin-left: 250px; padding: 20px; }
         .form-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; display: inline-block; width: 48%; margin-right: 2%; }
+        .form-group { margin-bottom: 15px; }
         .form-group-full { width: 100%; }
         label { display: block; font-weight: bold; margin-bottom: 5px; }
         input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
         .btn { background: #1a5d7a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
         .data-table { background: white; border-radius: 10px; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
-        th { background: #1a5d7a; color: white; padding: 10px; }
+        th { background: #1a5d7a; color: white; padding: 10px; text-align: left; }
         td { padding: 10px; border-bottom: 1px solid #eee; }
         .section { display: none; }
         .section.active { display: block; }
         .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: white; padding: 15px; border-radius: 10px; text-align: center; }
-        .image-preview img { width: 60px; border-radius: 8px; }
         .product-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
-        .doctor-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
     </style>
 </head>
 <body>
@@ -58,56 +56,37 @@
 
     <div id="products" class="section">
         <div class="form-card">
-            <h2>Add Product with Image</h2>
+            <h2>Add Product</h2>
             <div class="form-group"><label>Name</label><input type="text" id="prodName"></div>
             <div class="form-group"><label>Category</label><select id="prodCategory"><option>medicine</option><option>baby</option><option>skincare</option></select></div>
             <div class="form-group"><label>Price</label><input type="number" id="prodPrice"></div>
             <div class="form-group"><label>Stock</label><input type="number" id="prodStock"></div>
             <div class="form-group"><label>Unit</label><input type="text" id="prodUnit"></div>
-            <div class="form-group-full">
-                <label>Product Image</label>
-                <input type="file" id="prodImage" accept="image/*" onchange="previewProductImage(event)">
-                <div id="productImagePreview" class="image-preview"></div>
-            </div>
+            <div class="form-group-full"><label>Image URL</label><input type="text" id="prodImageUrl" placeholder="https://..."></div>
             <div class="form-group-full"><label>Description</label><textarea id="prodDesc" rows="2"></textarea></div>
-            <button class="btn" onclick="addProductWithImage()">Add Product</button>
+            <button class="btn" onclick="addProduct()">Add Product</button>
         </div>
         <div class="data-table">
             <h2>All Products</h2>
-            </table><thead>运转<th>Image</th><th>Name</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead>
-            <tbody id="productsList"></tbody>
-        </table>
+            <table id="productsTable"><thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead><tbody id="productsList"></tbody></table>
         </div>
     </div>
 
     <div id="doctors" class="section">
         <div class="form-card">
-            <h2>Add Doctor with Image</h2>
+            <h2>Add Doctor</h2>
             <div class="form-group"><label>Name</label><input type="text" id="docName"></div>
             <div class="form-group"><label>Specialty</label><input type="text" id="docSpecialty"></div>
             <div class="form-group"><label>Fees</label><input type="number" id="docFees"></div>
-            <div class="form-group-full">
-                <label>Doctor Image</label>
-                <input type="file" id="docImage" accept="image/*" onchange="previewDoctorImage(event)">
-                <div id="doctorImagePreview" class="image-preview"></div>
-            </div>
-            <button class="btn" onclick="addDoctorWithImage()">Add Doctor</button>
+            <div class="form-group-full"><label>Image URL</label><input type="text" id="docImageUrl" placeholder="https://..."></div>
+            <button class="btn" onclick="addDoctor()">Add Doctor</button>
         </div>
-        <div class="data-table">
-            <h2>All Doctors</h2>
-            </table><thead><tr><th>Image</th><th>Name</th><th>Specialty</th><th>Fees</th><th>Action</th></tr></thead>
-            <tbody id="doctorsList"></tbody>
-        </table>
-        </div>
+        <div class="data-table"><h2>All Doctors</h2><table><thead><tr><th>Image</th><th>Name</th><th>Specialty</th><th>Fees</th><th>Action</th></tr></thead><tbody id="doctorsList"></tbody></table></div>
     </div>
 
-    <div id="orders" class="section">
-        <div class="data-table"><h2>Orders</h2><table><thead><tr><th>ID</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersList"></tbody></table></div>
-    </div>
+    <div id="orders" class="section"><div class="data-table"><h2>Orders</h2><table><thead><tr><th>ID</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersList"></tbody></table></div></div>
 
-    <div id="appointments" class="section">
-        <div class="data-table"><h2>Appointments</h2><table><thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead><tbody id="appointmentsList"></tbody></table></div>
-    </div>
+    <div id="appointments" class="section"><div class="data-table"><h2>Appointments</h2><table><thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead><tbody id="appointmentsList"></tbody></table></div></div>
 </div>
 
 <script>
@@ -116,10 +95,7 @@
     if (!token) window.location.href = 'login.html';
 
     async function fetchAPI(url, options = {}) {
-        const res = await fetch(url, {
-            ...options,
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers }
-        });
+        const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
         if (res.status === 401) { localStorage.removeItem('adminToken'); window.location.href = 'login.html'; }
         return await res.json();
     }
@@ -146,26 +122,7 @@
         }
     }
 
-    // Product Image
-    function previewProductImage(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = e => document.getElementById('productImagePreview').innerHTML = `<img src="${e.target.result}">`;
-            reader.readAsDataURL(file);
-        }
-    }
-
-    async function addProductWithImage() {
-        const file = document.getElementById('prodImage').files[0];
-        let imageUrl = '';
-        if (file) {
-            const fd = new FormData();
-            fd.append('image', file);
-            const uploadRes = await fetch(`${API}/upload`, { method: 'POST', body: fd });
-            const uploadData = await uploadRes.json();
-            if (uploadData.success) imageUrl = uploadData.imageUrl;
-        }
+    async function addProduct() {
         const product = {
             name: document.getElementById('prodName').value,
             category: document.getElementById('prodCategory').value,
@@ -173,19 +130,18 @@
             totalStock: parseInt(document.getElementById('prodStock').value),
             unitType: document.getElementById('prodUnit').value,
             description: document.getElementById('prodDesc').value,
-            imageUrl
+            imageUrl: document.getElementById('prodImageUrl').value || ''
         };
-        if (!product.name || !product.pricePerUnit) { alert('Fill all fields'); return; }
+        if (!product.name || !product.pricePerUnit) { alert('Fill required fields'); return; }
         const res = await fetchAPI(`${API}/admin/products`, { method: 'POST', body: JSON.stringify(product) });
-        if (res.success) { alert('Product added!'); loadProducts(); document.getElementById('prodImage').value = ''; document.getElementById('productImagePreview').innerHTML = ''; }
+        if (res.success) { alert('Product added!'); loadProducts(); loadStats(); }
     }
 
     async function loadProducts() {
-        const res = await fetch(`${API}/products`);
-        const data = await res.json();
-        if (data.success) {
+        const res = await fetchAPI(`${API}/products`);
+        if (res.success) {
             let html = '';
-            data.products.forEach(p => {
+            res.products.forEach(p => {
                 html += `<tr><td>${p.imageUrl ? `<img src="${p.imageUrl}" class="product-img">` : '📷'}</td><td>${p.name}</td><td>₹${p.pricePerUnit}</td><td>${p.totalStock}</td><td><button onclick="deleteProduct(${p.id})">Delete</button></td></tr>`;
             });
             document.getElementById('productsList').innerHTML = html;
@@ -193,74 +149,50 @@
     }
 
     async function deleteProduct(id) {
-        if (confirm('Delete?')) await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' });
-        loadProducts(); loadStats();
+        if (confirm('Delete?')) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' }); loadProducts(); loadStats(); }
     }
 
-    // Doctor Image
-    function previewDoctorImage(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = e => document.getElementById('doctorImagePreview').innerHTML = `<img src="${e.target.result}">`;
-            reader.readAsDataURL(file);
-        }
-    }
-
-    async function addDoctorWithImage() {
-        const file = document.getElementById('docImage').files[0];
-        let imageUrl = '';
-        if (file) {
-            const fd = new FormData();
-            fd.append('image', file);
-            const uploadRes = await fetch(`${API}/upload`, { method: 'POST', body: fd });
-            const uploadData = await uploadRes.json();
-            if (uploadData.success) imageUrl = uploadData.imageUrl;
-        }
+    async function addDoctor() {
         const doctor = {
             name: document.getElementById('docName').value,
             specialty: document.getElementById('docSpecialty').value,
             fees: parseFloat(document.getElementById('docFees').value),
-            imageUrl
+            imageUrl: document.getElementById('docImageUrl').value || ''
         };
-        if (!doctor.name || !doctor.fees) { alert('Fill all fields'); return; }
+        if (!doctor.name || !doctor.fees) { alert('Fill required fields'); return; }
         const res = await fetchAPI(`${API}/admin/doctors`, { method: 'POST', body: JSON.stringify(doctor) });
-        if (res.success) { alert('Doctor added!'); loadDoctors(); document.getElementById('docImage').value = ''; document.getElementById('doctorImagePreview').innerHTML = ''; }
+        if (res.success) { alert('Doctor added!'); loadDoctors(); loadStats(); }
     }
 
     async function loadDoctors() {
-        const res = await fetch(`${API}/doctors`);
-        const data = await res.json();
-        if (data.success) {
+        const res = await fetchAPI(`${API}/doctors`);
+        if (res.success) {
             let html = '';
-            data.doctors.forEach(d => {
-                html += `<tr><td>${d.imageUrl ? `<img src="${d.imageUrl}" class="doctor-img">` : '📷'}</td><td>${d.name}</td><td>${d.specialty}</td><td>₹${d.fees}</td><td><button onclick="deleteDoctor(${d.id})">Delete</button></td></tr>`;
+            res.doctors.forEach(d => {
+                html += `<tr><td>${d.imageUrl ? `<img src="${d.imageUrl}" class="product-img">` : '📷'}</td><td>${d.name}</td><td>${d.specialty}</td><td>₹${d.fees}</td><td><button onclick="deleteDoctor(${d.id})">Delete</button></td></tr>`;
             });
             document.getElementById('doctorsList').innerHTML = html;
         }
     }
 
     async function deleteDoctor(id) {
-        if (confirm('Delete?')) await fetchAPI(`${API}/admin/doctors/${id}`, { method: 'DELETE' });
-        loadDoctors(); loadStats();
+        if (confirm('Delete?')) { await fetchAPI(`${API}/admin/doctors/${id}`, { method: 'DELETE' }); loadDoctors(); loadStats(); }
     }
 
     async function loadOrders() {
-        const res = await fetch(`${API}/orders`);
-        const data = await res.json();
-        if (data.success) {
+        const res = await fetchAPI(`${API}/orders`);
+        if (res.success) {
             let html = '';
-            data.orders.forEach(o => { html += `<tr><td>#${o.id}</td><td>₹${o.totalAmount}</td><td>${o.status}</td></tr>`; });
+            res.orders.forEach(o => { html += `<tr><td>#${o.id}</td><td>₹${o.totalAmount}</td><td>${o.status}</td></tr>`; });
             document.getElementById('ordersList').innerHTML = html;
         }
     }
 
     async function loadAppointments() {
-        const res = await fetch(`${API}/appointments`);
-        const data = await res.json();
-        if (data.success) {
+        const res = await fetchAPI(`${API}/appointments`);
+        if (res.success) {
             let html = '';
-            data.appointments.forEach(a => { html += `<tr><td>${a.patientName || 'Guest'}</td><td>${a.doctorName}</td><td>${a.date || '-'}</td><td>${a.status}</td></tr>`; });
+            res.appointments.forEach(a => { html += `<tr><td>${a.patientName || 'Guest'}</td><td>${a.doctorName}</td><td>${a.date || '-'}</td><td>${a.status}</td></tr>`; });
             document.getElementById('appointmentsList').innerHTML = html;
         }
     }
