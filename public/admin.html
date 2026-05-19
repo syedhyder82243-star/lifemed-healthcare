@@ -6,18 +6,20 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial; background: #f0f2f5; }
-        .header { background: #1a5d7a; color: white; padding: 15px; display: flex; justify-content: space-between; }
+        .header { background: #1a5d7a; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .logout-btn { background: #e76f51; padding: 6px 15px; border-radius: 25px; cursor: pointer; border: none; color: white; }
-        .sidebar { width: 250px; background: #0a2a3a; color: white; padding: 20px; float: left; min-height: 100vh; }
+        .sidebar { width: 260px; background: #0a2a3a; color: white; padding: 20px; float: left; min-height: 100vh; }
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #2e7d64; }
         .sidebar-item.active { background: #ffd700; color: #1a5d7a; }
-        .main-content { margin-left: 250px; padding: 20px; }
+        .main-content { margin-left: 260px; padding: 20px; }
         .form-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
         .form-group-full { width: 100%; }
         label { display: block; font-weight: bold; margin-bottom: 5px; }
         input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
-        .btn { background: #1a5d7a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn { background: #1a5d7a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; }
+        .btn-danger { background: #e76f51; }
+        .btn-small { padding: 5px 10px; font-size: 12px; }
         .data-table { background: white; border-radius: 10px; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
         th { background: #1a5d7a; color: white; padding: 10px; text-align: left; }
@@ -27,6 +29,11 @@
         .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: white; padding: 15px; border-radius: 10px; text-align: center; }
         .product-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+        .badge { background: #ffd700; color: #1a5d7a; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+        .status-active { background: #2e7d64; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; }
+        .status-blocked { background: #e76f51; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; }
     </style>
 </head>
 <body>
@@ -37,11 +44,17 @@
 </div>
 
 <div class="sidebar">
-    <div class="sidebar-item active" onclick="showSection('dashboard')">Dashboard</div>
-    <div class="sidebar-item" onclick="showSection('products')">Products</div>
-    <div class="sidebar-item" onclick="showSection('doctors')">Doctors</div>
-    <div class="sidebar-item" onclick="showSection('orders')">Orders</div>
-    <div class="sidebar-item" onclick="showSection('appointments')">Appointments</div>
+    <div class="sidebar-item active" onclick="showSection('dashboard')">📊 Dashboard</div>
+    <div class="sidebar-item" onclick="showSection('products')">📦 Products</div>
+    <div class="sidebar-item" onclick="showSection('doctors')">👨‍⚕️ Doctors</div>
+    <div class="sidebar-item" onclick="showSection('labtests')">🔬 Lab Tests</div>
+    <div class="sidebar-item" onclick="showSection('orders')">📋 Orders</div>
+    <div class="sidebar-item" onclick="showSection('appointments')">📅 Appointments</div>
+    <div class="sidebar-item" onclick="showSection('labbookings')">🧪 Lab Bookings</div>
+    <div class="sidebar-item" onclick="showSection('profile')">👤 My Profile</div>
+    <div class="sidebar-item" onclick="showSection('users')">👥 Users</div>
+    <div class="sidebar-item" onclick="showSection('workers')">👥 Staff</div>
+    <div class="sidebar-item" onclick="showSection('lowstock')">⚠️ Low Stock</div>
 </div>
 
 <div class="main-content">
@@ -51,30 +64,28 @@
             <div class="stat-card"><h3>Doctors</h3><div id="statDoctors">0</div></div>
             <div class="stat-card"><h3>Orders</h3><div id="statOrders">0</div></div>
             <div class="stat-card"><h3>Appointments</h3><div id="statAppointments">0</div></div>
+            <div class="stat-card"><h3>Users</h3><div id="statUsers">0</div></div>
+            <div class="stat-card"><h3>Low Stock</h3><div id="statLowStock">0</div></div>
         </div>
     </div>
 
+    <!-- Products -->
     <div id="products" class="section">
-        <div class="form-card">
-            <h2>Add Product</h2>
+        <div class="form-card"><h2>Add Product</h2>
             <div class="form-group"><label>Name</label><input type="text" id="prodName"></div>
             <div class="form-group"><label>Category</label><select id="prodCategory"><option>medicine</option><option>baby</option><option>skincare</option></select></div>
             <div class="form-group"><label>Price</label><input type="number" id="prodPrice"></div>
             <div class="form-group"><label>Stock</label><input type="number" id="prodStock"></div>
             <div class="form-group"><label>Unit</label><input type="text" id="prodUnit"></div>
             <div class="form-group-full"><label>Image URL</label><input type="text" id="prodImageUrl" placeholder="https://..."></div>
-            <div class="form-group-full"><label>Description</label><textarea id="prodDesc" rows="2"></textarea></div>
             <button class="btn" onclick="addProduct()">Add Product</button>
         </div>
-        <div class="data-table">
-            <h2>All Products</h2>
-            <table id="productsTable"><thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead><tbody id="productsList"></tbody></table>
-        </div>
+        <div class="data-table"><h2>All Products</h2><table><thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead><tbody id="productsList"></tbody></table></div>
     </div>
 
+    <!-- Doctors -->
     <div id="doctors" class="section">
-        <div class="form-card">
-            <h2>Add Doctor</h2>
+        <div class="form-card"><h2>Add Doctor</h2>
             <div class="form-group"><label>Name</label><input type="text" id="docName"></div>
             <div class="form-group"><label>Specialty</label><input type="text" id="docSpecialty"></div>
             <div class="form-group"><label>Fees</label><input type="number" id="docFees"></div>
@@ -84,10 +95,64 @@
         <div class="data-table"><h2>All Doctors</h2><table><thead><tr><th>Image</th><th>Name</th><th>Specialty</th><th>Fees</th><th>Action</th></tr></thead><tbody id="doctorsList"></tbody></table></div>
     </div>
 
-    <div id="orders" class="section"><div class="data-table"><h2>Orders</h2><table><thead><tr><th>ID</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersList"></tbody></table></div></div>
+    <!-- Lab Tests -->
+    <div id="labtests" class="section">
+        <div class="form-card"><h2>Add Lab Test</h2>
+            <div class="form-group"><label>Name</label><input type="text" id="testName"></div>
+            <div class="form-group"><label>Price</label><input type="number" id="testPrice"></div>
+            <button class="btn" onclick="addLabTest()">Add Lab Test</button>
+        </div>
+        <div class="data-table"><h2>All Lab Tests</h2><table><thead><tr><th>Name</th><th>Price</th><th>Action</th></tr></thead><tbody id="labTestsList"></tbody></table></div>
+    </div>
 
-    <div id="appointments" class="section"><div class="data-table"><h2>Appointments</h2><table><thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead><tbody id="appointmentsList"></tbody></table></div></div>
+    <!-- Orders -->
+    <div id="orders" class="section"><div class="data-table"><h2>Orders</h2><table><thead><tr><th>ID</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersList"></tbody></table></div></div>
+
+    <!-- Appointments -->
+    <div id="appointments" class="section"><div class="data-table"><h2>Appointments</h2><table><thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody id="appointmentsList"></tbody></table></div></div>
+
+    <!-- Lab Bookings -->
+    <div id="labbookings" class="section"><div class="data-table"><h2>Lab Bookings</h2><table><thead><tr><th>Patient</th><th>Test</th><th>Status</th><th>Action</th></tr></thead><tbody id="labBookingsList"></tbody></table></div></div>
+
+    <!-- Profile with Password Change -->
+    <div id="profile" class="section">
+        <div class="form-card">
+            <h2>👤 My Profile</h2>
+            <div class="form-group-full"><label>Name</label><input type="text" id="profileName"></div>
+            <div class="form-group-full"><label>Email</label><input type="email" id="profileEmail"></div>
+            <div class="form-group-full"><label>Current Password</label><input type="password" id="currentPassword" placeholder="Enter current password"></div>
+            <div class="form-group-full"><label>New Password</label><input type="password" id="newPassword" placeholder="Enter new password"></div>
+            <div class="form-group-full"><label>Confirm New Password</label><input type="password" id="confirmPassword" placeholder="Confirm new password"></div>
+            <button class="btn" onclick="changePassword()">Change Password</button>
+            <button class="btn" onclick="updateProfile()" style="margin-top:10px;">Update Profile Info</button>
+        </div>
+    </div>
+
+    <!-- Users Management -->
+    <div id="users" class="section">
+        <div class="data-table">
+            <h2>👥 All Users</h2>
+            <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody id="usersList"></tbody></table>
+        </div>
+    </div>
+
+    <!-- Workers/Staff -->
+    <div id="workers" class="section">
+        <div class="form-card"><h2>Add Staff</h2>
+            <div class="form-group"><label>Name</label><input type="text" id="workerName"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="workerEmail"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="workerPassword"></div>
+            <div class="form-group"><label>Role</label><select id="workerRole"><option>staff</option><option>manager</option></select></div>
+            <button class="btn" onclick="addWorker()">Add Staff</button>
+        </div>
+        <div class="data-table"><h2>Staff Members</h2><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody id="workersList"></tbody></table></div>
+    </div>
+
+    <!-- Low Stock -->
+    <div id="lowstock" class="section"><div class="data-table"><h2>Low Stock Products</h2><table><thead><tr><th>Product</th><th>Stock</th><th>Action</th></tr></thead><tbody id="lowStockList"></tbody></table></div></div>
 </div>
+
+<div id="changePwdModal" class="modal"><div class="modal-content"><h3>Password Changed</h3><p>Your password has been updated successfully.</p><button class="btn" onclick="closeModal()">OK</button></div></div>
 
 <script>
     const API = 'https://lifemed-healthcare.onrender.com/api';
@@ -108,8 +173,14 @@
         if (section === 'dashboard') loadStats();
         if (section === 'products') loadProducts();
         if (section === 'doctors') loadDoctors();
+        if (section === 'labtests') loadLabTests();
         if (section === 'orders') loadOrders();
         if (section === 'appointments') loadAppointments();
+        if (section === 'labbookings') loadLabBookings();
+        if (section === 'profile') loadProfile();
+        if (section === 'users') loadUsers();
+        if (section === 'workers') loadWorkers();
+        if (section === 'lowstock') loadLowStock();
     }
 
     async function loadStats() {
@@ -119,9 +190,12 @@
             document.getElementById('statDoctors').innerText = res.stats.totalDoctors;
             document.getElementById('statOrders').innerText = res.stats.totalOrders;
             document.getElementById('statAppointments').innerText = res.stats.totalAppointments;
+            document.getElementById('statUsers').innerText = res.stats.totalUsers || 0;
+            document.getElementById('statLowStock').innerText = res.stats.lowStock;
         }
     }
 
+    // Products
     async function addProduct() {
         const product = {
             name: document.getElementById('prodName').value,
@@ -129,7 +203,6 @@
             pricePerUnit: parseFloat(document.getElementById('prodPrice').value),
             totalStock: parseInt(document.getElementById('prodStock').value),
             unitType: document.getElementById('prodUnit').value,
-            description: document.getElementById('prodDesc').value,
             imageUrl: document.getElementById('prodImageUrl').value || ''
         };
         if (!product.name || !product.pricePerUnit) { alert('Fill required fields'); return; }
@@ -142,64 +215,139 @@
         if (res.success) {
             let html = '';
             res.products.forEach(p => {
-                html += `<tr><td>${p.imageUrl ? `<img src="${p.imageUrl}" class="product-img">` : '📷'}</td><td>${p.name}</td><td>₹${p.pricePerUnit}</td><td>${p.totalStock}</td><td><button onclick="deleteProduct(${p.id})">Delete</button></td></tr>`;
+                html += `<tr><td>${p.imageUrl ? `<img src="${p.imageUrl}" class="product-img">` : '📷'}</td><td>${p.name}</td><td>₹${p.pricePerUnit}</td><td>${p.totalStock}</td><td><button class="btn-small" onclick="deleteProduct(${p.id})">Delete</button></td></tr>`;
             });
             document.getElementById('productsList').innerHTML = html;
         }
     }
+    async function deleteProduct(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' }); loadProducts(); loadStats(); } }
 
-    async function deleteProduct(id) {
-        if (confirm('Delete?')) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' }); loadProducts(); loadStats(); }
-    }
-
+    // Doctors
     async function addDoctor() {
-        const doctor = {
-            name: document.getElementById('docName').value,
-            specialty: document.getElementById('docSpecialty').value,
-            fees: parseFloat(document.getElementById('docFees').value),
-            imageUrl: document.getElementById('docImageUrl').value || ''
-        };
+        const doctor = { name: document.getElementById('docName').value, specialty: document.getElementById('docSpecialty').value, fees: parseFloat(document.getElementById('docFees').value), imageUrl: document.getElementById('docImageUrl').value || '' };
         if (!doctor.name || !doctor.fees) { alert('Fill required fields'); return; }
         const res = await fetchAPI(`${API}/admin/doctors`, { method: 'POST', body: JSON.stringify(doctor) });
         if (res.success) { alert('Doctor added!'); loadDoctors(); loadStats(); }
     }
-
     async function loadDoctors() {
         const res = await fetchAPI(`${API}/doctors`);
         if (res.success) {
             let html = '';
             res.doctors.forEach(d => {
-                html += `<tr><td>${d.imageUrl ? `<img src="${d.imageUrl}" class="product-img">` : '📷'}</td><td>${d.name}</td><td>${d.specialty}</td><td>₹${d.fees}</td><td><button onclick="deleteDoctor(${d.id})">Delete</button></td></tr>`;
+                html += `<tr><td>${d.imageUrl ? `<img src="${d.imageUrl}" class="product-img">` : '📷'}</td><td>${d.name}</td><td>${d.specialty}</td><td>₹${d.fees}</td><td><button class="btn-small" onclick="deleteDoctor(${d.id})">Delete</button></td></tr>`;
             });
             document.getElementById('doctorsList').innerHTML = html;
         }
     }
+    async function deleteDoctor(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/doctors/${id}`, { method: 'DELETE' }); loadDoctors(); loadStats(); } }
 
-    async function deleteDoctor(id) {
-        if (confirm('Delete?')) { await fetchAPI(`${API}/admin/doctors/${id}`, { method: 'DELETE' }); loadDoctors(); loadStats(); }
+    // Lab Tests
+    async function addLabTest() {
+        const test = { name: document.getElementById('testName').value, price: parseFloat(document.getElementById('testPrice').value) };
+        if (!test.name || !test.price) { alert('Fill fields'); return; }
+        const res = await fetchAPI(`${API}/admin/lab-tests`, { method: 'POST', body: JSON.stringify(test) });
+        if (res.success) { alert('Lab test added!'); loadLabTests(); }
     }
-
-    async function loadOrders() {
-        const res = await fetchAPI(`${API}/orders`);
-        if (res.success) {
+    async function loadLabTests() {
+        const res = await fetchAPI(`${API}/lab-tests`);
+        if (res.success && res.labTests) {
             let html = '';
-            res.orders.forEach(o => { html += `<tr><td>#${o.id}</td><td>₹${o.totalAmount}</td><td>${o.status}</td></tr>`; });
-            document.getElementById('ordersList').innerHTML = html;
+            res.labTests.forEach(t => { html += `<tr><td>${t.name}</td><td>₹${t.price}</td><td><button class="btn-small" onclick="deleteLabTest(${t.id})">Delete</button></td></tr>`; });
+            document.getElementById('labTestsList').innerHTML = html;
         }
     }
+    async function deleteLabTest(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/lab-tests/${id}`, { method: 'DELETE' }); loadLabTests(); } }
 
-    async function loadAppointments() {
-        const res = await fetchAPI(`${API}/appointments`);
-        if (res.success) {
-            let html = '';
-            res.appointments.forEach(a => { html += `<tr><td>${a.patientName || 'Guest'}</td><td>${a.doctorName}</td><td>${a.date || '-'}</td><td>${a.status}</td></tr>`; });
-            document.getElementById('appointmentsList').innerHTML = html;
+    // Orders, Appointments, LabBookings
+    async function loadOrders() { const res = await fetchAPI(`${API}/orders`); if (res.success) { let html = ''; res.orders.forEach(o => { html += `<tr><td>#${o.id}</td><td>${o.products?.length || 0} items</td><td>₹${o.totalAmount}</td><td>${o.status}</td></tr>`; }); document.getElementById('ordersList').innerHTML = html; } }
+    async function loadAppointments() { const res = await fetchAPI(`${API}/appointments`); if (res.success) { let html = ''; res.appointments.forEach(a => { html += `<tr><td>${a.patientName || 'Guest'}</td><td>${a.doctorName}</td><td>${a.date || '-'}</td><td><span class="badge">${a.status}</span></td><td>${a.status === 'pending' ? `<button class="btn-small" onclick="confirmAppt(${a.id})">Confirm</button>` : '-'}</td></tr>`; }); document.getElementById('appointmentsList').innerHTML = html; } }
+    async function confirmAppt(id) { await fetchAPI(`${API}/appointments/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'confirmed' }) }); loadAppointments(); }
+    async function loadLabBookings() { const res = await fetchAPI(`${API}/lab-bookings`); if (res.success) { let html = ''; res.bookings.forEach(b => { html += `<tr><td>${b.patientName}</td><td>${b.testName}</td><td><span class="badge">${b.status}</span></td><td><button class="btn-small" onclick="processLabBooking(${b.id})">Process</button></td></tr>`; }); document.getElementById('labBookingsList').innerHTML = html; } }
+    async function processLabBooking(id) { await fetchAPI(`${API}/lab-bookings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'processing' }) }); loadLabBookings(); }
+
+    // Profile with Password Change
+    async function loadProfile() {
+        const res = await fetchAPI(`${API}/auth/profile`);
+        if (res.success && res.user) {
+            document.getElementById('profileName').value = res.user.name || '';
+            document.getElementById('profileEmail').value = res.user.email || '';
         }
     }
+    async function updateProfile() {
+        const data = { name: document.getElementById('profileName').value, email: document.getElementById('profileEmail').value };
+        const res = await fetchAPI(`${API}/auth/profile`, { method: 'PUT', body: JSON.stringify(data) });
+        if (res.success) alert('Profile updated!');
+        else alert('Failed');
+    }
+    async function changePassword() {
+        const current = document.getElementById('currentPassword').value;
+        const newPwd = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+        if (!current || !newPwd || !confirm) { alert('Please fill all password fields'); return; }
+        if (newPwd !== confirm) { alert('New passwords do not match'); return; }
+        const res = await fetchAPI(`${API}/auth/change-password`, { method: 'PUT', body: JSON.stringify({ currentPassword: current, newPassword: newPwd }) });
+        if (res.success) {
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            alert('Password changed successfully!');
+        } else alert('Failed: ' + (res.message || 'Wrong current password'));
+    }
 
+    // Users Management
+    async function loadUsers() {
+        const res = await fetchAPI(`${API}/admin/users`);
+        if (res.success && res.users) {
+            let html = '';
+            res.users.forEach(u => {
+                if (u.role !== 'admin') {
+                    html += `<tr><td>${u.name}</td><td>${u.email}</td><td>${u.phone || '-'}</td><td><span class="badge">${u.role}</span></td><td><span class="${u.status === 'blocked' ? 'status-blocked' : 'status-active'}">${u.status || 'active'}</span></td>
+                    <td><button class="btn-small" onclick="toggleUserStatus(${u.id}, '${u.status || 'active'}')">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button>
+                    <button class="btn-small btn-danger" onclick="deleteUser(${u.id})">Delete</button></td></tr>`;
+                }
+            });
+            document.getElementById('usersList').innerHTML = html;
+        }
+    }
+    async function toggleUserStatus(id, currentStatus) {
+        const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
+        await fetchAPI(`${API}/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: newStatus }) });
+        loadUsers();
+    }
+    async function deleteUser(id) { if(confirm('Delete this user?')) { await fetchAPI(`${API}/admin/users/${id}`, { method: 'DELETE' }); loadUsers(); loadStats(); } }
+
+    // Workers
+    async function addWorker() {
+        const worker = { name: document.getElementById('workerName').value, email: document.getElementById('workerEmail').value, password: document.getElementById('workerPassword').value, role: document.getElementById('workerRole').value };
+        if (!worker.name || !worker.email || !worker.password) { alert('Fill all fields'); return; }
+        const res = await fetchAPI(`${API}/admin/workers`, { method: 'POST', body: JSON.stringify(worker) });
+        if (res.success) { alert('Staff added!'); loadWorkers(); }
+    }
+    async function loadWorkers() {
+        const res = await fetchAPI(`${API}/admin/workers`);
+        if (res.success && res.workers) {
+            let html = '';
+            res.workers.forEach(w => { html += `<tr><td>${w.name}</td><td>${w.email}</td><td><span class="badge">${w.role}</span></td><td><button class="btn-small" onclick="deleteWorker(${w.id})">Delete</button></td></tr>`; });
+            document.getElementById('workersList').innerHTML = html;
+        }
+    }
+    async function deleteWorker(id) { if(confirm('Delete staff?')) { await fetchAPI(`${API}/admin/workers/${id}`, { method: 'DELETE' }); loadWorkers(); } }
+
+    // Low Stock
+    async function loadLowStock() {
+        const res = await fetchAPI(`${API}/low-stock`);
+        if (res.success) {
+            let html = '';
+            res.products.forEach(p => { html += `<tr><td>${p.name}</td><td style="color:red">${p.totalStock}</td><td><button class="btn-small" onclick="updateStock(${p.id}, ${p.totalStock})">Add Stock</button></td></tr>`; });
+            document.getElementById('lowStockList').innerHTML = html;
+        }
+    }
+    async function updateStock(id, current) { const newStock = prompt('Enter new stock:', current); if (newStock) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'PUT', body: JSON.stringify({ totalStock: parseInt(newStock) }) }); loadProducts(); loadLowStock(); loadStats(); } }
+
+    function closeModal() { document.getElementById('changePwdModal').style.display = 'none'; }
     function logout() { localStorage.removeItem('adminToken'); window.location.href = 'login.html'; }
 
-    loadStats(); loadProducts(); loadDoctors(); loadOrders(); loadAppointments();
+    loadStats(); loadProducts(); loadDoctors(); loadLabTests(); loadOrders(); loadAppointments(); loadLabBookings(); loadWorkers(); loadLowStock(); loadUsers();
 </script>
 </body>
 </html>
