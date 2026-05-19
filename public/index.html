@@ -113,7 +113,23 @@
 
 <div id="cartModal" class="modal"><div class="modal-content"><h3>Cart</h3><div id="cartItemsList"></div><div id="cartTotalAmount" style="font-weight:bold; margin:10px 0;"></div><button class="btn" onclick="showCheckout()">Checkout</button><button class="btn btn-outline" onclick="closeCart()">Close</button></div></div>
 
-<div id="checkoutModal" class="modal"><div class="modal-content"><h3>Checkout</h3><div id="orderSummaryItems"></div><div class="form-group"><label>Address</label><textarea id="orderAddress" rows="2"></textarea></div><div class="form-group"><label>Phone</label><input type="text" id="orderPhone"></div><div id="orderFinalTotal" style="font-weight:bold"></div><button class="btn" onclick="placeOrder()">Place Order</button><button class="btn btn-outline" onclick="closeCheckout()">Back</button></div></div>
+<!-- CHECKOUT MODAL WITH FULL ADDRESS -->
+<div id="checkoutModal" class="modal">
+    <div class="modal-content">
+        <h3>Checkout</h3>
+        <div id="orderSummaryItems"></div>
+        <div class="form-group"><label>Full Name</label><input type="text" id="orderFullName" placeholder="Enter full name"></div>
+        <div class="form-group"><label>Phone Number</label><input type="tel" id="orderPhone" placeholder="10 digit mobile number"></div>
+        <div class="form-group"><label>House/Flat No.</label><input type="text" id="orderHouse" placeholder="House/Flat number"></div>
+        <div class="form-group"><label>Street/Locality</label><input type="text" id="orderStreet" placeholder="Street name / Locality"></div>
+        <div class="form-group"><label>Landmark</label><input type="text" id="orderLandmark" placeholder="Nearest landmark (Optional)"></div>
+        <div class="form-group"><label>City</label><input type="text" id="orderCity" placeholder="City"></div>
+        <div class="form-group"><label>Pincode</label><input type="text" id="orderPincode" maxlength="6" placeholder="6 digit pincode"></div>
+        <div id="orderFinalTotal" style="font-weight:bold; margin:10px 0;"></div>
+        <button class="btn" onclick="placeOrder()">Place Order</button>
+        <button class="btn btn-outline" onclick="closeCheckout()">Back</button>
+    </div>
+</div>
 
 <div id="appointmentModal" class="modal"><div class="modal-content"><h3>Book Appointment</h3><div id="aptDoctorInfo"></div><div class="form-group"><label>Patient Name</label><input type="text" id="aptPatientName"></div><div class="form-group"><label>Date</label><input type="date" id="aptDate"></div><div class="form-group"><label>Time</label><select id="aptTime"><option>10:00 AM</option><option>11:00 AM</option><option>12:00 PM</option><option>02:00 PM</option><option>03:00 PM</option><option>04:00 PM</option></select></div><button class="btn" onclick="submitAppointment()">Book</button><button class="btn btn-outline" onclick="closeAppointmentModal()">Cancel</button></div></div>
 
@@ -161,10 +177,31 @@
     function closeCheckout() { document.getElementById('checkoutModal').style.display = 'none'; }
     
     async function placeOrder() {
-        let address = document.getElementById('orderAddress').value;
+        let fullName = document.getElementById('orderFullName').value;
         let phone = document.getElementById('orderPhone').value;
-        if(!address || !phone) { showToast('Enter address and phone'); return; }
-        let orderData = { userId: user.id || 'guest', products: cart.map(i=>({id:i.id, name:i.name, qty:i.qty, price:i.price})), totalAmount: cart.reduce((s,i)=>s+(i.price*i.qty),0), shippingAddress: address, phoneNumber: phone };
+        let house = document.getElementById('orderHouse').value;
+        let street = document.getElementById('orderStreet').value;
+        let landmark = document.getElementById('orderLandmark').value;
+        let city = document.getElementById('orderCity').value;
+        let pincode = document.getElementById('orderPincode').value;
+        
+        if(!fullName || !phone || !house || !street || !city || !pincode) { 
+            showToast('Please fill all required fields (Name, Phone, House, Street, City, Pincode)'); 
+            return; 
+        }
+        if(phone.length<10){ showToast('Enter valid 10 digit phone number'); return; }
+        if(pincode.length!==6){ showToast('Enter valid 6 digit pincode'); return; }
+        
+        let fullAddress = `${house}, ${street}${landmark ? ', ' + landmark : ''}, ${city} - ${pincode}`;
+        
+        let orderData = { 
+            userId: user.id || 'guest', 
+            userName: fullName,
+            products: cart.map(i=>({id:i.id, name:i.name, qty:i.qty, price:i.price})), 
+            totalAmount: cart.reduce((s,i)=>s+(i.price*i.qty),0), 
+            shippingAddress: fullAddress, 
+            phoneNumber: phone 
+        };
         let res = await fetch(API+'/orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(orderData) });
         let data = await res.json();
         if(data.success) { cart = []; updateCartCount(); closeCheckout(); document.getElementById('successModal').style.display = 'flex'; showToast('Order placed!'); }
@@ -217,12 +254,59 @@
         if(data.success) {
             let html = '', allHtml = '';
             data.products.slice(0,6).forEach(p => {
-                html += `<div class="product-card"><img src="${p.imageUrl || 'https://placehold.co/200x150?text='+encodeURIComponent(p.name)}" class="product-img" onerror="this.src='https://placehold.co/200x150?text=Product'"><div class="product-title">${p.name}</div><div class="product-price">₹${p.pricePerUnit}</div><div class="product-unit">${p.unitType||'unit'}</div><button class="add-btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
+                let imgUrl = p.imageUrl || `https://placehold.co/200x150?text=${encodeURIComponent(p.name)}`;
+                html += `<div class="product-card"><img src="${imgUrl}" class="product-img" onerror="this.src='https://placehold.co/200x150?text=Product'"><div class="product-title">${p.name}</div><div class="product-price">₹${p.pricePerUnit}</div><div class="product-unit">${p.unitType||'unit'}</div><button class="add-btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
             });
             data.products.forEach(p => {
-                allHtml += `<div class="product-card"><img src="${p.imageUrl || 'https://placehold.co/200x150?text='+encodeURIComponent(p.name)}" class="product-img" onerror="this.src='https://placehold.co/200x150?text=Product'"><div class="product-title">${p.name}</div><div class="product-price">₹${p.pricePerUnit}</div><div class="product-unit">${p.unitType||'unit'}</div><button class="add-btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
+                let imgUrl = p.imageUrl || `https://placehold.co/200x150?text=${encodeURIComponent(p.name)}`;
+                allHtml += `<div class="product-card"><img src="${imgUrl}" class="product-img" onerror="this.src='https://placehold.co/200x150?text=Product'"><div class="product-title">${p.name}</div><div class="product-price">₹${p.pricePerUnit}</div><div class="product-unit">${p.unitType||'unit'}</div><button class="add-btn" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button></div>`;
             });
             document.getElementById('productsList').innerHTML = html; document.getElementById('allProductsList').innerHTML = allHtml;
         }
     }
-    function filterProducts() { let s=document.getElementById('searchProd').value.toLowerCase(); let cards=document.querySelectorAll('#allProductsList .product-card'); cards.forEach(c=>{ let name=c.querySelector('.product
+    function filterProducts() { let s=document.getElementById('searchProd').value.toLowerCase(); let cards=document.querySelectorAll('#allProductsList .product-card'); cards.forEach(c=>{ let name=c.querySelector('.product-title').innerText.toLowerCase(); c.style.display=name.includes(s)?'block':'none'; }); }
+    document.getElementById('searchProd')?.addEventListener('keyup',filterProducts);
+    
+    async function loadDoctors() {
+        let res = await fetch(API+'/doctors'); let data = await res.json();
+        if(data.success) {
+            let html = '', allHtml = '';
+            data.doctors.slice(0,4).forEach(d => {
+                let imgUrl = d.imageUrl || 'https://placehold.co/100x100?text=👨‍⚕️';
+                html += `<div class="doctor-card"><img src="${imgUrl}" class="doctor-img" onerror="this.src='https://placehold.co/100x100?text=👨‍⚕️'"><div class="doctor-name">${d.name}</div><div class="doctor-specialty">${d.specialty}</div><div class="doctor-fees">₹${d.fees}</div><button class="add-btn" onclick='bookDoctor(${JSON.stringify(d)})'>Book</button></div>`;
+            });
+            data.doctors.forEach(d => {
+                let imgUrl = d.imageUrl || 'https://placehold.co/100x100?text=👨‍⚕️';
+                allHtml += `<div class="doctor-card"><img src="${imgUrl}" class="doctor-img" onerror="this.src='https://placehold.co/100x100?text=👨‍⚕️'"><div class="doctor-name">${d.name}</div><div class="doctor-specialty">${d.specialty}</div><div class="doctor-fees">₹${d.fees}</div><button class="add-btn" onclick='bookDoctor(${JSON.stringify(d)})'>Book</button></div>`;
+            });
+            document.getElementById('doctorsList').innerHTML = html; document.getElementById('allDoctorsList').innerHTML = allHtml;
+        }
+    }
+    
+    async function loadLabTests() {
+        let res = await fetch(API+'/lab-tests'); let data = await res.json();
+        if(data.success && data.labTests) {
+            let html = '';
+            data.labTests.forEach(t => {
+                html += `<div class="product-card"><div style="font-size:40px; text-align:center;">🔬</div><div class="product-title">${t.name}</div><div class="product-price">₹${t.price}</div><button class="add-btn" onclick='bookLabTest(${JSON.stringify(t)})'>Book Test</button></div>`;
+            });
+            document.getElementById('labTestsList').innerHTML = html;
+        }
+    }
+    
+    async function loadMyOrders() { let res=await fetch(API+'/orders'); let data=await res.json(); if(data.success && user.id) { let myOrders=data.orders.filter(o=>o.userId===user.id); document.getElementById('myOrdersList').innerHTML=myOrders.length?myOrders.map(o=>`<div>Order #${o.id.slice(-6)} - ₹${o.totalAmount}</div>`).join(''):'No orders'; } }
+    async function loadMyAppointments() { let res=await fetch(API+'/appointments'); let data=await res.json(); if(data.success && user.id) { let my=data.appointments.filter(a=>a.userId===user.id); document.getElementById('myAppointmentsList').innerHTML=my.length?my.map(a=>`<div>${a.doctorName} on ${a.date}</div>`).join(''):'No appointments'; } }
+    async function loadMyLabBookings() { let res=await fetch(API+'/lab-bookings'); let data=await res.json(); if(data.success && user.id) { let my=data.bookings.filter(b=>b.userId===user.id); document.getElementById('myLabBookingsList').innerHTML=my.length?my.map(b=>`<div>${b.testName} on ${b.date}</div>`).join(''):'No lab bookings'; } }
+    
+    function showTab(tab) {
+        document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+        document.getElementById(tab).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+        event.target.classList.add('active');
+        if(tab==='profile') { loadMyOrders(); loadMyAppointments(); loadMyLabBookings(); }
+    }
+    
+    loadProducts(); loadDoctors(); loadLabTests(); updateCartCount(); updateUI();
+</script>
+</body>
+</html>
