@@ -1,102 +1,342 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>LifeMed Admin</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeMed Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial; background: #f0f2f5; }
-        .header { background: #1a5d7a; color: white; padding: 15px; display: flex; justify-content: space-between; }
-        .logout-btn { background: #e76f51; padding: 6px 15px; border-radius: 25px; cursor: pointer; border: none; color: white; }
-        .sidebar { width: 250px; background: #0a2a3a; color: white; padding: 20px; float: left; min-height: 100vh; }
-        .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #2e7d64; }
-        .sidebar-item.active { background: #ffd700; color: #1a5d7a; }
-        .main-content { margin-left: 250px; padding: 20px; }
-        .form-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        
+        /* Glassmorphism Header */
+        .header {
+            background: rgba(26, 93, 122, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .logo h2 { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+        .logo span { color: #ffd700; }
+        .user-info { display: flex; align-items: center; gap: 20px; }
+        .user-info span { font-weight: 500; }
+        .logout-btn { background: #ff6b6b; padding: 8px 20px; border-radius: 30px; cursor: pointer; border: none; color: white; font-weight: 600; transition: all 0.3s; }
+        .logout-btn:hover { background: #ee5a5a; transform: scale(1.02); }
+        
+        /* Sidebar */
+        .container { display: flex; min-height: calc(100vh - 70px); }
+        .sidebar {
+            width: 280px;
+            background: rgba(10, 42, 58, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 20px 0;
+            transition: all 0.3s;
+        }
+        .sidebar-item {
+            padding: 14px 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            margin: 5px 0;
+        }
+        .sidebar-item:hover { background: rgba(255,255,255,0.15); padding-left: 30px; transform: translateX(5px); }
+        .sidebar-item.active {
+            background: linear-gradient(90deg, rgba(255,215,0,0.2), transparent);
+            border-left-color: #ffd700;
+            color: #ffd700;
+        }
+        .sidebar-item i { width: 24px; font-size: 18px; }
+        
+        /* Main Content */
+        .main-content { flex: 1; padding: 25px; overflow-x: auto; }
+        
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .stat-card:hover { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        .stat-card .number { font-size: 36px; font-weight: 800; color: #1a5d7a; }
+        .stat-card h3 { color: #555; font-size: 14px; margin-top: 8px; }
+        .stat-card i { font-size: 40px; color: #2e7d64; margin-bottom: 10px; display: block; }
+        
+        /* Form Cards */
+        .form-card {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .form-card:hover { box-shadow: 0 15px 40px rgba(0,0,0,0.15); }
+        .form-card h2 {
+            color: #1a5d7a;
+            border-left: 4px solid #ffd700;
+            padding-left: 15px;
+            margin-bottom: 25px;
+            font-size: 22px;
+        }
+        .form-group { margin-bottom: 15px; display: inline-block; width: 48%; margin-right: 2%; }
         .form-group-full { width: 100%; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
-        .btn { background: #1a5d7a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
-        .data-table { background: white; border-radius: 10px; overflow-x: auto; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #1a5d7a; }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #2e7d64; box-shadow: 0 0 0 3px rgba(46,125,100,0.2); }
+        
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, #1a5d7a, #2e7d64);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn:hover { transform: scale(1.02); box-shadow: 0 5px 20px rgba(26,93,122,0.4); }
+        .btn-small { padding: 5px 15px; font-size: 12px; margin: 2px; }
+        .btn-danger { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); }
+        
+        /* Data Table */
+        .data-table {
+            background: white;
+            border-radius: 20px;
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .data-table h2 { padding: 20px 20px 0 20px; color: #1a5d7a; }
         table { width: 100%; border-collapse: collapse; }
-        th { background: #1a5d7a; color: white; padding: 10px; text-align: left; }
-        td { padding: 10px; border-bottom: 1px solid #eee; }
-        .section { display: none; }
+        th { background: linear-gradient(135deg, #1a5d7a, #2e7d64); color: white; padding: 14px; text-align: left; font-weight: 600; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f5f5f5; }
+        
+        /* Status Badges */
+        .status-pending { background: #ffd93d; color: #333; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .status-confirmed { background: #6bcf7f; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge { background: #ffd700; color: #1a5d7a; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .audit-badge { background: #e0e0e0; color: #555; padding: 2px 8px; border-radius: 15px; font-size: 10px; }
+        
+        .section { display: none; animation: fadeIn 0.4s; }
         .section.active { display: block; }
-        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: white; padding: 15px; border-radius: 10px; text-align: center; }
-        .product-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @media (max-width: 768px) {
+            .sidebar { width: 80px; }
+            .sidebar-item span { display: none; }
+            .form-group { width: 100%; margin-right: 0; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div><h2>LifeMed Admin</h2></div>
-    <button class="logout-btn" onclick="logout()">Logout</button>
+    <div class="logo"><h2>LifeMed <span>Health Care</span></h2></div>
+    <div class="user-info">
+        <span><i class="fas fa-user-shield"></i> <span id="adminName">Admin</span></span>
+        <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
 </div>
 
-<div class="sidebar">
-    <div class="sidebar-item active" onclick="showSection('dashboard')">Dashboard</div>
-    <div class="sidebar-item" onclick="showSection('products')">Products</div>
-    <div class="sidebar-item" onclick="showSection('doctors')">Doctors</div>
-    <div class="sidebar-item" onclick="showSection('orders')">Orders</div>
-    <div class="sidebar-item" onclick="showSection('appointments')">Appointments</div>
-</div>
-
-<div class="main-content">
-    <div id="dashboard" class="section active">
-        <div class="stats-grid">
-            <div class="stat-card"><h3>Products</h3><div id="statProducts">0</div></div>
-            <div class="stat-card"><h3>Doctors</h3><div id="statDoctors">0</div></div>
-            <div class="stat-card"><h3>Orders</h3><div id="statOrders">0</div></div>
-            <div class="stat-card"><h3>Appointments</h3><div id="statAppointments">0</div></div>
-        </div>
+<div class="container">
+    <div class="sidebar">
+        <div class="sidebar-item active" onclick="showSection('dashboard')"><i class="fas fa-chart-line"></i> <span>Dashboard</span></div>
+        <div class="sidebar-item" onclick="showSection('products')"><i class="fas fa-box"></i> <span>Products</span></div>
+        <div class="sidebar-item" onclick="showSection('doctors')"><i class="fas fa-user-md"></i> <span>Doctors</span></div>
+        <div class="sidebar-item" onclick="showSection('labtests')"><i class="fas fa-flask"></i> <span>Lab Tests</span></div>
+        <div class="sidebar-item" onclick="showSection('orders')"><i class="fas fa-shopping-cart"></i> <span>Orders</span></div>
+        <div class="sidebar-item" onclick="showSection('appointments')"><i class="fas fa-calendar-check"></i> <span>Appointments</span></div>
+        <div class="sidebar-item" onclick="showSection('labbookings')"><i class="fas fa-vial"></i> <span>Lab Bookings</span></div>
+        <div class="sidebar-item" onclick="showSection('profile')"><i class="fas fa-user-cog"></i> <span>My Profile</span></div>
+        <div class="sidebar-item" onclick="showSection('users')"><i class="fas fa-users"></i> <span>Users</span></div>
+        <div class="sidebar-item" onclick="showSection('workers')"><i class="fas fa-user-tie"></i> <span>Staff</span></div>
+        <div class="sidebar-item" onclick="showSection('audit')"><i class="fas fa-history"></i> <span>Audit Log</span></div>
+        <div class="sidebar-item" onclick="showSection('lowstock')"><i class="fas fa-exclamation-triangle"></i> <span>Low Stock</span></div>
     </div>
 
-    <div id="products" class="section">
-        <div class="form-card">
-            <h2>Add Product</h2>
-            <div class="form-group"><label>Name</label><input type="text" id="prodName"></div>
-            <div class="form-group"><label>Category</label><select id="prodCategory"><option>medicine</option><option>baby</option><option>skincare</option></select></div>
-            <div class="form-group"><label>Price</label><input type="number" id="prodPrice"></div>
-            <div class="form-group"><label>Stock</label><input type="number" id="prodStock"></div>
-            <div class="form-group"><label>Unit</label><input type="text" id="prodUnit"></div>
-            <div class="form-group-full"><label>Image URL</label><input type="text" id="prodImageUrl" placeholder="https://..."></div>
-            <div class="form-group-full"><label>Description</label><textarea id="prodDesc" rows="2"></textarea></div>
-            <button class="btn" onclick="addProduct()">Add Product</button>
+    <div class="main-content">
+        <!-- Dashboard -->
+        <div id="dashboard" class="section active">
+            <div class="stats-grid">
+                <div class="stat-card"><i class="fas fa-box"></i><div class="number" id="statProducts">0</div><h3>Products</h3></div>
+                <div class="stat-card"><i class="fas fa-user-md"></i><div class="number" id="statDoctors">0</div><h3>Doctors</h3></div>
+                <div class="stat-card"><i class="fas fa-shopping-cart"></i><div class="number" id="statOrders">0</div><h3>Orders</h3></div>
+                <div class="stat-card"><i class="fas fa-calendar"></i><div class="number" id="statAppointments">0</div><h3>Appointments</h3></div>
+                <div class="stat-card"><i class="fas fa-users"></i><div class="number" id="statUsers">0</div><h3>Users</h3></div>
+                <div class="stat-card"><i class="fas fa-exclamation-triangle"></i><div class="number" id="statLowStock">0</div><h3>Low Stock</h3></div>
+            </div>
+            <div class="form-card">
+                <h2><i class="fas fa-heartbeat"></i> Welcome to LifeMed Admin Panel</h2>
+                <p>Manage your healthcare store from here. Track products, doctors, orders, appointments and more.</p>
+                <p style="margin-top: 10px; color: #2e7d64;"><i class="fas fa-map-marker-alt"></i> #123, Rajivnagar, Mysore - 570019</p>
+            </div>
         </div>
-        <div class="data-table">
-            <h2>All Products</h2>
-            <table id="productsTable"><thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead><tbody id="productsList"></tbody></table>
+
+        <!-- Products with Enhanced Fields -->
+        <div id="products" class="section">
+            <div class="form-card">
+                <h2><i class="fas fa-plus-circle"></i> Add New Product</h2>
+                <div class="form-group"><label>Product Name</label><input type="text" id="prodName" placeholder="e.g., Paracetamol 500mg"></div>
+                <div class="form-group"><label>Category</label><select id="prodCategory"><option>medicine</option><option>baby</option><option>skincare</option><option>daily</option></select></div>
+                <div class="form-group"><label>Sub Category</label><input type="text" id="prodSubCategory" placeholder="e.g., Painkiller, Diapers"></div>
+                <div class="form-group"><label>Unit Type</label><select id="prodUnitType"><option>box</option><option>strip</option><option>piece</option><option>bottle</option><option>pack</option></select></div>
+                <div class="form-group"><label>Pack Size</label><input type="text" id="prodPackSize" placeholder="e.g., 10 tablets, 500ml"></div>
+                <div class="form-group"><label>Price (₹)</label><input type="number" id="prodPrice"></div>
+                <div class="form-group"><label>Discount (%)</label><input type="number" id="prodDiscount" value="0"></div>
+                <div class="form-group"><label>Stock</label><input type="number" id="prodStock"></div>
+                <div class="form-group"><label>Batch Number</label><input type="text" id="prodBatch" placeholder="Batch #"></div>
+                <div class="form-group"><label>Expiry Date</label><input type="date" id="prodExpiry"></div>
+                <div class="form-group"><label>Manufacturer</label><input type="text" id="prodManufacturer" placeholder="Manufacturer name"></div>
+                <div class="form-group"><label>Prescription Required</label><select id="prodPrescription"><option value="false">No</option><option value="true">Yes</option></select></div>
+                <div class="form-group-full"><label>Image URL</label><input type="text" id="prodImageUrl" placeholder="https://..."></div>
+                <div class="form-group-full"><label>Description</label><textarea id="prodDesc" rows="2"></textarea></div>
+                <button class="btn" onclick="addProduct()"><i class="fas fa-save"></i> Add Product</button>
+            </div>
+            <div class="data-table">
+                <h2><i class="fas fa-boxes"></i> All Products</h2>
+                <table><thead><tr><th>Image</th><th>Name</th><th>Batch</th><th>Expiry</th><th>Unit</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+                <tbody id="productsList"></tbody></table>
+            </div>
         </div>
+
+        <!-- Doctors with Calendar -->
+        <div id="doctors" class="section">
+            <div class="form-card">
+                <h2><i class="fas fa-user-plus"></i> Add Doctor</h2>
+                <div class="form-group"><label>Doctor Name</label><input type="text" id="docName"></div>
+                <div class="form-group"><label>Specialty</label><input type="text" id="docSpecialty"></div>
+                <div class="form-group"><label>Qualification</label><input type="text" id="docQualification"></div>
+                <div class="form-group"><label>Experience</label><input type="text" id="docExperience"></div>
+                <div class="form-group"><label>Fees (₹)</label><input type="number" id="docFees"></div>
+                <div class="form-group"><label>Available Days</label><input type="text" id="docDays" placeholder="Mon, Wed, Fri"></div>
+                <div class="form-group"><label>Available Time</label><input type="text" id="docTime" placeholder="10:00 AM - 6:00 PM"></div>
+                <div class="form-group"><label>Contact</label><input type="text" id="docPhone"></div>
+                <div class="form-group-full"><label>Image URL</label><input type="text" id="docImageUrl"></div>
+                <button class="btn" onclick="addDoctor()"><i class="fas fa-save"></i> Add Doctor</button>
+            </div>
+            <div class="data-table"><h2><i class="fas fa-list"></i> All Doctors</h2>
+                <table><thead><tr><th>Image</th><th>Name</th><th>Specialty</th><th>Fees</th><th>Timing</th><th>Actions</th></tr></thead>
+                <tbody id="doctorsList"></tbody></table>
+            </div>
+        </div>
+
+        <!-- Lab Tests -->
+        <div id="labtests" class="section">
+            <div class="form-card"><h2><i class="fas fa-flask"></i> Add Lab Test</h2>
+                <div class="form-group"><label>Test Name</label><input type="text" id="testName"></div>
+                <div class="form-group"><label>Category</label><select id="testCategory"><option>Blood</option><option>Urine</option><option>Imaging</option><option>Hormone</option></select></div>
+                <div class="form-group"><label>Price (₹)</label><input type="number" id="testPrice"></div>
+                <div class="form-group"><label>Discount (%)</label><input type="number" id="testDiscount" value="0"></div>
+                <div class="form-group"><label>Preparation Instructions</label><input type="text" id="testPrep" placeholder="e.g., Fasting 8 hours"></div>
+                <div class="form-group"><label>Report Time</label><input type="text" id="testReportTime" placeholder="e.g., 24 hours"></div>
+                <button class="btn" onclick="addLabTest()"><i class="fas fa-save"></i> Add Lab Test</button>
+            </div>
+            <div class="data-table"><h2><i class="fas fa-list"></i> All Lab Tests</h2>
+                <table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Discounted</th><th>Actions</th></tr></thead>
+                <tbody id="labTestsList"></tbody></table>
+            </div>
+        </div>
+
+        <!-- Orders -->
+        <div id="orders" class="section"><div class="data-table"><h2><i class="fas fa-shopping-cart"></i> Orders</h2>
+            <table><thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Created By</th><th>Date</th></tr></thead>
+            <tbody id="ordersList"></tbody></table></div></div>
+
+        <!-- Appointments -->
+        <div id="appointments" class="section"><div class="data-table"><h2><i class="fas fa-calendar-alt"></i> Appointments</h2>
+            <table><thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th>Confirmed By</th><th>Action</th></tr></thead>
+            <tbody id="appointmentsList"></tbody></table></div></div>
+
+        <!-- Lab Bookings -->
+        <div id="labbookings" class="section"><div class="data-table"><h2><i class="fas fa-vial"></i> Lab Bookings</h2>
+            <table><thead><tr><th>Patient</th><th>Test</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="labBookingsList"></tbody></table></div></div>
+
+        <!-- Profile -->
+        <div id="profile" class="section">
+            <div class="form-card"><h2><i class="fas fa-user-cog"></i> My Profile</h2>
+                <div class="form-group-full"><label>Name</label><input type="text" id="profileName"></div>
+                <div class="form-group-full"><label>Email</label><input type="email" id="profileEmail"></div>
+                <div class="form-group-full"><label>Current Password</label><input type="password" id="currentPassword"></div>
+                <div class="form-group-full"><label>New Password</label><input type="password" id="newPassword"></div>
+                <div class="form-group-full"><label>Confirm Password</label><input type="password" id="confirmPassword"></div>
+                <button class="btn" onclick="changePassword()"><i class="fas fa-key"></i> Change Password</button>
+                <button class="btn" onclick="updateProfile()" style="margin-top:10px;"><i class="fas fa-save"></i> Update Profile</button>
+            </div>
+        </div>
+
+        <!-- Users -->
+        <div id="users" class="section"><div class="data-table"><h2><i class="fas fa-users"></i> All Users</h2>
+            <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="usersList"></tbody></table></div></div>
+
+        <!-- Staff/Workers -->
+        <div id="workers" class="section">
+            <div class="form-card"><h2><i class="fas fa-user-tie"></i> Add Staff</h2>
+                <div class="form-group"><label>Name</label><input type="text" id="workerName"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="workerEmail"></div>
+                <div class="form-group"><label>Password</label><input type="password" id="workerPassword"></div>
+                <div class="form-group"><label>Role</label><select id="workerRole"><option>staff</option><option>manager</option></select></div>
+                <button class="btn" onclick="addWorker()"><i class="fas fa-user-plus"></i> Add Staff</button>
+            </div>
+            <div class="data-table"><h2><i class="fas fa-list"></i> Staff Members</h2>
+                <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+                <tbody id="workersList"></tbody></table></div>
+        </div>
+
+        <!-- Audit Log -->
+        <div id="audit" class="section"><div class="data-table"><h2><i class="fas fa-history"></i> Audit Log</h2>
+            <table><thead><tr><th>Time</th><th>Staff</th><th>Action</th><th>Details</th></tr></thead>
+            <tbody id="auditList"></tbody></table></div></div>
+
+        <!-- Low Stock -->
+        <div id="lowstock" class="section"><div class="data-table"><h2><i class="fas fa-exclamation-triangle"></i> Low Stock Products</h2>
+            <table><thead><tr><th>Product</th><th>Current Stock</th><th>Unit</th><th>Action</th></tr></thead>
+            <tbody id="lowStockList"></tbody></table></div></div>
     </div>
-
-    <div id="doctors" class="section">
-        <div class="form-card">
-            <h2>Add Doctor</h2>
-            <div class="form-group"><label>Name</label><input type="text" id="docName"></div>
-            <div class="form-group"><label>Specialty</label><input type="text" id="docSpecialty"></div>
-            <div class="form-group"><label>Fees</label><input type="number" id="docFees"></div>
-            <div class="form-group-full"><label>Image URL</label><input type="text" id="docImageUrl" placeholder="https://..."></div>
-            <button class="btn" onclick="addDoctor()">Add Doctor</button>
-        </div>
-        <div class="data-table"><h2>All Doctors</h2><table><thead><tr><th>Image</th><th>Name</th><th>Specialty</th><th>Fees</th><th>Action</th></tr></thead><tbody id="doctorsList"></tbody></table></div>
-    </div>
-
-    <div id="orders" class="section"><div class="data-table"><h2>Orders</h2><table><thead><tr><th>ID</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersList"></tbody></table></div></div>
-
-    <div id="appointments" class="section"><div class="data-table"><h2>Appointments</h2><table><thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead><tbody id="appointmentsList"></tbody></table></div></div>
 </div>
 
 <script>
     const API = 'https://lifemed-healthcare.onrender.com/api';
     let token = localStorage.getItem('adminToken');
+    let currentUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
     if (!token) window.location.href = 'login.html';
+    document.getElementById('adminName').innerText = localStorage.getItem('adminName') || 'Admin';
 
     async function fetchAPI(url, options = {}) {
         const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
-        if (res.status === 401) { localStorage.removeItem('adminToken'); window.location.href = 'login.html'; }
+        if (res.status === 401) { localStorage.clear(); window.location.href = 'login.html'; }
         return await res.json();
     }
 
@@ -108,8 +348,15 @@
         if (section === 'dashboard') loadStats();
         if (section === 'products') loadProducts();
         if (section === 'doctors') loadDoctors();
+        if (section === 'labtests') loadLabTests();
         if (section === 'orders') loadOrders();
         if (section === 'appointments') loadAppointments();
+        if (section === 'labbookings') loadLabBookings();
+        if (section === 'profile') loadProfile();
+        if (section === 'users') loadUsers();
+        if (section === 'workers') loadWorkers();
+        if (section === 'audit') loadAudit();
+        if (section === 'lowstock') loadLowStock();
     }
 
     async function loadStats() {
@@ -119,18 +366,30 @@
             document.getElementById('statDoctors').innerText = res.stats.totalDoctors;
             document.getElementById('statOrders').innerText = res.stats.totalOrders;
             document.getElementById('statAppointments').innerText = res.stats.totalAppointments;
+            document.getElementById('statUsers').innerText = res.stats.totalUsers || 0;
+            document.getElementById('statLowStock').innerText = res.stats.lowStock;
         }
     }
 
+    // Enhanced Add Product
     async function addProduct() {
         const product = {
             name: document.getElementById('prodName').value,
             category: document.getElementById('prodCategory').value,
+            subCategory: document.getElementById('prodSubCategory').value,
+            unitType: document.getElementById('prodUnitType').value,
+            packSize: document.getElementById('prodPackSize').value,
             pricePerUnit: parseFloat(document.getElementById('prodPrice').value),
+            discount: parseFloat(document.getElementById('prodDiscount').value) || 0,
             totalStock: parseInt(document.getElementById('prodStock').value),
-            unitType: document.getElementById('prodUnit').value,
+            batchNumber: document.getElementById('prodBatch').value,
+            expiryDate: document.getElementById('prodExpiry').value,
+            manufacturer: document.getElementById('prodManufacturer').value,
+            prescriptionRequired: document.getElementById('prodPrescription').value === 'true',
+            imageUrl: document.getElementById('prodImageUrl').value || '',
             description: document.getElementById('prodDesc').value,
-            imageUrl: document.getElementById('prodImageUrl').value || ''
+            createdBy: localStorage.getItem('adminName') || 'Admin',
+            createdAt: new Date()
         };
         if (!product.name || !product.pricePerUnit) { alert('Fill required fields'); return; }
         const res = await fetchAPI(`${API}/admin/products`, { method: 'POST', body: JSON.stringify(product) });
@@ -139,25 +398,32 @@
 
     async function loadProducts() {
         const res = await fetchAPI(`${API}/products`);
-        if (res.success) {
+        if (res.success && res.products) {
             let html = '';
             res.products.forEach(p => {
-                html += `<tr><td>${p.imageUrl ? `<img src="${p.imageUrl}" class="product-img">` : '📷'}</td><td>${p.name}</td><td>₹${p.pricePerUnit}</td><td>${p.totalStock}</td><td><button onclick="deleteProduct(${p.id})">Delete</button></td></tr>`;
+                html += `<tr><td>${p.imageUrl ? `<img src="${p.imageUrl}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">` : '📷'}</td>
+                        <td>${p.name}</td><td>${p.batchNumber || '-'}</td><td>${p.expiryDate ? new Date(p.expiryDate).toLocaleDateString() : '-'}</td>
+                        <td>${p.unitType}</td><td>₹${p.pricePerUnit}</td><td>${p.totalStock}</td>
+                        <td><button class="btn-small" onclick="deleteProduct(${p.id})">Delete</button></td></tr>`;
             });
             document.getElementById('productsList').innerHTML = html;
         }
     }
+    async function deleteProduct(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' }); loadProducts(); loadStats(); } }
 
-    async function deleteProduct(id) {
-        if (confirm('Delete?')) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' }); loadProducts(); loadStats(); }
-    }
-
+    // Doctors
     async function addDoctor() {
         const doctor = {
             name: document.getElementById('docName').value,
             specialty: document.getElementById('docSpecialty').value,
+            qualification: document.getElementById('docQualification').value,
+            experience: document.getElementById('docExperience').value,
             fees: parseFloat(document.getElementById('docFees').value),
-            imageUrl: document.getElementById('docImageUrl').value || ''
+            availableDays: document.getElementById('docDays').value,
+            availableTime: document.getElementById('docTime').value,
+            contactNumber: document.getElementById('docPhone').value,
+            imageUrl: document.getElementById('docImageUrl').value || '',
+            createdBy: localStorage.getItem('adminName') || 'Admin'
         };
         if (!doctor.name || !doctor.fees) { alert('Fill required fields'); return; }
         const res = await fetchAPI(`${API}/admin/doctors`, { method: 'POST', body: JSON.stringify(doctor) });
@@ -166,40 +432,89 @@
 
     async function loadDoctors() {
         const res = await fetchAPI(`${API}/doctors`);
-        if (res.success) {
+        if (res.success && res.doctors) {
             let html = '';
             res.doctors.forEach(d => {
-                html += `<tr><td>${d.imageUrl ? `<img src="${d.imageUrl}" class="product-img">` : '📷'}</td><td>${d.name}</td><td>${d.specialty}</td><td>₹${d.fees}</td><td><button onclick="deleteDoctor(${d.id})">Delete</button></td></tr>`;
+                html += `<tr><td>${d.imageUrl ? `<img src="${d.imageUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : '👨‍⚕️'}</td>
+                        <td>${d.name}</td><td>${d.specialty}</td><td>₹${d.fees}</td><td>${d.availableTime || '-'}</td>
+                        <td><button class="btn-small" onclick="deleteDoctor(${d.id})">Delete</button></td></tr>`;
             });
             document.getElementById('doctorsList').innerHTML = html;
         }
     }
+    async function deleteDoctor(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/doctors/${id}`, { method: 'DELETE' }); loadDoctors(); loadStats(); } }
 
-    async function deleteDoctor(id) {
-        if (confirm('Delete?')) { await fetchAPI(`${API}/admin/doctors/${id}`, { method: 'DELETE' }); loadDoctors(); loadStats(); }
+    // Lab Tests
+    async function addLabTest() {
+        const test = {
+            name: document.getElementById('testName').value,
+            category: document.getElementById('testCategory').value,
+            price: parseFloat(document.getElementById('testPrice').value),
+            discount: parseFloat(document.getElementById('testDiscount').value) || 0,
+            preparationInstructions: document.getElementById('testPrep').value,
+            reportTime: document.getElementById('testReportTime').value
+        };
+        if (!test.name || !test.price) { alert('Fill required fields'); return; }
+        const res = await fetchAPI(`${API}/admin/lab-tests`, { method: 'POST', body: JSON.stringify(test) });
+        if (res.success) { alert('Lab test added!'); loadLabTests(); }
     }
-
-    async function loadOrders() {
-        const res = await fetchAPI(`${API}/orders`);
-        if (res.success) {
+    async function loadLabTests() {
+        const res = await fetchAPI(`${API}/lab-tests`);
+        if (res.success && res.labTests) {
             let html = '';
-            res.orders.forEach(o => { html += `<tr><td>#${o.id}</td><td>₹${o.totalAmount}</td><td>${o.status}</td></tr>`; });
-            document.getElementById('ordersList').innerHTML = html;
+            res.labTests.forEach(t => {
+                const discounted = t.discountedPrice || t.price;
+                html += `<tr><td>${t.name}</td><td>${t.category}</td><td>₹${t.price}</td><td>₹${discounted}</td>
+                        <td><button class="btn-small" onclick="deleteLabTest(${t.id})">Delete</button></td></tr>`;
+            });
+            document.getElementById('labTestsList').innerHTML = html;
         }
     }
+    async function deleteLabTest(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/lab-tests/${id}`, { method: 'DELETE' }); loadLabTests(); } }
 
-    async function loadAppointments() {
-        const res = await fetchAPI(`${API}/appointments`);
-        if (res.success) {
-            let html = '';
-            res.appointments.forEach(a => { html += `<tr><td>${a.patientName || 'Guest'}</td><td>${a.doctorName}</td><td>${a.date || '-'}</td><td>${a.status}</td></tr>`; });
-            document.getElementById('appointmentsList').innerHTML = html;
-        }
+    // Orders, Appointments, LabBookings
+    async function loadOrders() { const res = await fetchAPI(`${API}/orders`); if (res.success) { let html = ''; res.orders.forEach(o => { html += `<tr><td>#${o.id}</td><td>${o.userName || 'Guest'}</td><td>${o.products?.length || 0}</td><td>₹${o.totalAmount}</td><td><span class="badge">${o.status}</span></td><td><span class="audit-badge">${o.createdBy || '-'}</span></td><td>${new Date(o.orderDate).toLocaleDateString()}</td></tr>`; }); document.getElementById('ordersList').innerHTML = html; } }
+    
+    async function loadAppointments() { const res = await fetchAPI(`${API}/appointments`); if (res.success) { let html = ''; res.appointments.forEach(a => { html += `<tr><td>${a.patientName}</td><td>${a.doctorName}</td><td>${a.date}</td><td>${a.time}</td><td><span class="status-${a.status}">${a.status}</span></td><td><span class="audit-badge">${a.confirmedBy || '-'}</span></td><td>${a.status === 'pending' ? `<button class="btn-small" onclick="confirmAppt(${a.id})">Confirm</button>` : '-'}</td></tr>`; }); document.getElementById('appointmentsList').innerHTML = html; } }
+    async function confirmAppt(id) { await fetchAPI(`${API}/appointments/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'confirmed', confirmedBy: localStorage.getItem('adminName') }) }); loadAppointments(); }
+    
+    async function loadLabBookings() { const res = await fetchAPI(`${API}/lab-bookings`); if (res.success) { let html = ''; res.bookings.forEach(b => { html += `<tr><td>${b.patientName}</td><td>${b.testName}</td><td>₹${b.totalAmount || b.price}</td><td><span class="badge">${b.status}</span></td><td><button class="btn-small" onclick="processLabBooking(${b.id})">Process</button></td></tr>`; }); document.getElementById('labBookingsList').innerHTML = html; } }
+    async function processLabBooking(id) { await fetchAPI(`${API}/lab-bookings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'processing' }) }); loadLabBookings(); }
+
+    // Profile
+    async function loadProfile() { const res = await fetchAPI(`${API}/auth/profile`); if (res.success && res.user) { document.getElementById('profileName').value = res.user.name || ''; document.getElementById('profileEmail').value = res.user.email || ''; } }
+    async function updateProfile() { const data = { name: document.getElementById('profileName').value, email: document.getElementById('profileEmail').value }; const res = await fetchAPI(`${API}/auth/profile`, { method: 'PUT', body: JSON.stringify(data) }); if (res.success) { alert('Profile updated!'); localStorage.setItem('adminName', data.name); document.getElementById('adminName').innerText = data.name; } }
+    async function changePassword() {
+        const current = document.getElementById('currentPassword').value;
+        const newPwd = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+        if (!current || !newPwd || !confirm) { alert('Fill all password fields'); return; }
+        if (newPwd !== confirm) { alert('Passwords do not match'); return; }
+        const res = await fetchAPI(`${API}/auth/change-password`, { method: 'PUT', body: JSON.stringify({ currentPassword: current, newPassword: newPwd }) });
+        if (res.success) { alert('Password changed!'); document.getElementById('currentPassword').value = ''; document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; }
+        else alert('Failed: ' + (res.message || 'Wrong current password'));
     }
 
-    function logout() { localStorage.removeItem('adminToken'); window.location.href = 'login.html'; }
+    // Users
+    async function loadUsers() { const res = await fetchAPI(`${API}/admin/users`); if (res.success && res.users) { let html = ''; res.users.forEach(u => { if (u.role !== 'admin') { html += `<tr><td>${u.name}</td><td>${u.email}</td><td>${u.phone || '-'}</td>}<td class="${u.status === 'blocked' ? 'status-blocked' : 'status-active'}">${u.status || 'active'}</td><td><button class="btn-small" onclick="toggleUserStatus(${u.id}, '${u.status || 'active'}')">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button><button class="btn-small btn-danger" onclick="deleteUser(${u.id})">Delete</button></td></tr>`; } }); document.getElementById('usersList').innerHTML = html; } }
+    async function toggleUserStatus(id, current) { const newStatus = current === 'blocked' ? 'active' : 'blocked'; await fetchAPI(`${API}/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: newStatus }) }); loadUsers(); }
+    async function deleteUser(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/users/${id}`, { method: 'DELETE' }); loadUsers(); loadStats(); } }
 
-    loadStats(); loadProducts(); loadDoctors(); loadOrders(); loadAppointments();
+    // Workers
+    async function addWorker() { const worker = { name: document.getElementById('workerName').value, email: document.getElementById('workerEmail').value, password: document.getElementById('workerPassword').value, role: document.getElementById('workerRole').value }; if (!worker.name || !worker.email || !worker.password) { alert('Fill all fields'); return; } const res = await fetchAPI(`${API}/admin/workers`, { method: 'POST', body: JSON.stringify(worker) }); if (res.success) { alert('Staff added!'); loadWorkers(); } }
+    async function loadWorkers() { const res = await fetchAPI(`${API}/admin/workers`); if (res.success && res.workers) { let html = ''; res.workers.forEach(w => { html += `<tr><td>${w.name}</td><td>${w.email}</td>}<td class="badge">${w.role}</td><td><button class="btn-small" onclick="deleteWorker(${w.id})">Delete</button></td></tr>`; }); document.getElementById('workersList').innerHTML = html; } }
+    async function deleteWorker(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/workers/${id}`, { method: 'DELETE' }); loadWorkers(); } }
+
+    // Audit Log
+    async function loadAudit() { const res = await fetchAPI(`${API}/admin/audit`); if (res.success && res.audit) { let html = ''; res.audit.forEach(a => { html += `<tr><td>${new Date(a.timestamp).toLocaleString()}</td><td>${a.staff}</td>}<td class="badge">${a.action}</td><td>${a.details}</td></tr>`; }); document.getElementById('auditList').innerHTML = html; } }
+
+    // Low Stock
+    async function loadLowStock() { const res = await fetchAPI(`${API}/low-stock`); if (res.success && res.products) { let html = ''; res.products.forEach(p => { html += `<tr><td>${p.name}</td><td style="color:red;font-weight:bold">${p.totalStock}</td><td>${p.unitType}</td><td><button class="btn-small" onclick="updateStock(${p.id}, ${p.totalStock})">Add Stock</button></td></tr>`; }); document.getElementById('lowStockList').innerHTML = html; } }
+    async function updateStock(id, current) { const newStock = prompt('Enter new stock:', current); if (newStock) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'PUT', body: JSON.stringify({ totalStock: parseInt(newStock) }) }); loadProducts(); loadLowStock(); loadStats(); } }
+
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+    loadStats(); loadProducts(); loadDoctors(); loadLabTests(); loadOrders(); loadAppointments(); loadLabBookings(); loadWorkers(); loadLowStock(); loadUsers(); loadAudit();
 </script>
 </body>
 </html>
