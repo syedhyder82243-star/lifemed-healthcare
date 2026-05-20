@@ -1,9 +1,223 @@
 <!DOCTYPE html>
 <html>
-<head><title>LifeMed Admin</title></head>
+<head>
+    <title>LifeMed Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; background: #f0f2f5; }
+        .header { background: #1a5d7a; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .logout-btn { background: #e76f51; padding: 6px 15px; border-radius: 25px; cursor: pointer; border: none; color: white; }
+        .sidebar { width: 250px; background: #0a2a3a; color: white; padding: 20px; float: left; min-height: 100vh; }
+        .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #2e7d64; }
+        .sidebar-item.active { background: #ffd700; color: #1a5d7a; }
+        .main-content { margin-left: 250px; padding: 20px; }
+        .form-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; display: inline-block; width: 48%; margin-right: 2%; }
+        .form-group-full { width: 100%; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn { background: #1a5d7a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-small { padding: 5px 10px; font-size: 12px; }
+        .btn-danger { background: #e76f51; }
+        .data-table { background: white; border-radius: 10px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #1a5d7a; color: white; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 10px; text-align: center; }
+        .badge { background: #ffd700; color: #1a5d7a; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+        .status-active { background: #2e7d64; color: white; padding: 4px 12px; border-radius: 20px; }
+        .status-blocked { background: #e76f51; color: white; padding: 4px 12px; border-radius: 20px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; }
+        .product-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+    </style>
+</head>
 <body>
-<h1>LifeMed Health Care Admin</h1>
-<p>System is working</p>
-<a href="login.html">Login</a>
+
+<div class="header">
+    <div><h2>LifeMed Admin</h2></div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="sidebar">
+    <div class="sidebar-item active" onclick="showSection('dashboard')">Dashboard</div>
+    <div class="sidebar-item" onclick="showSection('products')">Products</div>
+    <div class="sidebar-item" onclick="showSection('doctors')">Doctors</div>
+    <div class="sidebar-item" onclick="showSection('orders')">Orders</div>
+    <div class="sidebar-item" onclick="showSection('appointments')">Appointments</div>
+    <div class="sidebar-item" onclick="showSection('profile')">Profile</div>
+    <div class="sidebar-item" onclick="showSection('users')">Users</div>
+    <div class="sidebar-item" onclick="showSection('workers')">Staff</div>
+    <div class="sidebar-item" onclick="showSection('lowstock')">Low Stock</div>
+</div>
+
+<div class="main-content">
+    <div id="dashboard" class="section active">
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Products</h3><div id="statProducts">0</div></div>
+            <div class="stat-card"><h3>Doctors</h3><div id="statDoctors">0</div></div>
+            <div class="stat-card"><h3>Orders</h3><div id="statOrders">0</div></div>
+            <div class="stat-card"><h3>Appointments</h3><div id="statAppointments">0</div></div>
+            <div class="stat-card"><h3>Users</h3><div id="statUsers">0</div></div>
+            <div class="stat-card"><h3>Low Stock</h3><div id="statLowStock">0</div></div>
+        </div>
+    </div>
+
+    <div id="products" class="section">
+        <div class="form-card">
+            <h2>Add Product</h2>
+            <div class="form-group"><label>Name</label><input type="text" id="prodName"></div>
+            <div class="form-group"><label>Category</label><select id="prodCategory"><option>medicine</option><option>baby</option><option>skincare</option></select></div>
+            <div class="form-group"><label>Price</label><input type="number" id="prodPrice"></div>
+            <div class="form-group"><label>Stock</label><input type="number" id="prodStock"></div>
+            <div class="form-group"><label>Unit</label><input type="text" id="prodUnit"></div>
+            <button class="btn" onclick="addProduct()">Add Product</button>
+        </div>
+        <div class="data-table"><h2>All Products</h2><table><thead><tr><th>Name</th><th>Price</th><th>Stock</th><th>Unit</th><th>Actions</th></tr></thead><tbody id="productsList"></tbody></table></div>
+    </div>
+
+    <div id="doctors" class="section">
+        <div class="form-card"><h2>Add Doctor</h2>
+            <div class="form-group"><label>Name</label><input type="text" id="docName"></div>
+            <div class="form-group"><label>Specialty</label><input type="text" id="docSpecialty"></div>
+            <div class="form-group"><label>Fees</label><input type="number" id="docFees"></div>
+            <button class="btn" onclick="addDoctor()">Add Doctor</button>
+        </div>
+        <div class="data-table"><h2>All Doctors</h2><tr><thead><tr><th>Name</th><th>Specialty</th><th>Fees</th><th>Actions</th></tr></thead><tbody id="doctorsList"></tbody></table></div>
+    </div>
+
+    <div id="orders" class="section"><div class="data-table"><h2>Orders</h2></table><thead><tr><th>ID</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersList"></tbody></table></div></div>
+    <div id="appointments" class="section"><div class="data-table"><h2>Appointments</h2><tr><thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th>Action</th></table></thead><tbody id="appointmentsList"></tbody></tr></div></div>
+
+    <div id="profile" class="section">
+        <div class="form-card"><h2>My Profile</h2>
+            <div class="form-group-full"><label>Name</label><input type="text" id="profileName"></div>
+            <div class="form-group-full"><label>Email</label><input type="email" id="profileEmail"></div>
+            <div class="form-group-full"><label>Current Password</label><input type="password" id="currentPwd"></div>
+            <div class="form-group-full"><label>New Password</label><input type="password" id="newPwd"></div>
+            <div class="form-group-full"><label>Confirm Password</label><input type="password" id="confirmPwd"></div>
+            <button class="btn" onclick="changePassword()">Change Password</button>
+        </div>
+    </div>
+
+    <div id="users" class="section"><div class="data-table"><h2>All Users</h2></table><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead><tbody id="usersList"></tbody></table></div></div>
+    <div id="workers" class="section"><div class="data-table"><h2>Staff</h2><tr><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead><tbody id="workersList"></tbody></table></div></div>
+    <div id="lowstock" class="section"><div class="data-table"><h2>Low Stock</h2></table><thead><tr><th>Product</th><th>Stock</th><th>Action</th></tr></thead><tbody id="lowStockList"></tbody></table></div></div>
+</div>
+
+<script>
+    const API = 'https://lifemed-healthcare.onrender.com/api';
+    let token = localStorage.getItem('adminToken');
+    if (!token) window.location.href = 'login.html';
+
+    async function fetchAPI(url, options = {}) {
+        const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } });
+        if (res.status === 401) { localStorage.clear(); window.location.href = 'login.html'; }
+        return await res.json();
+    }
+
+    function showSection(section) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(section).classList.add('active');
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        event.target.classList.add('active');
+        if (section === 'dashboard') loadStats();
+        if (section === 'products') loadProducts();
+        if (section === 'doctors') loadDoctors();
+        if (section === 'orders') loadOrders();
+        if (section === 'appointments') loadAppointments();
+        if (section === 'profile') loadProfile();
+        if (section === 'users') loadUsers();
+        if (section === 'workers') loadWorkers();
+        if (section === 'lowstock') loadLowStock();
+    }
+
+    async function loadStats() {
+        const res = await fetchAPI(`${API}/stats`);
+        if (res.success) {
+            document.getElementById('statProducts').innerText = res.stats.totalProducts;
+            document.getElementById('statDoctors').innerText = res.stats.totalDoctors;
+            document.getElementById('statOrders').innerText = res.stats.totalOrders;
+            document.getElementById('statAppointments').innerText = res.stats.totalAppointments;
+            document.getElementById('statUsers').innerText = res.stats.totalUsers || 0;
+            document.getElementById('statLowStock').innerText = res.stats.lowStock;
+        }
+    }
+
+    async function addProduct() {
+        const product = {
+            name: document.getElementById('prodName').value,
+            category: document.getElementById('prodCategory').value,
+            pricePerUnit: parseFloat(document.getElementById('prodPrice').value),
+            totalStock: parseInt(document.getElementById('prodStock').value),
+            unitType: document.getElementById('prodUnit').value
+        };
+        if (!product.name || !product.pricePerUnit) { alert('Fill fields'); return; }
+        const res = await fetchAPI(`${API}/admin/products`, { method: 'POST', body: JSON.stringify(product) });
+        if (res.success) { alert('Product added!'); loadProducts(); loadStats(); }
+    }
+
+    async function loadProducts() {
+        const res = await fetchAPI(`${API}/products`);
+        if (res.success && res.products) {
+            let html = '';
+            res.products.forEach(p => {
+                html += `<tr><td><button class="btn-small" onclick="deleteProduct(${p.id})">Delete</button></td><td>${p.name}</td><td>₹${p.pricePerUnit}</td><td>${p.totalStock}</td><td>${p.unitType || '-'}</td></tr>`;
+            });
+            document.getElementById('productsList').innerHTML = html;
+        }
+    }
+    async function deleteProduct(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' }); loadProducts(); loadStats(); } }
+
+    async function addDoctor() {
+        const doctor = { name: document.getElementById('docName').value, specialty: document.getElementById('docSpecialty').value, fees: parseFloat(document.getElementById('docFees').value) };
+        if (!doctor.name || !doctor.fees) { alert('Fill fields'); return; }
+        const res = await fetchAPI(`${API}/admin/doctors`, { method: 'POST', body: JSON.stringify(doctor) });
+        if (res.success) { alert('Doctor added!'); loadDoctors(); loadStats(); }
+    }
+    async function loadDoctors() {
+        const res = await fetchAPI(`${API}/doctors`);
+        if (res.success && res.doctors) {
+            let html = '';
+            res.doctors.forEach(d => {
+                html += `<tr><td><button class="btn-small" onclick="deleteDoctor(${d.id})">Delete</button></td><td>${d.name}</td><td>${d.specialty}</td><td>₹${d.fees}</td></tr>`;
+            });
+            document.getElementById('doctorsList').innerHTML = html;
+        }
+    }
+    async function deleteDoctor(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/doctors/${id}`, { method: 'DELETE' }); loadDoctors(); loadStats(); } }
+
+    async function loadOrders() { const res = await fetchAPI(`${API}/orders`); if (res.success) { let html = ''; res.orders.forEach(o => { html += `<tr><td>#${o.id}</td><td>₹${o.totalAmount}</td><td>${o.status}</td></tr>`; }); document.getElementById('ordersList').innerHTML = html; } }
+    async function loadAppointments() { const res = await fetchAPI(`${API}/appointments`); if (res.success) { let html = ''; res.appointments.forEach(a => { html += `<td><td>${a.patientName}</td><td>${a.doctorName}</td><td>${a.date}</td><td class="status-${a.status}">${a.status}</td><td>${a.status === 'pending' ? '<button class="btn-small" onclick="confirmAppt('+a.id+')">Confirm</button>' : '-'}</td></tr>`; }); document.getElementById('appointmentsList').innerHTML = html; } }
+    async function confirmAppt(id) { await fetchAPI(`${API}/appointments/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'confirmed' }) }); loadAppointments(); }
+
+    async function loadProfile() { const res = await fetchAPI(`${API}/auth/profile`); if (res.success && res.user) { document.getElementById('profileName').value = res.user.name || ''; document.getElementById('profileEmail').value = res.user.email || ''; } }
+    async function changePassword() {
+        const cur = document.getElementById('currentPwd').value, newP = document.getElementById('newPwd').value, con = document.getElementById('confirmPwd').value;
+        if (!cur || !newP || !con) { alert('Fill all fields'); return; }
+        if (newP !== con) { alert('Passwords do not match'); return; }
+        const res = await fetchAPI(`${API}/auth/change-password`, { method: 'PUT', body: JSON.stringify({ currentPassword: cur, newPassword: newP }) });
+        if (res.success) alert('Password changed!'); else alert('Failed');
+    }
+
+    async function loadUsers() { const res = await fetchAPI(`${API}/admin/users`); if (res.success && res.users) { let html = ''; res.users.forEach(u => { if (u.role !== 'admin') { html += `<tr><td>${u.name}</td><td>${u.email}</td><td class="${u.status === 'blocked' ? 'status-blocked' : 'status-active'}">${u.status || 'active'}</td><td><button class="btn-small" onclick="toggleUser(${u.id}, '${u.status || 'active'}')">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button> <button class="btn-small btn-danger" onclick="deleteUser(${u.id})">Delete</button></td></tr>`; } }); document.getElementById('usersList').innerHTML = html; } }
+    async function toggleUser(id, cur) { await fetchAPI(`${API}/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: cur === 'blocked' ? 'active' : 'blocked' }) }); loadUsers(); }
+    async function deleteUser(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/users/${id}`, { method: 'DELETE' }); loadUsers(); loadStats(); } }
+
+    async function addWorker() { const w = { name: document.getElementById('workerName').value, email: document.getElementById('workerEmail').value, password: document.getElementById('workerPassword').value, role: document.getElementById('workerRole').value }; if (!w.name || !w.email || !w.password) { alert('Fill fields'); return; } const res = await fetchAPI(`${API}/admin/workers`, { method: 'POST', body: JSON.stringify(w) }); if (res.success) { alert('Staff added!'); loadWorkers(); } }
+    async function loadWorkers() { const res = await fetchAPI(`${API}/admin/workers`); if (res.success && res.workers) { let html = ''; res.workers.forEach(w => { html += `<tr><td>${w.name}</td><td>${w.email}</td><td class="badge">${w.role}</td><td><button class="btn-small" onclick="deleteWorker(${w.id})">Delete</button></td></tr>`; }); document.getElementById('workersList').innerHTML = html; } }
+    async function deleteWorker(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/workers/${id}`, { method: 'DELETE' }); loadWorkers(); } }
+
+    async function loadLowStock() { const res = await fetchAPI(`${API}/low-stock`); if (res.success && res.products) { let html = ''; res.products.forEach(p => { html += `<tr><td>${p.name}</td><td style="color:red">${p.totalStock}</td><td><button class="btn-small" onclick="updateStock(${p.id}, ${p.totalStock})">Add Stock</button></td></tr>`; }); document.getElementById('lowStockList').innerHTML = html; } }
+    async function updateStock(id, cur) { const newStock = prompt('Enter new stock:', cur); if (newStock) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'PUT', body: JSON.stringify({ totalStock: parseInt(newStock) }) }); loadProducts(); loadLowStock(); loadStats(); } }
+
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+    loadStats(); loadProducts(); loadDoctors(); loadOrders(); loadAppointments(); loadWorkers(); loadLowStock(); loadUsers();
+</script>
 </body>
 </html>
