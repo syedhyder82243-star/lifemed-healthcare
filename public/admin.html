@@ -7,11 +7,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-        .header { background: rgba(26, 93, 122, 0.95); backdrop-filter: blur(10px); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .logo h2 { font-size: 22px; font-weight: 700; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .header { background: rgba(26, 93, 122, 0.95); backdrop-filter: blur(10px); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
+        .logo h2 { font-size: 22px; }
         .logo span { color: #ffd700; }
-        .logout-btn { background: #ff6b6b; padding: 8px 20px; border-radius: 30px; cursor: pointer; border: none; color: white; font-weight: 600; }
+        .logout-btn { background: #ff6b6b; padding: 8px 20px; border-radius: 30px; cursor: pointer; border: none; color: white; }
         .container { display: flex; min-height: calc(100vh - 70px); }
         .sidebar { width: 280px; background: rgba(10, 42, 58, 0.95); backdrop-filter: blur(10px); color: white; padding: 20px 0; }
         .sidebar-item { padding: 14px 25px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-left: 3px solid transparent; margin: 5px 0; }
@@ -52,7 +52,7 @@
 <div class="header">
     <div class="logo"><h2>LifeMed <span>Health Care</span></h2></div>
     <div><span><i class="fas fa-user-shield"></i> <span id="adminName">Admin</span></span>
-    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
+    <button class="logout-btn" onclick="logout()">Logout</button></div>
 </div>
 
 <div class="container">
@@ -84,22 +84,20 @@
             <div class="form-card"><h2>Welcome to LifeMed Admin Panel</h2><p>Manage your healthcare store from here.</p></div>
         </div>
 
-        <!-- Products -->
         <div id="products" class="section">
             <div class="form-card">
                 <h2>Add Product</h2>
                 <div class="form-group"><label>Name</label><input type="text" id="prodName"></div>
                 <div class="form-group"><label>Category</label><select id="prodCategory"><option>medicine</option><option>baby</option><option>skincare</option></select></div>
-                <div class="form-group"><label>Price (₹)</label><input type="number" id="prodPrice"></div>
+                <div class="form-group"><label>Price</label><input type="number" id="prodPrice"></div>
                 <div class="form-group"><label>Stock</label><input type="number" id="prodStock"></div>
                 <div class="form-group"><label>Unit</label><input type="text" id="prodUnit"></div>
-                <div class="form-group-full"><label>Image URL</label><input type="text" id="prodImageUrl" placeholder="https://..."></div>
+                <div class="form-group-full"><label>Image URL</label><input type="text" id="prodImageUrl"></div>
                 <button class="btn" onclick="addProduct()">Add Product</button>
             </div>
-            <div class="data-table"><h2>All Products</h2></table><thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Stock</th><th>Unit</th><th>Actions</th></tr></thead><tbody id="productsList"></tbody></table></div>
+            <div class="data-table"><h2>All Products</h2><table><thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Stock</th><th>Unit</th><th>Actions</th></tr></thead><tbody id="productsList"></tbody></table></div>
         </div>
 
-        <!-- Doctors -->
         <div id="doctors" class="section">
             <div class="form-card"><h2>Add Doctor</h2>
                 <div class="form-group"><label>Name</label><input type="text" id="docName"></div>
@@ -107,29 +105,22 @@
                 <div class="form-group"><label>Fees</label><input type="number" id="docFees"></div>
                 <button class="btn" onclick="addDoctor()">Add Doctor</button>
             </div>
-            <div class="data-table"><h2>All Doctors</h2></table><thead><tr><th>Image</th><th>Name</th><th>Specialty</th><th>Fees</th><th>Actions</th></tr></thead><tbody id="doctorsList"></tbody></table></div>
+            <div class="data-table"><h2>All Doctors</h2><table><thead><tr><th>Image</th><th>Name</th><th>Specialty</th><th>Fees</th><th>Actions</th></tr></thead><tbody id="doctorsList"></tbody></table></div>
         </div>
 
-        <!-- Lab Tests -->
         <div id="labtests" class="section">
             <div class="form-card"><h2>Add Lab Test</h2>
                 <div class="form-group"><label>Name</label><input type="text" id="testName"></div>
                 <div class="form-group"><label>Price</label><input type="number" id="testPrice"></div>
                 <button class="btn" onclick="addLabTest()">Add Lab Test</button>
             </div>
-            <div class="data-table"><h2>All Lab Tests</h2></table><thead><tr><th>Name</th><th>Price</th><th>Actions</th></tr></thead><tbody id="labTestsList"></tbody></table></div>
+            <div class="data-table"><h2>All Lab Tests</h2><table><thead><tr><th>Name</th><th>Price</th><th>Actions</th></tr></thead><tbody id="labTestsList"></tbody></table></div>
         </div>
 
-        <!-- Orders -->
-        <div id="orders" class="section"><div class="data-table"><h2>Orders</h2><table><thead><tr><th>ID</th><th>Total</th><th>Status</th></td></thead><tbody id="ordersList"></tbody></table></div></div>
-
-        <!-- Appointments -->
+        <div id="orders" class="section"><div class="data-table"><h2>Orders</h2><table><thead><tr><th>ID</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersList"></tbody></table></div></div>
         <div id="appointments" class="section"><div class="data-table"><h2>Appointments</h2><table><thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody id="appointmentsList"></tbody></table></div></div>
+        <div id="labbookings" class="section"><div class="data-table"><h2>Lab Bookings</h2><table><thead><tr><th>Patient</th><th>Test</th><th>Status</th><th>Action</th></tr></thead><tbody id="labBookingsList"></tbody></table></div></div>
 
-        <!-- Lab Bookings -->
-        <div id="labbookings" class="section"><div class="data-table"><h2>Lab Bookings</h2><td><thead><tr><th>Patient</th><th>Test</th><th>Status</th><th>Action</th></tr></thead><tbody id="labBookingsList"></tbody></table></div></div>
-
-        <!-- Profile -->
         <div id="profile" class="section">
             <div class="form-card"><h2>My Profile</h2>
                 <div class="form-group-full"><label>Name</label><input type="text" id="profileName"></div>
@@ -141,21 +132,13 @@
             </div>
         </div>
 
-        <!-- Users -->
-        <div id="users" class="section"><div class="data-table"><h2>All Users</h2><tr><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead><tbody id="usersList"></tbody></table></div></div>
-
-        <!-- Staff -->
+        <div id="users" class="section"><div class="data-table"><h2>All Users</h2><table><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead><tbody id="usersList"></tbody></table></div></div>
         <div id="workers" class="section"><div class="data-table"><h2>Staff Members</h2><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead><tbody id="workersList"></tbody></table></div></div>
-
-        <!-- Audit -->
-        <div id="audit" class="section"><div class="data-table"><h2>Audit Log</h2><tr><thead><tr><th>Time</th><th>Staff</th><th>Action</th><th>Details</th></tr></thead><tbody id="auditList"></tbody></table></div></div>
-
-        <!-- Low Stock -->
-        <div id="lowstock" class="section"><div class="data-table"><h2>Low Stock</h2></table><thead><tr><th>Product</th><th>Stock</th><th>Action</th></tr></thead><tbody id="lowStockList"></tbody></tr></div></div>
+        <div id="audit" class="section"><div class="data-table"><h2>Audit Log</h2><table><thead><tr><th>Time</th><th>Staff</th><th>Action</th><th>Details</th></tr></thead><tbody id="auditList"></tbody></table></div></div>
+        <div id="lowstock" class="section"><div class="data-table"><h2>Low Stock</h2><table><thead><tr><th>Product</th><th>Stock</th><th>Action</th></tr></thead><tbody id="lowStockList"></tbody></table></div></div>
     </div>
 </div>
 
-<!-- Edit Modal -->
 <div id="editModal" class="modal">
     <div class="modal-content">
         <h3>Edit Product</h3>
@@ -170,329 +153,189 @@
 </div>
 
 <script>
-    const API = ' = 'https://lifemed-healthhttps://lifemed-healthcare.oncare.onrender.com/api';
-    letrender.com/api';
-    let token token = = localStorage.getItem('admin localStorage.getItem('adminToken');
-Token');
-    if    if (!token) window (!token) window.location.href = 'login.html';
-    document.location.href = 'login.html';
-    document.getElementById('.getElementById('adminName').innerTextadminName').innerText = localStorage.getItem('adminName') = localStorage.getItem('adminName') || ' || 'Admin';
+    const API = 'https://lifemed-healthcare.onrender.com/api';
+    let token = localStorage.getItem('adminToken');
+    if (!token) window.location.href = 'login.html';
+    document.getElementById('adminName').innerText = localStorage.getItem('adminName') || 'Admin';
 
-Admin';
-
-    async function fetch    async function fetchAPI(urlAPI(url, options, options = { = {}) {
-        const}) {
-        const res = res = await fetch(url, await fetch(url, { ... { ...options, headers:options, headers: { 'Content-Type': 'application/json { 'Content-Type': 'application/json', '', 'Authorization': `Bearer ${tokenAuthorization': `Bearer ${token}`, ...options.headers }}`, ...options.headers } });
-        if (res.status });
-        if (res.status ===  === 401) { localStorage401) { localStorage.clear(); window.location.h.clear(); window.location.href = 'ref = 'login.htmllogin.html'; }
-        return'; }
-        return await res await res.json();
+    async function fetchAPI(url, options = {}) {
+        const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers } });
+        if (res.status === 401) { localStorage.clear(); window.location.href = 'login.html'; }
+        return await res.json();
     }
 
-.json();
-    }
-
-    function showSection(section    function showSection(section) {
-) {
-        document        document.querySelectorAll('.section').forEach.querySelectorAll('.section').forEach(s =>(s => s.classList s.classList.remove('.remove('active'));
-        documentactive'));
-        document.getElementById(s.getElementById(section).classList.add('active');
-ection).classList.add('active');
-        document.querySelectorAll        document.querySelectorAll('.sidebar('.sidebar-item').-item').forEach(i => iforEach(i => i.classList.remove.classList.remove('active'));
-       ('active'));
-        event.target event.target.classList.add('active.classList.add('active');
-       ');
-        if (section === if (section === 'dashboard 'dashboard') loadStats();
-        if') loadStats();
-        if (section (section === 'products') === 'products') loadProducts loadProducts();
-       ();
-        if (section === if (section === 'doctors') loadDo 'doctors') loadDoctors();
-ctors();
-        if (section        if ( === 'labtestssection === 'labtests') loadLabTests') loadLabTests();
-       ();
-        if (section === if (section === 'orders') loadOrders();
- 'orders') load        ifOrders();
-        if (section (section === 'appointments === 'appointments') load') loadAppointments();
-       Appointments();
-        if ( if (section === 'labsection === 'labbookingsbookings') loadLab') loadLabBookBookings();
-        if (section === 'profile')ings();
+    function showSection(section) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(section).classList.add('active');
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        event.target.classList.add('active');
+        if (section === 'dashboard') loadStats();
+        if (section === 'products') loadProducts();
+        if (section === 'doctors') loadDoctors();
+        if (section === 'labtests') loadLabTests();
+        if (section === 'orders') loadOrders();
+        if (section === 'appointments') loadAppointments();
+        if (section === 'labbookings') loadLabBookings();
         if (section === 'profile') loadProfile();
-        loadProfile();
-        if ( if (section ===section === 'users') load 'users') loadUsers();
-Users();
-        if (section        if (section === ' === 'workers')workers') loadWorkers();
- loadWorkers();
-        if        if (section === ' (section === 'auditaudit') loadAudit') loadAudit();
-       ();
-        if (section if (section === 'low === 'lowstock')stock') loadLowStock();
- loadLowStock();
+        if (section === 'users') loadUsers();
+        if (section === 'workers') loadWorkers();
+        if (section === 'audit') loadAudit();
+        if (section === 'lowstock') loadLowStock();
     }
 
-    }
-
-    async    async function loadStats() function loadStats() {
-        {
-        const res = await const res = await fetchAPI(`${API}/stats fetchAPI(`${API}/stats`);
-        if (`);
-        if (res.successres.success) {
-) {
-            document.getElementById('            documentstatProducts.getElementById('statProducts').inner').innerText = res.stText = res.stats.totalats.totalProducts;
-            documentProducts;
-            document.getElementById('.getElementById('statDostatDoctors').innerTextctors').innerText = res = res.stats.totalDo.stats.totalDoctors;
-ctors;
-            document.getElementById('            document.getElementById('statOrdersstatOrders').innerText =').innerText = res.st res.stats.totalats.totalOrders;
-            documentOrders;
-            document.getElementById('.getElementById('statAppointmentsstatAppointments').innerText').innerText = res.stats = res.stats.totalApp.totalAppointments;
-            documentointments;
-            document.getElementById('.getElementById('statUsersstatUsers').innerText =').innerText = res.stats.totalUsers || res.stats.totalUsers || 0;
-            document.getElementById 0;
-            document.getElementById('stat('statLowStockLowStock').innerText =').innerText = res res.stats.lowStock.stats.lowStock;
+    async function loadStats() {
+        const res = await fetchAPI(`${API}/stats`);
+        if (res.success) {
+            document.getElementById('statProducts').innerText = res.stats.totalProducts;
+            document.getElementById('statDoctors').innerText = res.stats.totalDoctors;
+            document.getElementById('statOrders').innerText = res.stats.totalOrders;
+            document.getElementById('statAppointments').innerText = res.stats.totalAppointments;
+            document.getElementById('statUsers').innerText = res.stats.totalUsers || 0;
+            document.getElementById('statLowStock').innerText = res.stats.lowStock;
         }
     }
 
-   ;
-        }
-    }
-
-    async function addProduct async function addProduct() {
-() {
-        const product =        const product = {
-            {
-            name: document.getElementById name: document.getElementById('prod('prodName').valueName').value,
-           ,
-            category: document.getElementById('prodCategory category: document.getElementById('prodCategory').value').value,
-            pricePer,
-            pricePerUnit:Unit: parseFloat(document.getElementById parseFloat(document.getElementById('prod('prodPrice').value),
-Price').value),
-            total            totalStock: parseInt(document.getElementByIdStock: parseInt(document.getElementById('('prodprodStock').value),
-            unitTypeStock').value),
-            unitType: document.getElementById('prodUnit: document.getElementById('prodUnit').value').value,
-           ,
-            imageUrl imageUrl: document: document.getElementById('prodImage.getElementById('prodImageUrl').Url').value ||value || ''
-        ''
+    async function addProduct() {
+        const product = {
+            name: document.getElementById('prodName').value,
+            category: document.getElementById('prodCategory').value,
+            pricePerUnit: parseFloat(document.getElementById('prodPrice').value),
+            totalStock: parseInt(document.getElementById('prodStock').value),
+            unitType: document.getElementById('prodUnit').value,
+            imageUrl: document.getElementById('prodImageUrl').value || ''
         };
-        if (! };
-        if (!product.name || !product.name || !product.priceproduct.pricePerUnit) {PerUnit alert(') { alert('Fill required fields'); return;Fill required fields'); return; }
-        }
-        const res = await const res = await fetchAPI fetchAPI(`${API}/admin(`${API}/admin/products`,/products`, { method: 'POST', { method: 'POST', body: body: JSON.stringify(product) JSON.stringify(product) });
-        });
-        if (res.success if (res.success) {) { alert('Product added alert('Product added!');!'); loadProducts(); load loadProducts(); loadStats();Stats(); }
+        if (!product.name || !product.pricePerUnit) { alert('Fill required fields'); return; }
+        const res = await fetchAPI(`${API}/admin/products`, { method: 'POST', body: JSON.stringify(product) });
+        if (res.success) { alert('Product added!'); loadProducts(); loadStats(); }
     }
 
-    function }
-    }
-
-    function editProduct editProduct(id(id) {
-       ) {
-        fetchAPI fetchAPI(`${API}/products(`${API}/products`).`).then(resthen(res => {
-            const => {
-            const p = p = res.products.find(p => res.products.find(p => p.id === id p.id === id);
-           );
-            if ( if (p)p) {
-                document.getElementById {
-                document.getElementById('edit('editId').value =Id').value = p.id;
-                p.id;
+    function editProduct(id) {
+        fetchAPI(`${API}/products`).then(res => {
+            const p = res.products.find(p => p.id === id);
+            if (p) {
+                document.getElementById('editId').value = p.id;
                 document.getElementById('editName').value = p.name;
-                document.getElementById('edit document.getElementById('editName').value = p.name;
-                document.getElementById('editPrice').value = p.pricePrice').value = p.pricePerUnitPerUnit;
-                document.getElementById;
-                document.getElementById('editStock').value =('editStock'). p.totalvalue = p.totalStock;
-Stock;
-                document.getElementById('                document.getElementById('editUnit').value = peditUnit').value = p.unit.unitType || '';
-               Type || '';
-                document.getElementById('editModal'). document.getElementById('editModal').style.displaystyle.display = ' = 'flex';
+                document.getElementById('editPrice').value = p.pricePerUnit;
+                document.getElementById('editStock').value = p.totalStock;
+                document.getElementById('editUnit').value = p.unitType || '';
+                document.getElementById('editModal').style.display = 'flex';
             }
-flex';
-            }
-        });
         });
     }
 
-    async    }
-
-    async function update function updateProduct()Product() {
-        {
-        const id = document const id = document.getElementById('editId.getElementById('editId').value').value;
-       ;
-        const product const product = {
- = {
-            name: document            name: document.getElementById('.getElementById('editNameeditName').value,
-           ').value,
-            pricePer pricePerUnit: parseFloatUnit: parseFloat(document.getElementById(document.getElementById('editPrice').('editPrice').value),
-           value),
-            totalStock: totalStock: parseInt(document parseInt(document.getElementById('editStock.getElementById('editStock').value').value),
-            unitType),
-            unitType: document.getElementById(': document.getElementById('editUniteditUnit').value
-       ').value
+    async function updateProduct() {
+        const id = document.getElementById('editId').value;
+        const product = {
+            name: document.getElementById('editName').value,
+            pricePerUnit: parseFloat(document.getElementById('editPrice').value),
+            totalStock: parseInt(document.getElementById('editStock').value),
+            unitType: document.getElementById('editUnit').value
         };
-        const res };
-        const res = await = await fetchAPI(`${API fetchAPI(`${API}/admin/products/${}/admin/products/${id}id}`, { method:`, { method: 'PUT', body 'PUT', body: JSON: JSON.stringify(product.stringify(product) });
-) });
-        if        if (res (res.success.success) { alert('Updated) { alert('Updated!'); closeEditModal();!'); closeEditModal(); loadProducts loadProducts(); load(); loadStats();Stats(); }
+        const res = await fetchAPI(`${API}/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(product) });
+        if (res.success) { alert('Updated!'); closeEditModal(); loadProducts(); loadStats(); }
     }
-    }
-    }
-    function close function closeEditModal() {EditModal() { document.getElementById document.getElementById('editModal').('editModal').style.displaystyle.display = 'none'; = 'none'; }
+    function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
 
-    }
-
-    async function loadProducts async function loadProducts() {
-() {
-        const        const res = await fetch res = await fetchAPI(`${API(`${API}/products`);
-API}/products`);
-        if        if (res.success && res. (res.success && res.products)products) {
-            let html {
+    async function loadProducts() {
+        const res = await fetchAPI(`${API}/products`);
+        if (res.success && res.products) {
             let html = '';
- = '';
-            res.products            res.products.forEach(p.forEach(p => {
- => {
-                let imgHtml = p                let imgHtml = p.imageUrl ?.imageUrl ? `<img src="${p.image `<img src="${p.imageUrlUrl}" style}" style="width:40="width:40px;px;height:40pxheight:40px;border;border-radius:8px-radius:8px;">` : '📷;">` : '📷';
-';
-                html                html += `<tr += `<tr><td>><td>${imgHtml}</${imgHtml}</tdtd><td>><td>${p.name}</${p.name}</tdtd><td>₹${p.price><td>₹${p.pricePerUnit}</tdPerUnit><td>${}</td><td>${p.totalStock}</p.totalStock}</tdtd><td>${p><td>${p.unit.unitType || '-'}</Type || '-'}</td>
-td>
-                <td                <td><button class="btn-small" onclick><button class="btn-small" onclick="edit="editProduct($Product(${p.id}){p.id})">Edit">Edit</button</button><button class="><button class="btn-small btn-dangerbtn-small btn-danger" onclick" onclick="delete="deleteProduct(${pProduct(${p.id}).id})">Delete</button></td">Delete</button></td></tr>`;
-></tr>`;
+            res.products.forEach(p => {
+                let imgHtml = p.imageUrl ? `<img src="${p.imageUrl}" style="width:40px;height:40px;border-radius:8px;">` : '📷';
+                html += `<tr><td>${imgHtml}</td><td>${p.name}</td><td>₹${p.pricePerUnit}</td><td>${p.totalStock}</td><td>${p.unitType || '-'}</td><td><button class="btn-small" onclick="editProduct(${p.id})">Edit</button><button class="btn-small btn-danger" onclick="deleteProduct(${p.id})">Delete</button></td></tr>`;
             });
-            });
-            document.getElementById('            document.getElementById('productsListproductsList').innerHTML = html;
-').innerHTML = html;
-        }
+            document.getElementById('productsList').innerHTML = html;
         }
     }
-    async    }
-    async function delete function deleteProduct(id) {Product(id) { if( if(confirm('Delete?'confirm('Delete?')) {)) { await fetchAPI(`${ await fetchAPI(`${API}/API}/admin/products/${idadmin/products/${id}`,}`, { method { method: ': 'DELETE' }); loadProductsDELETE' }); loadProducts(); loadStats(); loadStats();(); } }
+    async function deleteProduct(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' }); loadProducts(); loadStats(); } }
 
-    async function add } }
-
-    async function addDoctor()Doctor() {
-        const doctor {
-        const doctor = { = { name: document.getElementById name: document.getElementById('docName').('docName').value,value, specialty: document.getElementById('docSpecialty specialty: document.getElementById('docSpecialty').value').value, fees: parse, fees: parseFloat(documentFloat(document.getElementById('docF.getElementById('docFees').ees').value)value) };
-        if (! };
-        if (!doctor.name || !doctor.fdoctor.name || !doctor.fees) { alertees) { alert('Fill('Fill required fields required fields'); return'); return; }
-        const; }
-        const res = await fetch res = await fetchAPI(`${API(`${API}/API}/admin/admin/doctors`, {doctors`, { method: method: 'POST', body 'POST', body: JSON.stringify(doctor): JSON.stringify(doctor) });
-        });
-        if (res.success) { if (res.success) { alert(' alert('Doctor added!');Doctor added!'); loadDo loadDoctors(); loadStatsctors(); loadStats(); }
-(); }
+    async function addDoctor() {
+        const doctor = { name: document.getElementById('docName').value, specialty: document.getElementById('docSpecialty').value, fees: parseFloat(document.getElementById('docFees').value) };
+        if (!doctor.name || !doctor.fees) { alert('Fill required fields'); return; }
+        const res = await fetchAPI(`${API}/admin/doctors`, { method: 'POST', body: JSON.stringify(doctor) });
+        if (res.success) { alert('Doctor added!'); loadDoctors(); loadStats(); }
     }
-    async function load    }
-    async function loadDoctorsDoctors() {
-        const() {
-        const res = res = await fetchAPI(`${ await fetchAPI(`${API}/API}/doctors`);
-        if (doctors`);
-        if (res.success && resres.success && res.doct.doctors)ors) {
-            {
+    async function loadDoctors() {
+        const res = await fetchAPI(`${API}/doctors`);
+        if (res.success && res.doctors) {
             let html = '';
- let html = '';
-            res.doct            res.doctors.forEachors.forEach(d =>(d => { html += { html += `<tr `<tr><td>👨><td>👨‍‍⚕️</td⚕️</td><td><td>${d.name>${d.name}</td><td}</td><td>${d.s>${d.specialty}</td><tdpecialty}</td><td>₹>₹${d.fees${d.fees}</td><td><button}</td><td><button class="btn-small class="btn-small" onclick" onclick="deleteDoctor($="deleteDoctor(${d{d.id}).id})">Delete</button">Delete</button></td></td></tr>`;></tr>`; });
-            });
-            document.getElementById('do document.getElementById('doctorsListctorsList').innerHTML = html;
-').innerHTML = html;
-        }
+            res.doctors.forEach(d => { html += `<tr><td>👨‍⚕️</td><td>${d.name}</td><td>${d.specialty}</td><td>₹${d.fees}</td><td><button class="btn-small" onclick="deleteDoctor(${d.id})">Delete</button></td></tr>`; });
+            document.getElementById('doctorsList').innerHTML = html;
         }
     }
-    async    }
-    async function delete function deleteDoctor(idDoctor(id) { if() { if(confirm('confirm('Delete?')) {Delete?')) { await fetchAPI(`${API}/ await fetchAPI(`${API}/admin/admin/doctors/${iddoctors/${id}`,}`, { method { method: 'DELETE': 'DELETE' }); }); loadDoctors(); loadDoctors(); loadStats loadStats(); } }
+    async function deleteDoctor(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/doctors/${id}`, { method: 'DELETE' }); loadDoctors(); loadStats(); } }
 
-   (); } }
-
-    async function async function addLabTest() addLabTest() {
-        {
-        const test const test = { = { name: document.getElementById name: document.getElementById('test('testName').value, price:Name').value, price: parseFloat parseFloat(document.getElementById('test(document.getElementById('testPrice').value) };
-        if (!test.name || !test.pricePrice').value) };
-        if (!test.name || !test.price) {) { alert('Fill fields'); return alert('Fill fields'); return; }
-        const; }
-        const res = res = await fetchAPI(`${API}/ await fetchAPI(`${API}/admin/lab-tests`,admin/lab-tests`, { method { method: ': 'POST', body:POST', body: JSON.stringify JSON.stringify(test) });
-       (test) });
-        if ( if (res.success) {res.success) { alert('Lab test added! alert('Lab test added!'); load'); loadLabTestsLabTests(); }
+    async function addLabTest() {
+        const test = { name: document.getElementById('testName').value, price: parseFloat(document.getElementById('testPrice').value) };
+        if (!test.name || !test.price) { alert('Fill fields'); return; }
+        const res = await fetchAPI(`${API}/admin/lab-tests`, { method: 'POST', body: JSON.stringify(test) });
+        if (res.success) { alert('Lab test added!'); loadLabTests(); }
     }
-(); }
-    }
-    async    async function loadLabTests function loadLabTests() {
-() {
-        const res        const res = = await fetchAPI(`${ await fetchAPI(`${API}/API}/lab-tests`);
-lab-tests`);
-        if (res        if (res.success &&.success && res.labTests) {
- res.labTests) {
-            let            let html = '';
-            html = '';
-            res.l res.labTests.forEach(tabTests.forEach(t => { => { html += `< html += `<tr><tdtr><td>${>${t.name}</tdt.name}</td><td><td>₹${t>₹${t.price}</.price}</td><td><button classtd><td><button class="btn="btn-small"-small" onclick="deleteLabTest(${t onclick="deleteLabTest(${t.id}).id})">Delete</button">Delete</button></td></td></tr>`;></tr>`; });
-            });
-            document.getElementById('labTestsList document.getElementById('labTestsList').inner').innerHTML = html;
-HTML = html;
-        }
+    async function loadLabTests() {
+        const res = await fetchAPI(`${API}/lab-tests`);
+        if (res.success && res.labTests) {
+            let html = '';
+            res.labTests.forEach(t => { html += `<tr><td>${t.name}</td><td>₹${t.price}</td><td><button class="btn-small" onclick="deleteLabTest(${t.id})">Delete</button></td></tr>`; });
+            document.getElementById('labTestsList').innerHTML = html;
         }
     }
-    }
-    async function delete    async function deleteLabTest(id) { ifLabTest(id) { if(confirm(confirm('Delete('Delete?')) { await?')) { await fetchAPI fetchAPI(`${API}/admin(`${API}/admin/lab/lab-tests-tests/${id}`,/${id}`, { method { method: 'DELETE': 'DELETE' }); }); loadLabTests(); loadLabTests(); } }
+    async function deleteLabTest(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/lab-tests/${id}`, { method: 'DELETE' }); loadLabTests(); } }
 
- } }
+    async function loadOrders() { const res = await fetchAPI(`${API}/orders`); if (res.success) { let html = ''; res.orders.forEach(o => { html += `<tr><td>#${o.id}</td><td>₹${o.totalAmount}</td><td>${o.status}</td></tr>`; }); document.getElementById('ordersList').innerHTML = html; } }
+    async function loadAppointments() { const res = await fetchAPI(`${API}/appointments`); if (res.success) { let html = ''; res.appointments.forEach(a => { html += `<tr><td>${a.patientName}</td><td>${a.doctorName}</td><td>${a.date}</td><td class="status-${a.status}">${a.status}</td><td>${a.status === 'pending' ? `<button class="btn-small" onclick="confirmAppt(${a.id})">Confirm</button>` : '-'}</td></tr>`; }); document.getElementById('appointmentsList').innerHTML = html; } }
+    async function confirmAppt(id) { await fetchAPI(`${API}/appointments/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'confirmed' }) }); loadAppointments(); }
+    async function loadLabBookings() { const res = await fetchAPI(`${API}/lab-bookings`); if (res.success) { let html = ''; res.bookings.forEach(b => { html += `<tr><td>${b.patientName}</td><td>${b.testName}</td><td class="badge">${b.status}</td><td><button class="btn-small" onclick="processLabBooking(${b.id})">Process</button></td></tr>`; }); document.getElementById('labBookingsList').innerHTML = html; } }
+    async function processLabBooking(id) { await fetchAPI(`${API}/lab-bookings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'processing' }) }); loadLabBookings(); }
 
-    async function load    async function loadOrders()Orders() { const res { const res = await fetch = await fetchAPI(`${API(`${API}/orders`API}/orders`); if); if (res.success) (res.success) { let { let html = ''; html = ''; res. res.orders.forEachorders.forEach(o => { html(o => { html += `<tr><td> += `<tr><td>#${o.id}</td><td>₹#${o.id}</td><td>₹${${o.totalAmounto.totalAmount}</td}</td><td>${><td>${o.statuso.status}</td></tr>`; }); document.getElementById('ordersList').}</td></tr>`; }); document.getElementById('ordersList').innerHTMLinnerHTML = html = html; }; } }
-    async function }
-    async function loadApp loadAppointments()ointments() { const res = await fetch { const res = await fetchAPI(`${APIAPI(`${API}/appointments}/appointments`);`); if ( if (res.success) {res.success) { let html let html = '' = ''; res.appointments; res.appointments.forEach(a.forEach(a => { html += => { html += `<tr `<tr><td><td>${a.patientName>${a.patientName}</td><td}</td><td>${>${a.doctorName}</tda.doctorName}</td><td><td>${>${a.datea.date}</td><td}</td><td class=" class="status-${astatus-${a.status}">${.status}">${a.statusa.status}</td><td}</td><td>${>${a.status === 'a.status === 'pending' ?pending' ? `< `<button class="btn-small"button class="btn-small" onclick="confirmAppt($ onclick="confirmAppt(${a.id})">Confirm{a.id})">Confirm</button>` : '-'}</</button>` : '-'}</td></td></tr>`; }tr>`; }); document); document.getElementById('app.getElementById('appointmentsList').ointmentsList').innerHTMLinnerHTML = html; } = html; } }
-    }
-    async function confirmAppt(id async function confirmAppt(id) { await fetch) {API(`${API}/appointments await fetchAPI(`${API}/appointments/${id/${id}/status}/status`, { method:`, { method: 'PUT 'PUT', body: JSON', body: JSON.stringify({.stringify({ status: status: 'confirmed' }) 'confirmed' }) }); }); loadAppointments(); loadAppointments(); }
-    }
-    async function loadLab async function loadLabBookings() { const resBookings() { const res = await fetchAPI(`${API = await fetchAPI(`${API}/lab-bookings}/lab-bookings`); if (`); if (res.success) {res.success) { let html = '' let html = ''; res; res.bookings.forEach(b.bookings.forEach(b => { => { html += html += `<tr><td `<tr><td>${>${b.patientNameb.patientName}</td}</td><td>${><td>${b.testb.testName}</tdName}</td><td class><td class="badge">="bad${bge">${b.status}</.status}</td><tdtd><td><button class><button class="="btn-small" onclick="btn-small" onclick="processLabBooking($processLabBooking(${b{b.id})">Process</button.id})">Process</button></td></td></tr>`; });></tr>`; }); document.getElementById document.getElementById('labBookings('labBookingsList').List').innerHTML = html; } }
-   innerHTML = html; } }
-    async function async function processLabBooking(id processLabBooking(id) {) { await fetch await fetchAPI(`${API(`${API}/lab-bookAPI}/lab-bookings/${id}/status`,ings/${id}/status`, { method: ' { method: 'PUT',PUT', body: JSON.stringify({ status body: JSON.stringify({ status: 'processing': 'processing' }) } }) }); loadLabBookings();); loadLabBookings(); }
-
-    async function loadProfile }
-
-    async function load() { const resProfile() { const res = await fetchAPI = await fetchAPI(`${API}/auth/profile`(`${API}/auth/profile`); if); if (res (res.success && res.user.success && res.user) { document.getElementById) { document.getElementById('profileName').value =('profileName'). res.uservalue = res.user.name || ''; document.getElementById.name || ''; document.getElementById('profile('profileEmail').value =Email').value = res.user res.user.email || '';.email || ''; } }
- } }
-    async function change    async function changePassword() {
-       Password() {
-        const cur const cur = document = document.getElementById('currentP.getElementById('currentPwd').wd').value, newPwd =value, newPwd = document.getElementById document.getElementById('new('newPwd').valuePwd').value, confirm = document.getElementById(', confirm = document.getElementById('confirmPwd').value;
-       confirmPwd').value;
-        if if (!cur || (!cur || ! !newPnewPwd || !confirmwd || !confirm) {) { alert(' alert('Fill all fieldsFill all fields'); return; }
-       '); return; }
-        if ( if (newPnewPwd !== confirm) { alert('Passwd !== confirm) { alert('Passwords dowords do not match not match'); return; }
-'); return; }
-        const        const res = await fetch res = await fetchAPI(`${API(`${API}/API}/auth/auth/change-password`,change-password`, { method { method: 'PUT',: 'PUT', body: body: JSON.stringify({ current JSON.stringify({ currentPassword:Password: cur, newPassword cur, newPassword: new: newPwd }) });
-Pwd }) });
-        if        if (res.success) (res.success) alert(' alert('Password changed!');
-Password changed!');
-        else        else alert('Failed');
- alert('Failed');
+    async function loadProfile() { const res = await fetchAPI(`${API}/auth/profile`); if (res.success && res.user) { document.getElementById('profileName').value = res.user.name || ''; document.getElementById('profileEmail').value = res.user.email || ''; } }
+    async function changePassword() {
+        const cur = document.getElementById('currentPwd').value, newPwd = document.getElementById('newPwd').value, confirm = document.getElementById('confirmPwd').value;
+        if (!cur || !newPwd || !confirm) { alert('Fill all fields'); return; }
+        if (newPwd !== confirm) { alert('Passwords do not match'); return; }
+        const res = await fetchAPI(`${API}/auth/change-password`, { method: 'PUT', body: JSON.stringify({ currentPassword: cur, newPassword: newPwd }) });
+        if (res.success) alert('Password changed!');
+        else alert('Failed');
     }
 
-    async    }
+    async function loadUsers() { const res = await fetchAPI(`${API}/admin/users`); if (res.success && res.users) { let html = ''; res.users.forEach(u => { if (u.role !== 'admin') { html += `<tr><td>${u.name}</td><td>${u.email}</td><td class="${u.status === 'blocked' ? 'status-blocked' : 'status-active'}">${u.status || 'active'}</td><td><button class="btn-small" onclick="toggleUserStatus(${u.id}, '${u.status || 'active'}')">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button><button class="btn-small btn-danger" onclick="deleteUser(${u.id})">Delete</button></td></tr>`; } }); document.getElementById('usersList').innerHTML = html; } }
+    async function toggleUserStatus(id, cur) { await fetchAPI(`${API}/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: cur === 'blocked' ? 'active' : 'blocked' }) }); loadUsers(); loadStats(); }
+    async function deleteUser(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/users/${id}`, { method: 'DELETE' }); loadUsers(); loadStats(); } }
 
-    async function loadUsers() function loadUsers() { const { const res = await fetchAPI(`${ res = await fetchAPI(`${API}/admin/usersAPI}/admin/users`); if (`); if (res.success && res.users)res.success && res.users) { let html = { let html = ''; ''; res.users.forEach(u res.users.forEach(u => { => { if ( if (u.role !==u.role !== 'admin 'admin') { html +=') { html += `<tr `<tr><td>${><td>${u.nameu.name}</td><td>${}</td><td>${u.email}</tdu.email}</td><td><td class="${u.status === ' class="${u.status === 'blockedblocked' ? 'status' ? 'status-blocked-blocked' : 'status' : 'status-active'}-active'}">${">${u.status || 'u.status || 'active'active'}</td><td}</td><td><button class="btn-small><button class="btn-small" onclick" onclick="toggleUserStatus="toggleUserStatus(${(${u.id}, 'u.id}, '${u${u.status || 'active'}')">${.status || 'active'}')">${u.statusu.status === ' === 'blockedblocked' ? 'Un' ? 'Unblock'block' : 'Block' : 'Block'}</button}</button><button class="><button class="btn-small btn-dangerbtn-small btn-danger" onclick" onclick="deleteUser($="deleteUser(${u{u.id})">Delete.id})">Delete</button</button></td></tr>`;></td></tr>`; } } } }); document.getElementById('); document.getElementById('usersListusersList').innerHTML =').innerHTML = html; html; } }
-    async } }
- function toggleUserStatus(id,    async function toggleUserStatus(id, cur) cur) { await { await fetchAPI(`${API fetchAPI(`${API}/admin}/admin/users/${/users/${id}/status`,id}/status`, { method: 'PUT', body: { method: 'PUT', JSON.stringify body: JSON.stringify({ status({ status: cur: cur === 'block === 'blocked' ?ed' ? 'active' : 'block 'active' : 'blocked' }) }); loadUsers();ed' }) }); loadUsers(); load loadStats(); }
-Stats(); }
-    async function deleteUser(id) { if(confirm('Delete?')) {    async function deleteUser(id) { if(confirm('Delete?')) { await fetch await fetchAPI(`${API(`${API}/admin/usersAPI}/admin/users/${id/${id}`, { method}`, { method: ': 'DELETE' });DELETE' loadUsers(); load }); loadUsers(); loadStats(); } }
+    async function addWorker() { const worker = { name: document.getElementById('workerName'). = { name: document.getElementById('workerName').value, email: document.getElementById document.getElementById('workerName').value, email: document.getElementById('workerEmail').value, email: document.getElementById('worker('workerEmail').value,value, password: document.getElementById('workerEmail').value, password: password: document.getElementById('workerPassword').value, role:Password').value, role: document.getElementById('workerPassword').value, role: document.getElementById document.getElementById('workerRole'). document.getElementById('workerRole').('workerRole').value }; if (!worker.namevalue }; if (!worker.namevalue }; if (!worker.name || !worker.email || ! || !worker.email || ! || !worker.email || !worker.password) {worker.password) {worker.password) { alert(' alert('Fill fields'); return alert('Fill fields'); returnFill fields'); return; } const res = await fetchAPI; } const res = await; } const res = await fetchAPI(`${API}/admin(`${API}/admin/workers fetchAPI(`${API}/admin/workers`, { method:/workers`, { method:`, { method: 'POST', body: JSON 'POST', body: JSON 'POST', body: JSON.stringify(worker) });.stringify(worker) });.stringify(worker) }); if (res.success) { if (res.success) { if (res.success) { alert('Staff added alert('Staff added!'); alert('Staff added!'); loadWorkers(); } }
+    async function loadWork!'); loadWorkers(); } }
+    async function loadWorkers loadWorkers(); } }
+    async function loadWorkers() { const res = await fetchAPI(`${API}/admin/workersers() { const res = await fetchAPI(`${API}/admin() { const res = await fetchAPI(`${API}/admin/workers`); if (res.success && res.workers`); if (res.success && res.workers) {/workers`); if (res.success && res.workers) { let html = ''; res) { let html = ''; res. let html = ''; res.workers.forEach(w => { html +=.workers.forEach(w => { html += `<trworkers.forEach(w => { html += `<tr><td>${w.name `<tr><td>${w.name}</td><td>${w.name}</td><td>${w.email}</td><td>${w.email><td>${w.email}</td><td class="badge">${}</td><td class="badge">${}</td><td class="badge">${w.role}</tdw.role}</tdw.role}</td><td><button class="><td><button class="btn><td><button class="btn-small"btn-small"-small" onclick="deleteWorker(${w.id})"> onclick="deleteWorker(${w.id})"> onclick="deleteWorker(${w.id})">Delete</button></Delete</button></td></Delete</button></td></tr>`; }); documenttd></tr>`; }tr>`; }); document.getElementById('workersList').innerHTML =.getElementById('workersList').innerHTML =); document.getElementById('workersList').innerHTML = html; } }
+    async html; } }
+    async html; } }
+    async function deleteWorker(id) { function deleteWorker(id) { if( function deleteWorker(id) { if(confirm('Delete?' if(confirm('Delete?')) { await fetchAPI(`${confirm('Delete?')) { await fetchAPI(`${API}/admin/workers/${)) { await fetchAPI(`${API}/admin/workers/${API}/admin/workers/${id}`, {id}`, { method:id}`, { method: 'DELETE' } method: 'DELETE' }); load 'DELETE' }); loadWorkers(); } }
 
-    asyncStats(); } }
+    async function); loadWorkers(); } }
 
-    async function add function addWorker()Worker() { const worker = { const worker = { name { name: document.getElementById(': document.getElementById('workerNameworkerName').value, email').value, email: document: document.getElementById('.getElementById('workerEmail').valueworkerEmail').value, password, password: document: document.getElementById('workerPassword').value.getElementById('workerPassword').value, role, role: document.getElementById(': document.getElementById('workerRoleworkerRole').value }; if').value }; if (!worker.name || !worker (!worker.name || !worker.email ||.email || !worker.password) !worker { alert.password) { alert('Fill('Fill fields'); return fields'); return; }; } const res = await fetchAPI const res = await fetchAPI(`${API(`${API}/admin/workers`, { method}/admin/workers`, { method: 'POST: 'POST', body', body: JSON.stringify(worker): JSON.stringify(worker) }); if ( }); if (res.success) { alert('Staff added!'); loadWorkers();res.success) { alert('Staff added!'); loadWorkers(); } }
- } }
-    async function load    asyncWorkers() { const function loadWorkers() { res = await const res = await fetchAPI fetchAPI(`${API(`${API}/admin}/admin/workers`);/workers`); if ( if (res.success && resres.success && res.workers.workers) {) { let html = '' let html = ''; res; res.workers.forEach(w.workers.forEach(w => { => { html += `<tr html += `<tr><td><td>${>${w.name}</td><tdw.name}</td><td>${>${w.email}</tdw.email}</td><td><td class="badge class="badge">${w.">${w.role}</role}</td><tdtd><td><button class><button class="btn-small" onclick="="btn-small" onclick="deleteWorker(${deleteWorker(${w.idw.id})">Delete</})">Delete</button></button></td></tr>`td></tr>`; }); document.getElementById('; }); document.getElementById('workersList').innerworkersList').innerHTML =HTML = html; } html; } }
- }
-    async function delete    async function deleteWorker(idWorker(id) { if() { if(confirm('confirm('Delete?')) {Delete?')) { await fetch await fetchAPI(`${API}/API(`${API}/admin/admin/workers/${id}workers/${`, { method: 'DELETEid}`, { method: 'DELETE' }); load' }); loadWorkersWorkers(); } }
+    async function loadAudit()Workers(); } }
 
-   (); } }
+    async function loadAudit() { const res = loadAudit() { const res = { const res = await fetch await fetchAPI(`${API}/admin/audit await fetchAPI(`${API}/admin/API(`${API}/admin/`); if (res.success && resaudit`); if (res.successaudit`); if (res.success && res.audit) { let.audit) { let html = ''; && res.audit) { let html = ''; res.audit html = ''; res. res.audit.forEach(a.forEach(a => { html +=audit.forEach(a => { html += `<tr><td>${ => { html += `<tr><td>${new Date(a.t `<tr><td>${new Date(a.timestamp).toLocalenew Date(a.timestamp).toLocaleString()imestamp).toLocaleString()String()}</td><td}</td><td>${}</td><td>${>${a.staff}</a.staff}</tda.staff}</td><td class="badge">td><td class="badge">${a><td class="badge">${a${a.action}</td.action}</td><td>${a.details.action}</td><td>${a.details><td>${a.details}</td></tr>`;}</td></tr>`;}</td></tr>`; }); document.getElementById('auditList }); document.getElementById('aud }); document.getElementById('auditList').innerHTML = html; } }
+').innerHTML = html;itList').innerHTML = html; } }
+    async function loadLowStock    async function loadLowStock() { const res } }
+    async function loadLowStock() { const res = await() { const res = await = await fetchAPI(`${API}/low-stock`); fetchAPI(`${API}/low-stock`); fetchAPI(`${API}/low-stock`); if (res.success && res.products if (res.success && res if (res.success && res.products) { let html = '') { let html = ''.products) { let html = ''; res; res.products.forEach(p; res.products.forEach(p => { html += `<tr><td.products.forEach(p => { html += `<tr><td>${ => { html += `<tr><td>${>${p.name}</td><td style="color:p.name}</td><td style="p.name}</td><td style="color:red">${pred">${p.totalStockcolor:red">${p.totalStock}</td.totalStock}</td}</td><td><button><td><button class="btn-small" onclick><td><button class="btn-small" onclick="updateStock(${p.id}, ${p.totalStock class="btn-small" onclick="update="updateStock(${p.id}, ${p.totalStock})">Add Stock</button></td></tr})">Add Stock</button></td></trStock(${p.id}, ${p.totalStock})">Add Stock</button></td></tr>`; }); document.getElementById('lowStockList>`; }); document.getElementById('lowStockList>`; }); document.getElementById('lowStockList').innerHTML = html; } }
+    async function update').innerHTML = html; } }
+    async function update').innerHTML = html; } }
+    async function updateStock(id, cur) { const newStock =Stock(id, cur) { const newStock =Stock(id, cur) { const newStock = prompt('Enter new stock:', cur); if (newStock prompt('Enter new stock:', cur); if (newStock prompt('Enter new stock:', cur); if (newStock) { await fetchAPI(`${API}/admin/products) { await fetchAPI(`${API}/admin/products) { await fetchAPI(`${API}/admin/products/${id}`, { method: '/${id}`, { method: 'PUT',/${id}`, { method: 'PUT', body: JSON.stringify({ totalStock:PUT', body: JSON.stringify({ totalStock: parseInt(new body: JSON.stringify({ totalStock: parseInt(newStock) }) }); loadProducts(); parseInt(newStock) }) }); loadProducts();Stock) }) }); loadProducts(); loadLowStock(); loadStats(); } loadLowStock(); loadStats(); } loadLowStock(); loadStats(); } }
 
-    async function async function loadAud loadAudit() { constit() { const res res = = await fetchAPI(`${ await fetchAPI(`${API}/admin/API}/admin/audit`);audit`); if ( if (res.successres.success && res.aud && res.audit)it) { let html = { let html = ''; res. ''; res.auditaudit.forEach(a => {.forEach(a => { html += html += `<tr><td `<tr><td>${new Date>${(a.timestamp).new Date(a.timestamp).toLocaleString()}</tdtoLocaleString()}</td><td>${><td>${a.sta.staff}</tdaff}</td><td class><td class="badge">="badge">${a${a.action}</td.action}</td><td>><td>${a${a.details.details}</td></tr}</td></tr>`; });>`; }); document.getElementById document.getElementById('auditList('aud').innerHTML =itList').innerHTML = html; } }
- html; } }
-    async    async function loadLowStock function load() { const resLowStock() { const res = await fetchAPI = await fetchAPI(`${API(`${API}/low-stock}/low-stock`);`); if (res.success if (res.success && res && res.products) {.products) { let html let html = '' = ''; res.products; res.products.forEach(p => { html += `<tr><td>${p.name}</td.forEach(p => { html += `<tr><td>${p.name}</td><td style="color:><td style="red">color:red">${p${p.totalStock.totalStock}</td><td}</td><td><button class="btn-small><button class="btn-small" onclick" onclick="update="updateStock($Stock(${p{p.id},.id}, ${p.totalStock ${p.totalStock})">})">Add Stock</buttonAdd Stock</button></td></tr></td></tr>`; });>`; }); document.getElementById document.getElementById('low('lowStockList').innerStockList').innerHTML =HTML = html; } }
- html; } }
-    async function updateStock(id, cur) {    async function updateStock(id, cur) { const newStock = prompt(' const newStock = prompt('Enter new stock:',Enter new stock:', cur); cur); if ( if (newStock) {newStock) { await fetch await fetchAPI(`${API}/API(`${API}/admin/productsadmin/products/${id}`,/${id}`, { method { method: ': 'PUT', body: JSONPUT', body: JSON.stringify({ totalStock: parseInt(newStock) }) }); loadProducts(); loadLow.stringify({ totalStock: parseInt(newStock) }) }); loadProducts(); loadLowStock();Stock(); loadStats(); } loadStats(); } }
+    function logout() { localStorage.clear(); window }
 
-    }
+    function logout() { localStorage.clear(); window }
 
-    function logout() { function logout localStorage.clear(); window.location.h() { localStorage.clear(); window.location.href =ref = 'login.html'; 'login.html'; }
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 
-    }
+   .location.href = 'login.html'; }
 
-    loadStats loadStats(); loadProducts();(); loadProducts(); loadDo loadDoctors(); loadLabTests();ctors(); loadLabTests(); loadOrders loadOrders(); load(); loadAppointments(); loadLabBookings();Appointments(); loadLabBookings(); loadWork loadWorkers(); loadLowers(); loadLowStock();Stock(); loadUsers loadUsers(); loadAudit(); loadAudit();
+    loadStats.location.href = 'login.html'; }
+
+    loadStats(); loadProducts(); loadDo loadStats(); loadProducts(); loadDo(); loadProducts(); loadDoctors(); loadLabTests(); loadOrders(); loadAppointments(); loadctors(); loadLabTests(); loadOrders(); loadAppointments(); loadLabBookctors(); loadLabTests(); loadOrders(); loadAppointments(); loadLabBookings();LabBookings(); loadWorkings(); loadWorkers(); loadWorkers(); loadLowStock();ers(); loadLowStock(); loadUsers loadLowStock(); loadUsers loadUsers(); loadAudit();
 </script>
-</body();
+</body(); loadAudit();
+</script>
+</body(); loadAudit();
 </script>
 </body>
-</>
 </html>
-html>
