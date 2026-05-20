@@ -1,223 +1,392 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>LifeMed Admin</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial; background: #f0f2f5; }
-        .header { background: #1a5d7a; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .logout-btn { background: #e76f51; padding: 6px 15px; border-radius: 25px; cursor: pointer; border: none; color: white; }
-        .sidebar { width: 250px; background: #0a2a3a; color: white; padding: 20px; float: left; min-height: 100vh; }
-        .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #2e7d64; }
-        .sidebar-item.active { background: #ffd700; color: #1a5d7a; }
-        .main-content { margin-left: 250px; padding: 20px; }
-        .form-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; display: inline-block; width: 48%; margin-right: 2%; }
-        .form-group-full { width: 100%; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
-        .btn { background: #1a5d7a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
-        .btn-small { padding: 5px 10px; font-size: 12px; }
-        .btn-danger { background: #e76f51; }
-        .data-table { background: white; border-radius: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #1a5d7a; color: white; padding: 10px; text-align: left; }
-        td { padding: 10px; border-bottom: 1px solid #eee; }
-        .section { display: none; }
-        .section.active { display: block; }
-        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: white; padding: 15px; border-radius: 10px; text-align: center; }
-        .badge { background: #ffd700; color: #1a5d7a; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
-        .status-active { background: #2e7d64; color: white; padding: 4px 12px; border-radius: 20px; }
-        .status-blocked { background: #e76f51; color: white; padding: 4px 12px; border-radius: 20px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; }
-        .product-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
-    </style>
-</head>
-<body>
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
 
-<div class="header">
-    <div><h2>LifeMed Admin</h2></div>
-    <button class="logout-btn" onclick="logout()">Logout</button>
-</div>
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
 
-<div class="sidebar">
-    <div class="sidebar-item active" onclick="showSection('dashboard')">Dashboard</div>
-    <div class="sidebar-item" onclick="showSection('products')">Products</div>
-    <div class="sidebar-item" onclick="showSection('doctors')">Doctors</div>
-    <div class="sidebar-item" onclick="showSection('orders')">Orders</div>
-    <div class="sidebar-item" onclick="showSection('appointments')">Appointments</div>
-    <div class="sidebar-item" onclick="showSection('profile')">Profile</div>
-    <div class="sidebar-item" onclick="showSection('users')">Users</div>
-    <div class="sidebar-item" onclick="showSection('workers')">Staff</div>
-    <div class="sidebar-item" onclick="showSection('lowstock')">Low Stock</div>
-</div>
+// ========== IMAGE UPLOAD ==========
+if (!fs.existsSync('./uploads')) fs.mkdirSync('./uploads');
 
-<div class="main-content">
-    <div id="dashboard" class="section active">
-        <div class="stats-grid">
-            <div class="stat-card"><h3>Products</h3><div id="statProducts">0</div></div>
-            <div class="stat-card"><h3>Doctors</h3><div id="statDoctors">0</div></div>
-            <div class="stat-card"><h3>Orders</h3><div id="statOrders">0</div></div>
-            <div class="stat-card"><h3>Appointments</h3><div id="statAppointments">0</div></div>
-            <div class="stat-card"><h3>Users</h3><div id="statUsers">0</div></div>
-            <div class="stat-card"><h3>Low Stock</h3><div id="statLowStock">0</div></div>
-        </div>
-    </div>
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+});
+const upload = multer({ storage });
 
-    <div id="products" class="section">
-        <div class="form-card">
-            <h2>Add Product</h2>
-            <div class="form-group"><label>Name</label><input type="text" id="prodName"></div>
-            <div class="form-group"><label>Category</label><select id="prodCategory"><option>medicine</option><option>baby</option><option>skincare</option></select></div>
-            <div class="form-group"><label>Price</label><input type="number" id="prodPrice"></div>
-            <div class="form-group"><label>Stock</label><input type="number" id="prodStock"></div>
-            <div class="form-group"><label>Unit</label><input type="text" id="prodUnit"></div>
-            <button class="btn" onclick="addProduct()">Add Product</button>
-        </div>
-        <div class="data-table"><h2>All Products</h2><table><thead><tr><th>Name</th><th>Price</th><th>Stock</th><th>Unit</th><th>Actions</th></tr></thead><tbody id="productsList"></tbody></table></div>
-    </div>
+app.post('/api/upload', upload.single('image'), (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false });
+    res.json({ success: true, imageUrl: `/uploads/${req.file.filename}` });
+});
 
-    <div id="doctors" class="section">
-        <div class="form-card"><h2>Add Doctor</h2>
-            <div class="form-group"><label>Name</label><input type="text" id="docName"></div>
-            <div class="form-group"><label>Specialty</label><input type="text" id="docSpecialty"></div>
-            <div class="form-group"><label>Fees</label><input type="number" id="docFees"></div>
-            <button class="btn" onclick="addDoctor()">Add Doctor</button>
-        </div>
-        <div class="data-table"><h2>All Doctors</h2><tr><thead><tr><th>Name</th><th>Specialty</th><th>Fees</th><th>Actions</th></tr></thead><tbody id="doctorsList"></tbody></table></div>
-    </div>
+// ========== DATABASE ==========
+const DB_FILE = './data/db.json';
+if (!fs.existsSync('./data')) fs.mkdirSync('./data');
 
-    <div id="orders" class="section"><div class="data-table"><h2>Orders</h2></table><thead><tr><th>ID</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersList"></tbody></table></div></div>
-    <div id="appointments" class="section"><div class="data-table"><h2>Appointments</h2><tr><thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th>Action</th></table></thead><tbody id="appointmentsList"></tbody></tr></div></div>
+const initDB = {
+    products: [],
+    doctors: [],
+    orders: [],
+    appointments: [],
+    labTests: [],
+    labBookings: [],
+    users: [],
+    categories: [],
+    banner: { title: "Up to 30% OFF", subtitle: "On selected health products", buttonText: "Shop Now", imageUrl: "" },
+    subscribers: [],
+    stores: [],
+    audit: []
+};
 
-    <div id="profile" class="section">
-        <div class="form-card"><h2>My Profile</h2>
-            <div class="form-group-full"><label>Name</label><input type="text" id="profileName"></div>
-            <div class="form-group-full"><label>Email</label><input type="email" id="profileEmail"></div>
-            <div class="form-group-full"><label>Current Password</label><input type="password" id="currentPwd"></div>
-            <div class="form-group-full"><label>New Password</label><input type="password" id="newPwd"></div>
-            <div class="form-group-full"><label>Confirm Password</label><input type="password" id="confirmPwd"></div>
-            <button class="btn" onclick="changePassword()">Change Password</button>
-        </div>
-    </div>
+if (!fs.existsSync(DB_FILE)) {
+    fs.writeFileSync(DB_FILE, JSON.stringify(initDB, null, 2));
+}
 
-    <div id="users" class="section"><div class="data-table"><h2>All Users</h2></table><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead><tbody id="usersList"></tbody></table></div></div>
-    <div id="workers" class="section"><div class="data-table"><h2>Staff</h2><tr><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead><tbody id="workersList"></tbody></table></div></div>
-    <div id="lowstock" class="section"><div class="data-table"><h2>Low Stock</h2></table><thead><tr><th>Product</th><th>Stock</th><th>Action</th></tr></thead><tbody id="lowStockList"></tbody></table></div></div>
-</div>
+const readDB = () => JSON.parse(fs.readFileSync(DB_FILE));
+const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 
-<script>
-    const API = 'https://lifemed-healthcare.onrender.com/api';
-    let token = localStorage.getItem('adminToken');
-    if (!token) window.location.href = 'login.html';
+// ========== SAMPLE DATA ==========
+let db = readDB();
+if (db.products.length === 0) {
+    db.products = [
+        { id: 1, name: "Baby Pampers", category: "baby", pricePerUnit: 850, totalStock: 100, unitType: "pack", discount: 0, discountedPrice: 850, imageUrl: "https://placehold.co/200x150?text=Baby+Pampers", description: "Soft baby diapers" },
+        { id: 2, name: "Panadol 500mg", category: "medicine", pricePerUnit: 120, totalStock: 500, unitType: "strip", discount: 0, discountedPrice: 120, imageUrl: "https://placehold.co/200x150?text=Panadol", description: "Fever and pain relief" }
+    ];
+    db.doctors = [
+        { id: 1, name: "Dr. Ahmed Raza", specialty: "Cardiologist", fees: 1500, availableDays: "Mon, Wed, Fri", availableTime: "10AM-6PM" },
+        { id: 2, name: "Dr. Fatima Khan", specialty: "Dermatologist", fees: 1200, availableDays: "Tue, Thu, Sat", availableTime: "11AM-7PM" }
+    ];
+    db.labTests = [
+        { id: 1, name: "Complete Blood Count (CBC)", category: "Blood", price: 500, discount: 0, discountedPrice: 500 },
+        { id: 2, name: "Blood Sugar (Fasting)", category: "Blood", price: 200, discount: 0, discountedPrice: 200 }
+    ];
+    db.categories = [
+        { id: 1, name: "Medicine", icon: "fas fa-capsules", imageUrl: "", status: "active" },
+        { id: 2, name: "Baby", icon: "fas fa-baby-carriage", imageUrl: "", status: "active" },
+        { id: 3, name: "Skincare", icon: "fas fa-spa", imageUrl: "", status: "active" },
+        { id: 4, name: "Daily", icon: "fas fa-hand-sparkles", imageUrl: "", status: "active" }
+    ];
+    db.stores = [
+        { id: 1, name: "LifeMed Main Store", address: "#123, Rajivnagar", city: "Mysore", phone: "+91 8214514503", timings: "9AM-9PM" }
+    ];
+    writeDB(db);
+}
 
-    async function fetchAPI(url, options = {}) {
-        const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } });
-        if (res.status === 401) { localStorage.clear(); window.location.href = 'login.html'; }
-        return await res.json();
+// ========== CREATE ADMIN ==========
+(async () => {
+    let db = readDB();
+    if (!db.users.find(u => u.role === 'admin')) {
+        db.users.push({
+            id: Date.now(),
+            name: 'Admin',
+            email: 'admin@lifemed.com',
+            password: await bcrypt.hash('admin123', 10),
+            phone: '8214514503',
+            role: 'admin',
+            status: 'active'
+        });
+        writeDB(db);
+        console.log('✅ Admin created: admin@lifemed.com / admin123');
     }
+})();
 
-    function showSection(section) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(section).classList.add('active');
-        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-        event.target.classList.add('active');
-        if (section === 'dashboard') loadStats();
-        if (section === 'products') loadProducts();
-        if (section === 'doctors') loadDoctors();
-        if (section === 'orders') loadOrders();
-        if (section === 'appointments') loadAppointments();
-        if (section === 'profile') loadProfile();
-        if (section === 'users') loadUsers();
-        if (section === 'workers') loadWorkers();
-        if (section === 'lowstock') loadLowStock();
+// ========== AUTH MIDDLEWARE ==========
+const auth = (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ success: false });
+    try {
+        req.user = jwt.verify(token, 'lifemed_secret');
+        next();
+    } catch {
+        res.status(403).json({ success: false });
     }
+};
 
-    async function loadStats() {
-        const res = await fetchAPI(`${API}/stats`);
-        if (res.success) {
-            document.getElementById('statProducts').innerText = res.stats.totalProducts;
-            document.getElementById('statDoctors').innerText = res.stats.totalDoctors;
-            document.getElementById('statOrders').innerText = res.stats.totalOrders;
-            document.getElementById('statAppointments').innerText = res.stats.totalAppointments;
-            document.getElementById('statUsers').innerText = res.stats.totalUsers || 0;
-            document.getElementById('statLowStock').innerText = res.stats.lowStock;
+const adminAuth = (req, res, next) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ success: false });
+    next();
+};
+
+// ========== AUTH ROUTES ==========
+app.post('/api/auth/register', async (req, res) => {
+    let db = readDB();
+    const { name, email, password, phone } = req.body;
+    if (db.users.find(u => u.email === email)) return res.status(400).json({ success: false });
+    const user = { id: Date.now(), name, email, password: await bcrypt.hash(password, 10), phone, role: 'user', status: 'active' };
+    db.users.push(user);
+    writeDB(db);
+    const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
+    res.json({ success: true, token, user });
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    const db = readDB();
+    const user = db.users.find(u => u.email === req.body.email);
+    if (!user || !(await bcrypt.compare(req.body.password, user.password))) return res.status(401).json({ success: false });
+    if (user.status === 'blocked') return res.status(401).json({ success: false, message: 'Account blocked' });
+    const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
+    res.json({ success: true, token, user });
+});
+
+app.put('/api/auth/change-password', auth, async (req, res) => {
+    let db = readDB();
+    const idx = db.users.findIndex(u => u.id === req.user.id);
+    if (idx === -1) return res.status(404).json({ success: false });
+    const valid = await bcrypt.compare(req.body.currentPassword, db.users[idx].password);
+    if (!valid) return res.status(401).json({ success: false });
+    db.users[idx].password = await bcrypt.hash(req.body.newPassword, 10);
+    writeDB(db);
+    res.json({ success: true });
+});
+
+app.get('/api/auth/profile', auth, (req, res) => {
+    const db = readDB();
+    const user = db.users.find(u => u.id === req.user.id);
+    if (user) { const { password, ...rest } = user; res.json({ success: true, user: rest }); }
+    else res.status(404).json({ success: false });
+});
+
+app.put('/api/auth/profile', auth, (req, res) => {
+    let db = readDB();
+    const idx = db.users.findIndex(u => u.id === req.user.id);
+    if (idx !== -1) {
+        if (req.body.name) db.users[idx].name = req.body.name;
+        if (req.body.email) db.users[idx].email = req.body.email;
+        writeDB(db);
+        res.json({ success: true });
+    } else res.status(404).json({ success: false });
+});
+
+// ========== PUBLIC ROUTES ==========
+app.get('/api/products', (req, res) => res.json({ success: true, products: readDB().products }));
+app.get('/api/doctors', (req, res) => res.json({ success: true, doctors: readDB().doctors }));
+app.get('/api/lab-tests', (req, res) => res.json({ success: true, labTests: readDB().labTests }));
+app.get('/api/categories', (req, res) => res.json({ success: true, categories: readDB().categories }));
+app.get('/api/banner', (req, res) => res.json({ success: true, banner: readDB().banner }));
+app.get('/api/stores', (req, res) => res.json({ success: true, stores: readDB().stores }));
+
+// ========== ORDER WITH STOCK DEDUCT ==========
+app.post('/api/orders', (req, res) => {
+    let db = readDB();
+    const order = { id: Date.now(), ...req.body, orderDate: new Date(), status: 'confirmed', createdBy: req.body.userName || 'Customer' };
+    if (order.products) {
+        order.products.forEach(item => {
+            const p = db.products.find(p => p.id === item.id);
+            if (p) p.totalStock -= item.qty;
+        });
+    }
+    db.orders = db.orders || [];
+    db.orders.unshift(order);
+    db.audit = db.audit || [];
+    db.audit.unshift({ timestamp: new Date(), staff: order.userName || 'Customer', action: 'PLACE_ORDER', details: `Order #${order.id} - ₹${order.totalAmount}` });
+    writeDB(db);
+    res.json({ success: true, order });
+});
+
+app.get('/api/orders', (req, res) => res.json({ success: true, orders: (readDB().orders || []).reverse() }));
+
+app.post('/api/appointments', (req, res) => {
+    let db = readDB();
+    db.appointments = db.appointments || [];
+    db.appointments.push({ id: Date.now(), ...req.body, status: 'pending' });
+    writeDB(db);
+    res.json({ success: true });
+});
+
+app.get('/api/appointments', (req, res) => res.json({ success: true, appointments: readDB().appointments || [] }));
+
+app.put('/api/appointments/:id/status', (req, res) => {
+    let db = readDB();
+    const idx = (db.appointments || []).findIndex(a => a.id == req.params.id);
+    if (idx !== -1) {
+        db.appointments[idx].status = req.body.status;
+        writeDB(db);
+    }
+    res.json({ success: true });
+});
+
+app.post('/api/lab-bookings', (req, res) => {
+    let db = readDB();
+    db.labBookings = db.labBookings || [];
+    db.labBookings.push({ id: Date.now(), ...req.body, status: 'pending' });
+    writeDB(db);
+    res.json({ success: true });
+});
+
+app.get('/api/lab-bookings', (req, res) => res.json({ success: true, bookings: readDB().labBookings || [] }));
+
+app.put('/api/lab-bookings/:id/status', (req, res) => {
+    let db = readDB();
+    const idx = (db.labBookings || []).findIndex(b => b.id == req.params.id);
+    if (idx !== -1) {
+        db.labBookings[idx].status = req.body.status;
+        writeDB(db);
+    }
+    res.json({ success: true });
+});
+
+app.post('/api/subscribe', (req, res) => {
+    let db = readDB();
+    const { email } = req.body;
+    if (!db.subscribers) db.subscribers = [];
+    if (db.subscribers.find(s => s.email === email)) return res.status(400).json({ success: false, message: 'Already subscribed' });
+    db.subscribers.push({ id: Date.now(), email, subscribedAt: new Date() });
+    writeDB(db);
+    res.json({ success: true });
+});
+
+// ========== STATS ==========
+app.get('/api/stats', (req, res) => {
+    const db = readDB();
+    res.json({
+        success: true,
+        stats: {
+            totalProducts: db.products.length,
+            totalDoctors: db.doctors.length,
+            totalOrders: (db.orders || []).length,
+            totalAppointments: (db.appointments || []).length,
+            totalLabBookings: (db.labBookings || []).length,
+            totalUsers: db.users.filter(u => u.role !== 'admin').length,
+            totalCategories: (db.categories || []).length,
+            totalSubscribers: (db.subscribers || []).length,
+            totalStores: (db.stores || []).length,
+            lowStock: db.products.filter(p => p.totalStock < 10).length
         }
-    }
+    });
+});
 
-    async function addProduct() {
-        const product = {
-            name: document.getElementById('prodName').value,
-            category: document.getElementById('prodCategory').value,
-            pricePerUnit: parseFloat(document.getElementById('prodPrice').value),
-            totalStock: parseInt(document.getElementById('prodStock').value),
-            unitType: document.getElementById('prodUnit').value
-        };
-        if (!product.name || !product.pricePerUnit) { alert('Fill fields'); return; }
-        const res = await fetchAPI(`${API}/admin/products`, { method: 'POST', body: JSON.stringify(product) });
-        if (res.success) { alert('Product added!'); loadProducts(); loadStats(); }
-    }
+app.get('/api/low-stock', (req, res) => res.json({ success: true, products: readDB().products.filter(p => p.totalStock < 10) }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-    async function loadProducts() {
-        const res = await fetchAPI(`${API}/products`);
-        if (res.success && res.products) {
-            let html = '';
-            res.products.forEach(p => {
-                html += `<tr><td><button class="btn-small" onclick="deleteProduct(${p.id})">Delete</button></td><td>${p.name}</td><td>₹${p.pricePerUnit}</td><td>${p.totalStock}</td><td>${p.unitType || '-'}</td></tr>`;
-            });
-            document.getElementById('productsList').innerHTML = html;
-        }
-    }
-    async function deleteProduct(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' }); loadProducts(); loadStats(); } }
+// ========== ADMIN ROUTES ==========
+app.get('/api/admin/products', auth, adminAuth, (req, res) => res.json({ success: true, products: readDB().products }));
+app.post('/api/admin/products', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const product = { id: Date.now(), ...req.body, createdAt: new Date() };
+    db.products.push(product);
+    db.audit = db.audit || [];
+    db.audit.unshift({ timestamp: new Date(), staff: req.user.name || 'Admin', action: 'ADD_PRODUCT', details: `Added product: ${product.name}` });
+    writeDB(db);
+    res.json({ success: true, product });
+});
+app.put('/api/admin/products/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const idx = db.products.findIndex(p => p.id == req.params.id);
+    if (idx !== -1) {
+        db.products[idx] = { ...db.products[idx], ...req.body };
+        writeDB(db);
+        res.json({ success: true });
+    } else res.status(404).json({ success: false });
+});
+app.delete('/api/admin/products/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.products = db.products.filter(p => p.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
 
-    async function addDoctor() {
-        const doctor = { name: document.getElementById('docName').value, specialty: document.getElementById('docSpecialty').value, fees: parseFloat(document.getElementById('docFees').value) };
-        if (!doctor.name || !doctor.fees) { alert('Fill fields'); return; }
-        const res = await fetchAPI(`${API}/admin/doctors`, { method: 'POST', body: JSON.stringify(doctor) });
-        if (res.success) { alert('Doctor added!'); loadDoctors(); loadStats(); }
-    }
-    async function loadDoctors() {
-        const res = await fetchAPI(`${API}/doctors`);
-        if (res.success && res.doctors) {
-            let html = '';
-            res.doctors.forEach(d => {
-                html += `<tr><td><button class="btn-small" onclick="deleteDoctor(${d.id})">Delete</button></td><td>${d.name}</td><td>${d.specialty}</td><td>₹${d.fees}</td></tr>`;
-            });
-            document.getElementById('doctorsList').innerHTML = html;
-        }
-    }
-    async function deleteDoctor(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/doctors/${id}`, { method: 'DELETE' }); loadDoctors(); loadStats(); } }
+app.get('/api/admin/doctors', auth, adminAuth, (req, res) => res.json({ success: true, doctors: readDB().doctors }));
+app.post('/api/admin/doctors', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const doctor = { id: Date.now(), ...req.body };
+    db.doctors.push(doctor);
+    writeDB(db);
+    res.json({ success: true });
+});
+app.delete('/api/admin/doctors/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.doctors = db.doctors.filter(d => d.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
 
-    async function loadOrders() { const res = await fetchAPI(`${API}/orders`); if (res.success) { let html = ''; res.orders.forEach(o => { html += `<tr><td>#${o.id}</td><td>₹${o.totalAmount}</td><td>${o.status}</td></tr>`; }); document.getElementById('ordersList').innerHTML = html; } }
-    async function loadAppointments() { const res = await fetchAPI(`${API}/appointments`); if (res.success) { let html = ''; res.appointments.forEach(a => { html += `<td><td>${a.patientName}</td><td>${a.doctorName}</td><td>${a.date}</td><td class="status-${a.status}">${a.status}</td><td>${a.status === 'pending' ? '<button class="btn-small" onclick="confirmAppt('+a.id+')">Confirm</button>' : '-'}</td></tr>`; }); document.getElementById('appointmentsList').innerHTML = html; } }
-    async function confirmAppt(id) { await fetchAPI(`${API}/appointments/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'confirmed' }) }); loadAppointments(); }
+app.post('/api/admin/lab-tests', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const test = { id: Date.now(), ...req.body, discountedPrice: req.body.price - (req.body.price * (req.body.discount || 0) / 100 };
+    db.labTests.push(test);
+    writeDB(db);
+    res.json({ success: true });
+});
+app.delete('/api/admin/lab-tests/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.labTests = db.labTests.filter(t => t.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
 
-    async function loadProfile() { const res = await fetchAPI(`${API}/auth/profile`); if (res.success && res.user) { document.getElementById('profileName').value = res.user.name || ''; document.getElementById('profileEmail').value = res.user.email || ''; } }
-    async function changePassword() {
-        const cur = document.getElementById('currentPwd').value, newP = document.getElementById('newPwd').value, con = document.getElementById('confirmPwd').value;
-        if (!cur || !newP || !con) { alert('Fill all fields'); return; }
-        if (newP !== con) { alert('Passwords do not match'); return; }
-        const res = await fetchAPI(`${API}/auth/change-password`, { method: 'PUT', body: JSON.stringify({ currentPassword: cur, newPassword: newP }) });
-        if (res.success) alert('Password changed!'); else alert('Failed');
-    }
+// Categories Management
+app.get('/api/admin/categories', auth, adminAuth, (req, res) => res.json({ success: true, categories: readDB().categories }));
+app.post('/api/admin/categories', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const cat = { id: Date.now(), ...req.body, status: 'active' };
+    db.categories.push(cat);
+    writeDB(db);
+    res.json({ success: true });
+});
+app.delete('/api/admin/categories/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.categories = db.categories.filter(c => c.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
 
-    async function loadUsers() { const res = await fetchAPI(`${API}/admin/users`); if (res.success && res.users) { let html = ''; res.users.forEach(u => { if (u.role !== 'admin') { html += `<tr><td>${u.name}</td><td>${u.email}</td><td class="${u.status === 'blocked' ? 'status-blocked' : 'status-active'}">${u.status || 'active'}</td><td><button class="btn-small" onclick="toggleUser(${u.id}, '${u.status || 'active'}')">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button> <button class="btn-small btn-danger" onclick="deleteUser(${u.id})">Delete</button></td></tr>`; } }); document.getElementById('usersList').innerHTML = html; } }
-    async function toggleUser(id, cur) { await fetchAPI(`${API}/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: cur === 'blocked' ? 'active' : 'blocked' }) }); loadUsers(); }
-    async function deleteUser(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/users/${id}`, { method: 'DELETE' }); loadUsers(); loadStats(); } }
+// Banner Management
+app.put('/api/admin/banner', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.banner = { ...db.banner, ...req.body };
+    writeDB(db);
+    res.json({ success: true });
+});
 
-    async function addWorker() { const w = { name: document.getElementById('workerName').value, email: document.getElementById('workerEmail').value, password: document.getElementById('workerPassword').value, role: document.getElementById('workerRole').value }; if (!w.name || !w.email || !w.password) { alert('Fill fields'); return; } const res = await fetchAPI(`${API}/admin/workers`, { method: 'POST', body: JSON.stringify(w) }); if (res.success) { alert('Staff added!'); loadWorkers(); } }
-    async function loadWorkers() { const res = await fetchAPI(`${API}/admin/workers`); if (res.success && res.workers) { let html = ''; res.workers.forEach(w => { html += `<tr><td>${w.name}</td><td>${w.email}</td><td class="badge">${w.role}</td><td><button class="btn-small" onclick="deleteWorker(${w.id})">Delete</button></td></tr>`; }); document.getElementById('workersList').innerHTML = html; } }
-    async function deleteWorker(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/workers/${id}`, { method: 'DELETE' }); loadWorkers(); } }
+// Subscribers Management
+app.get('/api/admin/subscribers', auth, adminAuth, (req, res) => res.json({ success: true, subscribers: readDB().subscribers || [] }));
+app.delete('/api/admin/subscribers/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.subscribers = (db.subscribers || []).filter(s => s.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
 
-    async function loadLowStock() { const res = await fetchAPI(`${API}/low-stock`); if (res.success && res.products) { let html = ''; res.products.forEach(p => { html += `<tr><td>${p.name}</td><td style="color:red">${p.totalStock}</td><td><button class="btn-small" onclick="updateStock(${p.id}, ${p.totalStock})">Add Stock</button></td></tr>`; }); document.getElementById('lowStockList').innerHTML = html; } }
-    async function updateStock(id, cur) { const newStock = prompt('Enter new stock:', cur); if (newStock) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'PUT', body: JSON.stringify({ totalStock: parseInt(newStock) }) }); loadProducts(); loadLowStock(); loadStats(); } }
+// Stores Management
+app.post('/api/admin/stores', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const store = { id: Date.now(), ...req.body };
+    db.stores.push(store);
+    writeDB(db);
+    res.json({ success: true });
+});
+app.delete('/api/admin/stores/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.stores = (db.stores || []).filter(s => s.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
 
-    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+// User Management
+app.get('/api/admin/users', auth, adminAuth, (req, res) => { const db = readDB(); res.json({ success: true, users: db.users.filter(u => u.role !== 'admin') }); });
+app.put('/api/admin/users/:id/status', auth, adminAuth, (req, res) => { let db = readDB(); const idx = db.users.findIndex(u => u.id == req.params.id); if (idx !== -1) { db.users[idx].status = req.body.status; writeDB(db); res.json({ success: true }); } else res.status(404).json({ success: false }); });
+app.delete('/api/admin/users/:id', auth, adminAuth, (req, res) => { let db = readDB(); db.users = db.users.filter(u => u.id != req.params.id); writeDB(db); res.json({ success: true }); });
 
-    loadStats(); loadProducts(); loadDoctors(); loadOrders(); loadAppointments(); loadWorkers(); loadLowStock(); loadUsers();
-</script>
-</body>
-</html>
+// Worker Management
+app.get('/api/admin/workers', auth, adminAuth, (req, res) => { const db = readDB(); res.json({ success: true, workers: db.users.filter(u => u.role !== 'admin' && u.role !== 'user') }); });
+app.post('/api/admin/workers', auth, adminAuth, async (req, res) => {
+    let db = readDB();
+    if (db.users.find(u => u.email === req.body.email)) return res.status(400).json({ success: false });
+    db.users.push({ id: Date.now(), name: req.body.name, email: req.body.email, password: await bcrypt.hash(req.body.password, 10), role: req.body.role || 'staff', status: 'active' });
+    writeDB(db);
+    res.json({ success: true });
+});
+app.delete('/api/admin/workers/:id', auth, adminAuth, (req, res) => { let db = readDB(); db.users = db.users.filter(u => u.id != req.params.id); writeDB(db); res.json({ success: true }); });
+
+// Audit Log
+app.get('/api/admin/audit', auth, adminAuth, (req, res) => { const db = readDB(); res.json({ success: true, audit: (db.audit || []).reverse() }); });
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => console.log(`✅ Server running on port ${PORT}`));
