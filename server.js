@@ -401,4 +401,8 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Server running on port ${PORT}`);
     console.log(`🔑 Admin: admin@lifemed.com / admin123`);
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 5a1a0d07dfe55c9f34dec53484176fb1713f8bcc
