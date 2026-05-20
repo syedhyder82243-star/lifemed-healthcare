@@ -309,7 +309,7 @@ app.delete('/api/admin/doctors/:id', auth, adminAuth, (req, res) => {
 
 app.post('/api/admin/lab-tests', auth, adminAuth, (req, res) => {
     let db = readDB();
-    const test = { id: Date.now(), ...req.body, discountedPrice: req.body.price - (req.body.price * (req.body.discount || 0) / 100 };
+    const test = { id: Date.now(), ...req.body, discountedPrice: req.body.price - (req.body.price * (req.body.discount || 0) / 100) };
     db.labTests.push(test);
     writeDB(db);
     res.json({ success: true });
