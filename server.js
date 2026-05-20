@@ -12,6 +12,7 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
+// ========== IMAGE UPLOAD ==========
 if (!fs.existsSync('./uploads')) fs.mkdirSync('./uploads');
 
 const storage = multer.diskStorage({
@@ -25,47 +26,87 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     res.json({ success: true, imageUrl: `/uploads/${req.file.filename}` });
 });
 
+// ========== DATABASE ==========
 const DB_FILE = './data/db.json';
 if (!fs.existsSync('./data')) fs.mkdirSync('./data');
 
 const initDB = {
-    products: [], doctors: [], orders: [], appointments: [], labTests: [], labBookings: [], users: [], audit: []
+    products: [],
+    doctors: [],
+    orders: [],
+    appointments: [],
+    labTests: [],
+    labBookings: [],
+    users: [],
+    categories: [],
+    banner: { title: "Up to 30% OFF", subtitle: "On selected health products", buttonText: "Shop Now", imageUrl: "" },
+    subscribers: [],
+    stores: [],
+    audit: []
 };
 
-if (!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, JSON.stringify(initDB, null, 2));
+if (!fs.existsSync(DB_FILE)) {
+    fs.writeFileSync(DB_FILE, JSON.stringify(initDB, null, 2));
+}
 
 const readDB = () => JSON.parse(fs.readFileSync(DB_FILE));
 const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 
+// ========== SAMPLE DATA ==========
 let db = readDB();
 if (db.products.length === 0) {
     db.products = [
-        { id: 1, name: "Baby Pampers", category: "baby", pricePerUnit: 850, totalStock: 100, unitType: "pack", imageUrl: "" },
-        { id: 2, name: "Panadol", category: "medicine", pricePerUnit: 120, totalStock: 500, unitType: "strip", imageUrl: "" }
+        { id: 1, name: "Baby Pampers", category: "baby", pricePerUnit: 850, totalStock: 100, unitType: "pack", discount: 0, discountedPrice: 850, imageUrl: "https://placehold.co/200x150?text=Baby+Pampers", description: "Soft baby diapers" },
+        { id: 2, name: "Panadol 500mg", category: "medicine", pricePerUnit: 120, totalStock: 500, unitType: "strip", discount: 0, discountedPrice: 120, imageUrl: "https://placehold.co/200x150?text=Panadol", description: "Fever and pain relief" }
     ];
     db.doctors = [
-        { id: 1, name: "Dr. Ahmed", specialty: "Cardiologist", fees: 1500 },
-        { id: 2, name: "Dr. Fatima", specialty: "Dermatologist", fees: 1200 }
+        { id: 1, name: "Dr. Ahmed Raza", specialty: "Cardiologist", fees: 1500, availableDays: "Mon, Wed, Fri", availableTime: "10AM-6PM" },
+        { id: 2, name: "Dr. Fatima Khan", specialty: "Dermatologist", fees: 1200, availableDays: "Tue, Thu, Sat", availableTime: "11AM-7PM" }
     ];
     db.labTests = [
-        { id: 1, name: "CBC", price: 500 },
-        { id: 2, name: "Blood Sugar", price: 200 }
+        { id: 1, name: "Complete Blood Count (CBC)", category: "Blood", price: 500, discount: 0, discountedPrice: 500 },
+        { id: 2, name: "Blood Sugar (Fasting)", category: "Blood", price: 200, discount: 0, discountedPrice: 200 }
+    ];
+    db.categories = [
+        { id: 1, name: "Medicine", icon: "fas fa-capsules", imageUrl: "", status: "active" },
+        { id: 2, name: "Baby", icon: "fas fa-baby-carriage", imageUrl: "", status: "active" },
+        { id: 3, name: "Skincare", icon: "fas fa-spa", imageUrl: "", status: "active" },
+        { id: 4, name: "Daily", icon: "fas fa-hand-sparkles", imageUrl: "", status: "active" }
+    ];
+    db.stores = [
+        { id: 1, name: "LifeMed Main Store", address: "#123, Rajivnagar", city: "Mysore", phone: "+91 8214514503", timings: "9AM-9PM" }
     ];
     writeDB(db);
 }
 
+// ========== CREATE ADMIN ==========
 (async () => {
     let db = readDB();
     if (!db.users.find(u => u.role === 'admin')) {
-        db.users.push({ id: Date.now(), name: 'Admin', email: 'admin@lifemed.com', password: await bcrypt.hash('admin123', 10), role: 'admin', status: 'active' });
+        db.users.push({
+            id: Date.now(),
+            name: 'Admin',
+            email: 'admin@lifemed.com',
+            password: await bcrypt.hash('admin123', 10),
+            phone: '8214514503',
+            role: 'admin',
+            status: 'active'
+        });
         writeDB(db);
+        console.log('✅ Admin created: admin@lifemed.com / admin123');
     }
 })();
 
+// ========== AUTH MIDDLEWARE ==========
 const auth = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return res.status(401).json({ success: false });
-    try { req.user = jwt.verify(token, 'lifemed_secret'); next(); } catch { res.status(403).json({ success: false }); }
+    try {
+        req.user = jwt.verify(token, 'lifemed_secret');
+        next();
+    } catch {
+        res.status(403).json({ success: false });
+    }
 };
 
 const adminAuth = (req, res, next) => {
@@ -73,7 +114,7 @@ const adminAuth = (req, res, next) => {
     next();
 };
 
-// Auth Routes
+// ========== AUTH ROUTES ==========
 app.post('/api/auth/register', async (req, res) => {
     let db = readDB();
     const { name, email, password, phone } = req.body;
@@ -123,15 +164,24 @@ app.put('/api/auth/profile', auth, (req, res) => {
     } else res.status(404).json({ success: false });
 });
 
-// Public Routes
+// ========== PUBLIC ROUTES ==========
 app.get('/api/products', (req, res) => res.json({ success: true, products: readDB().products }));
 app.get('/api/doctors', (req, res) => res.json({ success: true, doctors: readDB().doctors }));
 app.get('/api/lab-tests', (req, res) => res.json({ success: true, labTests: readDB().labTests }));
+app.get('/api/categories', (req, res) => res.json({ success: true, categories: readDB().categories }));
+app.get('/api/banner', (req, res) => res.json({ success: true, banner: readDB().banner }));
+app.get('/api/stores', (req, res) => res.json({ success: true, stores: readDB().stores }));
 
+// ========== ORDER WITH STOCK DEDUCT ==========
 app.post('/api/orders', (req, res) => {
     let db = readDB();
     const order = { id: Date.now(), ...req.body, orderDate: new Date(), status: 'confirmed', createdBy: req.body.userName || 'Customer' };
-    order.products?.forEach(item => { let p = db.products.find(p => p.id === item.id); if (p) p.totalStock -= item.qty; });
+    if (order.products) {
+        order.products.forEach(item => {
+            const p = db.products.find(p => p.id === item.id);
+            if (p) p.totalStock -= item.qty;
+        });
+    }
     db.orders = db.orders || [];
     db.orders.unshift(order);
     db.audit = db.audit || [];
@@ -141,29 +191,85 @@ app.post('/api/orders', (req, res) => {
 });
 
 app.get('/api/orders', (req, res) => res.json({ success: true, orders: (readDB().orders || []).reverse() }));
-app.post('/api/appointments', (req, res) => { let db = readDB(); db.appointments = db.appointments || []; db.appointments.push({ id: Date.now(), ...req.body, status: 'pending' }); writeDB(db); res.json({ success: true }); });
+
+app.post('/api/appointments', (req, res) => {
+    let db = readDB();
+    db.appointments = db.appointments || [];
+    db.appointments.push({ id: Date.now(), ...req.body, status: 'pending' });
+    writeDB(db);
+    res.json({ success: true });
+});
+
 app.get('/api/appointments', (req, res) => res.json({ success: true, appointments: readDB().appointments || [] }));
-app.put('/api/appointments/:id/status', (req, res) => { let db = readDB(); const idx = (db.appointments || []).findIndex(a => a.id == req.params.id); if (idx !== -1) { db.appointments[idx].status = req.body.status; writeDB(db); } res.json({ success: true }); });
-app.post('/api/lab-bookings', (req, res) => { let db = readDB(); db.labBookings = db.labBookings || []; db.labBookings.push({ id: Date.now(), ...req.body, status: 'pending' }); writeDB(db); res.json({ success: true }); });
+
+app.put('/api/appointments/:id/status', (req, res) => {
+    let db = readDB();
+    const idx = (db.appointments || []).findIndex(a => a.id == req.params.id);
+    if (idx !== -1) {
+        db.appointments[idx].status = req.body.status;
+        writeDB(db);
+    }
+    res.json({ success: true });
+});
+
+app.post('/api/lab-bookings', (req, res) => {
+    let db = readDB();
+    db.labBookings = db.labBookings || [];
+    db.labBookings.push({ id: Date.now(), ...req.body, status: 'pending' });
+    writeDB(db);
+    res.json({ success: true });
+});
+
 app.get('/api/lab-bookings', (req, res) => res.json({ success: true, bookings: readDB().labBookings || [] }));
 
+app.put('/api/lab-bookings/:id/status', (req, res) => {
+    let db = readDB();
+    const idx = (db.labBookings || []).findIndex(b => b.id == req.params.id);
+    if (idx !== -1) {
+        db.labBookings[idx].status = req.body.status;
+        writeDB(db);
+    }
+    res.json({ success: true });
+});
+
+app.post('/api/subscribe', (req, res) => {
+    let db = readDB();
+    const { email } = req.body;
+    if (!db.subscribers) db.subscribers = [];
+    if (db.subscribers.find(s => s.email === email)) return res.status(400).json({ success: false, message: 'Already subscribed' });
+    db.subscribers.push({ id: Date.now(), email, subscribedAt: new Date() });
+    writeDB(db);
+    res.json({ success: true });
+});
+
+// ========== STATS ==========
 app.get('/api/stats', (req, res) => {
     const db = readDB();
-    res.json({ success: true, stats: {
-        totalProducts: db.products.length, totalDoctors: db.doctors.length, totalOrders: (db.orders || []).length,
-        totalAppointments: (db.appointments || []).length, totalLabBookings: (db.labBookings || []).length,
-        totalUsers: db.users.filter(u => u.role !== 'admin').length, lowStock: db.products.filter(p => p.totalStock < 10).length
-    } });
+    res.json({
+        success: true,
+        stats: {
+            totalProducts: db.products.length,
+            totalDoctors: db.doctors.length,
+            totalOrders: (db.orders || []).length,
+            totalAppointments: (db.appointments || []).length,
+            totalLabBookings: (db.labBookings || []).length,
+            totalUsers: db.users.filter(u => u.role !== 'admin').length,
+            totalCategories: (db.categories || []).length,
+            totalSubscribers: (db.subscribers || []).length,
+            totalStores: (db.stores || []).length,
+            lowStock: db.products.filter(p => p.totalStock < 10).length
+        }
+    });
 });
 
 app.get('/api/low-stock', (req, res) => res.json({ success: true, products: readDB().products.filter(p => p.totalStock < 10) }));
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-// Admin Routes
+// ========== ADMIN ROUTES ==========
 app.get('/api/admin/products', auth, adminAuth, (req, res) => res.json({ success: true, products: readDB().products }));
 app.post('/api/admin/products', auth, adminAuth, (req, res) => {
     let db = readDB();
-    const product = { id: Date.now(), ...req.body, createdBy: req.user.name || 'Admin', createdAt: new Date() };
+    const product = { id: Date.now(), ...req.body, createdAt: new Date() };
     db.products.push(product);
     db.audit = db.audit || [];
     db.audit.unshift({ timestamp: new Date(), staff: req.user.name || 'Admin', action: 'ADD_PRODUCT', details: `Added product: ${product.name}` });
@@ -173,8 +279,11 @@ app.post('/api/admin/products', auth, adminAuth, (req, res) => {
 app.put('/api/admin/products/:id', auth, adminAuth, (req, res) => {
     let db = readDB();
     const idx = db.products.findIndex(p => p.id == req.params.id);
-    if (idx !== -1) { db.products[idx] = { ...db.products[idx], ...req.body }; writeDB(db); res.json({ success: true }); }
-    else res.status(404).json({ success: false });
+    if (idx !== -1) {
+        db.products[idx] = { ...db.products[idx], ...req.body };
+        writeDB(db);
+        res.json({ success: true });
+    } else res.status(404).json({ success: false });
 });
 app.delete('/api/admin/products/:id', auth, adminAuth, (req, res) => {
     let db = readDB();
@@ -182,10 +291,12 @@ app.delete('/api/admin/products/:id', auth, adminAuth, (req, res) => {
     writeDB(db);
     res.json({ success: true });
 });
+
 app.get('/api/admin/doctors', auth, adminAuth, (req, res) => res.json({ success: true, doctors: readDB().doctors }));
 app.post('/api/admin/doctors', auth, adminAuth, (req, res) => {
     let db = readDB();
-    db.doctors.push({ id: Date.now(), ...req.body, createdBy: req.user.name || 'Admin' });
+    const doctor = { id: Date.now(), ...req.body };
+    db.doctors.push(doctor);
     writeDB(db);
     res.json({ success: true });
 });
@@ -195,9 +306,10 @@ app.delete('/api/admin/doctors/:id', auth, adminAuth, (req, res) => {
     writeDB(db);
     res.json({ success: true });
 });
+
 app.post('/api/admin/lab-tests', auth, adminAuth, (req, res) => {
     let db = readDB();
-    const test = { id: Date.now(), ...req.body, discountedPrice: req.body.price - (req.body.price * (req.body.discount || 0) / 100) };
+    const test = { id: Date.now(), ...req.body, discountedPrice: req.body.price - (req.body.price * (req.body.discount || 0) / 100 };
     db.labTests.push(test);
     writeDB(db);
     res.json({ success: true });
@@ -205,6 +317,54 @@ app.post('/api/admin/lab-tests', auth, adminAuth, (req, res) => {
 app.delete('/api/admin/lab-tests/:id', auth, adminAuth, (req, res) => {
     let db = readDB();
     db.labTests = db.labTests.filter(t => t.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
+
+// Categories Management
+app.get('/api/admin/categories', auth, adminAuth, (req, res) => res.json({ success: true, categories: readDB().categories }));
+app.post('/api/admin/categories', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const cat = { id: Date.now(), ...req.body, status: 'active' };
+    db.categories.push(cat);
+    writeDB(db);
+    res.json({ success: true });
+});
+app.delete('/api/admin/categories/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.categories = db.categories.filter(c => c.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
+
+// Banner Management
+app.put('/api/admin/banner', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.banner = { ...db.banner, ...req.body };
+    writeDB(db);
+    res.json({ success: true });
+});
+
+// Subscribers Management
+app.get('/api/admin/subscribers', auth, adminAuth, (req, res) => res.json({ success: true, subscribers: readDB().subscribers || [] }));
+app.delete('/api/admin/subscribers/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.subscribers = (db.subscribers || []).filter(s => s.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
+
+// Stores Management
+app.post('/api/admin/stores', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const store = { id: Date.now(), ...req.body };
+    db.stores.push(store);
+    writeDB(db);
+    res.json({ success: true });
+});
+app.delete('/api/admin/stores/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.stores = (db.stores || []).filter(s => s.id != req.params.id);
     writeDB(db);
     res.json({ success: true });
 });
@@ -227,11 +387,6 @@ app.delete('/api/admin/workers/:id', auth, adminAuth, (req, res) => { let db = r
 
 // Audit Log
 app.get('/api/admin/audit', auth, adminAuth, (req, res) => { const db = readDB(); res.json({ success: true, audit: (db.audit || []).reverse() }); });
-
-// Health check
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', message: 'Server is running' });
-});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => console.log(`✅ Server running on port ${PORT}`));
