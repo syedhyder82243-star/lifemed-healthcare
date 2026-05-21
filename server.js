@@ -12,7 +12,6 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
-app.use('/invoices', express.static('invoices'));
 
 // Security headers
 app.use((req, res, next) => {
@@ -86,12 +85,13 @@ const initDB = {
     users: [], categories: [], banner: { title: "Up to 30% OFF", subtitle: "On selected health products", buttonText: "Shop Now", imageUrl: "" },
     subscribers: [], stores: [], audit: [], coupons: [], wallets: [], refunds: [], reviews: [],
     wishlists: [], resetTokens: [], stockAlerts: [], communicationLogs: [], staffPerformance: [],
-    inventoryLogs: [], variants: [], batches: [], returnRequests: [],
+    inventoryLogs: [], variants: [], batches: [], returnRequests: [], securityLogs: [],
     settings: {
         lowStockThreshold: 10, cartTimeoutMinutes: 15, orderCancelMinutes: 5,
         maxCODOrder: 5000, allowDiscountStacking: false, maxDiscountPercent: 50,
         returnShippingPaidBy: 'customer', defaultGST: 5, autoReorderStock: 20,
-        deliverySlots: ['9AM-12PM', '12PM-3PM', '3PM-6PM', '6PM-9PM']
+        deliverySlots: ['9AM-12PM', '12PM-3PM', '3PM-6PM', '6PM-9PM'],
+        passwordExpiryDays: 90, maxLoginAttempts: 5, lockoutMinutes: 15
     }
 };
 
@@ -100,12 +100,21 @@ if (!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, JSON.stringify(initDB, nu
 const readDB = () => JSON.parse(fs.readFileSync(DB_FILE));
 const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 
+// Password validation function
+const isPasswordStrong = (password) => {
+    const hasMinLength = password.length >= 8;
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    return hasMinLength && hasUppercase && hasNumber && hasSpecialChar;
+};
+
 // ========== SAMPLE DATA ==========
 let db = readDB();
 if (db.products.length === 0) {
     db.products = [
-        { id: 1, name: "Baby Pampers", category: "baby", pricePerUnit: 850, totalStock: 100, unitType: "pack", discount: 0, discountedPrice: 850, imageUrl: "https://placehold.co/200x150", description: "Soft baby diapers", ratings: [], avgRating: 0, isActive: true, minOrderQty: 1, expiryDate: "2026-12-31", batchNo: "BATCH001", storeId: 1, variantOf: null },
-        { id: 2, name: "Panadol 500mg", category: "medicine", pricePerUnit: 120, totalStock: 500, unitType: "strip", discount: 0, discountedPrice: 120, imageUrl: "https://placehold.co/200x150", description: "Fever relief", ratings: [], avgRating: 0, isActive: true, minOrderQty: 1, expiryDate: "2025-12-31", batchNo: "BATCH002", storeId: 1, variantOf: null }
+        { id: 1, name: "Baby Pampers", category: "baby", pricePerUnit: 850, totalStock: 100, unitType: "pack", discount: 0, discountedPrice: 850, imageUrl: "https://placehold.co/200x150", description: "Soft baby diapers", ratings: [], avgRating: 0, isActive: true, minOrderQty: 1, expiryDate: "2026-12-31", batchNo: "BATCH001", storeId: 1 },
+        { id: 2, name: "Panadol 500mg", category: "medicine", pricePerUnit: 120, totalStock: 500, unitType: "strip", discount: 0, discountedPrice: 120, imageUrl: "https://placehold.co/200x150", description: "Fever relief", ratings: [], avgRating: 0, isActive: true, minOrderQty: 1, expiryDate: "2025-12-31", batchNo: "BATCH002", storeId: 1 }
     ];
     db.categories = [
         { id: 1, name: "Medicine", icon: "fas fa-capsules", tax: 5, status: "active" },
@@ -128,7 +137,10 @@ if (db.products.length === 0) {
             id: Date.now(), name: 'Super Admin', email: 'admin@lifemed.com',
             password: await bcrypt.hash('admin123', 10), phone: '8214514503',
             role: 'admin', status: 'active', wallet: 0, addresses: [],
-            creditLimit: 0, creditUsed: 0, gstin: '', createdAt: new Date()
+            creditLimit: 0, creditUsed: 0, gstin: '', createdAt: new Date(),
+            lastLogin: null, passwordLastChanged: new Date(),
+            passwordExpiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+            loginAttempts: 0, lockedUntil: null, isFirstLogin: true
         });
         writeDB(db);
         console.log('✅ Super Admin created');
@@ -143,7 +155,15 @@ const auth = (req, res, next) => {
         req.user = jwt.verify(token, 'lifemed_secret');
         const db = readDB();
         const user = db.users.find(u => u.id === req.user.id);
-        if (user) { req.user.name = user.name; req.user.role = user.role; req.user.wallet = user.wallet || 0; req.user.creditLimit = user.creditLimit || 0; }
+        if (user) {
+            req.user.name = user.name;
+            req.user.role = user.role;
+            req.user.wallet = user.wallet || 0;
+            // Check if password expired
+            if (user.passwordExpiry && new Date(user.passwordExpiry) < new Date() && user.role !== 'admin') {
+                return res.status(403).json({ success: false, message: 'Password expired. Please reset.', requirePasswordChange: true });
+            }
+        }
         next();
     } catch { res.status(403).json({ success: false, message: 'Invalid token' }); }
 };
@@ -153,28 +173,112 @@ const adminAuth = (req, res, next) => {
     next();
 };
 
+// ========== LOGIN ATTEMPT TRACKING ==========
+const logSecurityEvent = (userId, action, details, ip) => {
+    let db = readDB();
+    if (!db.securityLogs) db.securityLogs = [];
+    db.securityLogs.unshift({ userId, action, details, ip, timestamp: new Date() });
+    writeDB(db);
+};
+
 // ========== AUTH ROUTES ==========
 app.post('/api/auth/register', async (req, res) => {
     let db = readDB();
     const { name, email, password, phone, gstin, role = 'user' } = req.body;
     if (!name || !email || !password) return res.status(400).json({ success: false, message: 'All fields required' });
-    if (password.length < 6) return res.status(400).json({ success: false, message: 'Password must be 6+ characters' });
+    if (!isPasswordStrong(password)) return res.status(400).json({ success: false, message: 'Password must be 8+ chars with uppercase, number & special character' });
     if (db.users.find(u => u.email === email)) return res.status(400).json({ success: false, message: 'Email exists' });
     
-    const user = { id: Date.now(), name, email, password: await bcrypt.hash(password, 10), phone, role, gstin, status: 'active', wallet: 0, addresses: [], creditLimit: role === 'wholesale' ? 50000 : 0, creditUsed: 0, createdAt: new Date() };
+    const user = {
+        id: Date.now(), name, email, password: await bcrypt.hash(password, 10), phone, role, gstin,
+        status: 'active', wallet: 0, addresses: [], creditLimit: role === 'wholesale' ? 50000 : 0, creditUsed: 0,
+        createdAt: new Date(), lastLogin: null, passwordLastChanged: new Date(),
+        passwordExpiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+        loginAttempts: 0, lockedUntil: null, isFirstLogin: true
+    };
     db.users.push(user);
     writeDB(db);
     const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
-    res.json({ success: true, token, user: { id: user.id, name, email, role, wallet: 0 } });
+    res.json({ success: true, token, user: { id: user.id, name, email, role, wallet: 0, requirePasswordChange: user.isFirstLogin } });
 });
 
 app.post('/api/auth/login', async (req, res) => {
-    const db = readDB();
-    const user = db.users.find(u => u.email === req.body.email);
-    if (!user || !(await bcrypt.compare(req.body.password, user.password))) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    let db = readDB();
+    const { email, password } = req.body;
+    const user = db.users.find(u => u.email === email);
+    const ip = req.ip;
+    
+    if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    
+    // Check if account is locked
+    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+        return res.status(401).json({ success: false, message: `Account locked. Try after ${new Date(user.lockedUntil).toLocaleTimeString()}` });
+    }
+    
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    
+    if (!passwordMatch) {
+        user.loginAttempts = (user.loginAttempts || 0) + 1;
+        const settings = db.settings;
+        if (user.loginAttempts >= settings.maxLoginAttempts) {
+            user.lockedUntil = new Date(Date.now() + settings.lockoutMinutes * 60 * 1000);
+            logSecurityEvent(user.id, 'ACCOUNT_LOCKED', `Failed ${user.loginAttempts} attempts`, ip);
+        }
+        writeDB(db);
+        return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+    
+    // Reset login attempts on successful login
+    user.loginAttempts = 0;
+    user.lockedUntil = null;
+    user.lastLogin = new Date();
+    writeDB(db);
+    
     if (user.status === 'blocked') return res.status(401).json({ success: false, message: 'Account blocked' });
+    
+    // Check if password expired
+    if (user.passwordExpiry && new Date(user.passwordExpiry) < new Date() && user.role !== 'admin') {
+        const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
+        return res.json({ success: true, requirePasswordChange: true, token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    }
+    
+    // Check if first login - force password change
+    if (user.isFirstLogin && user.role !== 'admin') {
+        const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
+        return res.json({ success: true, requirePasswordChange: true, token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    }
+    
     const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
-    res.json({ success: true, token, user: { id: user.id, name: user.name, email: user.email, role: user.role, wallet: user.wallet || 0, creditLimit: user.creditLimit, creditUsed: user.creditUsed, gstin: user.gstin } });
+    logSecurityEvent(user.id, 'LOGIN_SUCCESS', 'Successful login', ip);
+    res.json({
+        success: true, token,
+        user: { id: user.id, name: user.name, email: user.email, role: user.role, wallet: user.wallet || 0, creditLimit: user.creditLimit, creditUsed: user.creditUsed, gstin: user.gstin, lastLogin: user.lastLogin, requirePasswordChange: false }
+    });
+});
+
+// ========== CHANGE PASSWORD ==========
+app.post('/api/auth/change-password', auth, async (req, res) => {
+    let db = readDB();
+    const { currentPassword, newPassword } = req.body;
+    const user = db.users.find(u => u.id === req.user.id);
+    
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    
+    if (user.role !== 'admin') {
+        const valid = await bcrypt.compare(currentPassword, user.password);
+        if (!valid) return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    }
+    
+    if (!isPasswordStrong(newPassword)) return res.status(400).json({ success: false, message: 'Password must be 8+ chars with uppercase, number & special character' });
+    
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.passwordLastChanged = new Date();
+    user.passwordExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+    user.isFirstLogin = false;
+    writeDB(db);
+    
+    logSecurityEvent(user.id, 'PASSWORD_CHANGED', 'Password changed successfully', req.ip);
+    res.json({ success: true, message: 'Password changed successfully' });
 });
 
 // ========== FORGOT PASSWORD ==========
@@ -182,10 +286,75 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     let db = readDB();
     const user = db.users.find(u => u.email === req.body.email);
     if (!user) return res.json({ success: true, message: 'If email exists, reset link sent' });
+    
     const token = crypto.randomBytes(32).toString('hex');
     db.resetTokens = db.resetTokens || [];
     db.resetTokens.push({ email: user.email, token, expires: new Date(Date.now() + 3600000) });
     writeDB(db);
+    
+    await sendEmail(user.email, 'Password Reset', `<a href="https://lifemed-healthcare.onrender.com/reset-password?token=${token}">Reset Password</a>`);
+    res.json({ success: true });
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+    let db = readDB();
+    const { token, newPassword } = req.body;
+    const resetEntry = (db.resetTokens || []).find(t => t.token === token && new Date(t.expires) > new Date());
+    if (!resetEntry) return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+    
+    if (!isPasswordStrong(newPassword)) return res.status(400).json({ success: false, message: 'Password must be 8+ chars with uppercase, number & special character' });
+    
+    const user = db.users.find(u => u.email === resetEntry.email);
+    if (user) {
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.passwordLastChanged = new Date();
+        user.passwordExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+        user.isFirstLogin = false;
+        db.resetTokens = db.resetTokens.filter(t => t.token !== token);
+        writeDB(db);
+        logSecurityEvent(user.id, 'PASSWORD_RESET', 'Password reset via email', req.ip);
+        res.json({ success: true });
+    } else res.status(404).json({ success: false });
+});
+
+// ========== ADMIN RESET USER PASSWORD ==========
+app.post('/api/admin/users/:id/reset-password', auth, adminAuth, async (req, res) => {
+    let db = readDB();
+    const user = db.users.find(u => u.id == req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    
+    const tempPassword = crypto.randomBytes(6).toString('hex');
+    user.password = await bcrypt.hash(tempPassword, 10);
+    user.passwordLastChanged = new Date();
+    user.passwordExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+    user.isFirstLogin = true;
+    user.loginAttempts = 0;
+    user.lockedUntil = null;
+    writeDB(db);
+    
+    await sendEmail(user.email, 'Password Reset by Admin', `<h2>Your password has been reset</h2><p>Temporary password: <strong>${tempPassword}</strong></p><p>Please login and change your password immediately.</p>`);
+    
+    logSecurityEvent(user.id, 'ADMIN_PASSWORD_RESET', `Password reset by ${req.user.name}`, req.ip);
+    res.json({ success: true, message: 'Password reset email sent', tempPassword });
+});
+
+// ========== SECURITY LOGS ==========
+app.get('/api/admin/security-logs', auth, adminAuth, (req, res) => {
+    const db = readDB();
+    res.json({ success: true, logs: db.securityLogs || [] });
+});
+
+// ========== FORGOT PASSWORD ==========
+app.post('/api/auth/forgot-password', async (req, res) => {
+    let db = readDB();
+    const user = db.users.find(u => u.email === req.body.email);
+    if (!user) return res.json({ success: true, message: 'If email exists, reset link sent' });
+    
+    const token = crypto.randomBytes(32).toString('hex');
+    db.resetTokens = db.resetTokens || [];
+    db.resetTokens.push({ email: user.email, token, expires: new Date(Date.now() + 3600000) });
+    writeDB(db);
+    
     await sendEmail(user.email, 'Password Reset', `<a href="https://lifemed-healthcare.onrender.com/reset-password?token=${token}">Reset Password</a>`);
     res.json({ success: true });
 });
@@ -195,9 +364,13 @@ app.post('/api/auth/reset-password', async (req, res) => {
     const { token, newPassword } = req.body;
     const resetEntry = (db.resetTokens || []).find(t => t.token === token && new Date(t.expires) > new Date());
     if (!resetEntry) return res.status(400).json({ success: false });
+    
     const user = db.users.find(u => u.email === resetEntry.email);
     if (user) {
         user.password = await bcrypt.hash(newPassword, 10);
+        user.passwordLastChanged = new Date();
+        user.passwordExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+        user.isFirstLogin = false;
         db.resetTokens = db.resetTokens.filter(t => t.token !== token);
         writeDB(db);
         res.json({ success: true });
@@ -289,7 +462,7 @@ app.post('/api/validate-coupon', auth, (req, res) => {
     res.json({ success: true, discount, message: `₹${discount} off applied` });
 });
 
-// ========== ORDER PLACEMENT ==========
+// ========== ORDER PLACEMENT (with security) ==========
 const orderLocks = new Set();
 app.post('/api/orders', auth, async (req, res) => {
     const lockKey = `${req.user.id}_${Date.now()}`;
@@ -352,15 +525,12 @@ app.post('/api/orders', auth, async (req, res) => {
         batchNumbers: items.map(item => ({ productId: item.id, batchNo: db.products.find(p => p.id === item.id)?.batchNo }))
     };
     
-    // Deduct stock and log inventory
     for (const item of items) {
         const p = db.products.find(p => p.id === item.id);
         if (p) {
             p.totalStock -= item.quantity;
             if (!db.inventoryLogs) db.inventoryLogs = [];
             db.inventoryLogs.unshift({ productId: item.id, change: -item.quantity, newStock: p.totalStock, staff: req.user.name, timestamp: new Date() });
-            
-            // Auto reorder alert
             if (p.totalStock <= settings.autoReorderStock) {
                 await sendEmail('admin@lifemed.com', `Low Stock Alert: ${p.name}`, `Stock is now ${p.totalStock}. Please reorder.`);
             }
@@ -401,7 +571,6 @@ app.put('/api/admin/orders/:id/status', auth, adminAuth, (req, res) => {
         if (!db.staffPerformance) db.staffPerformance = [];
         db.staffPerformance.unshift({ staff: req.user.name, action: `ORDER_STATUS_${req.body.status}`, orderId: order.id, timestamp: new Date() });
         
-        // Send email on status change
         const user = db.users.find(u => u.id === order.userId);
         if (user) {
             sendEmail(user.email, `Order #${order.id} Status Update`, `<h2>Order Status: ${req.body.status}</h2><p>Your order is now ${req.body.status}</p>`);
@@ -674,6 +843,52 @@ app.post('/api/admin/products/bulk', auth, adminAuth, (req, res) => {
     res.json({ success: true, count: products.length });
 });
 
+// ========== STOCK INCREMENT (NOT OVERWRITE) ==========
+app.post('/api/admin/products/:id/stock', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const { quantity, note } = req.body;
+    const product = db.products.find(p => p.id == req.params.id);
+    if (product) {
+        const oldStock = product.totalStock;
+        product.totalStock += quantity;
+        if (!db.inventoryLogs) db.inventoryLogs = [];
+        db.inventoryLogs.unshift({ productId: product.id, change: quantity, oldStock, newStock: product.totalStock, staff: req.user.name, note, timestamp: new Date() });
+        writeDB(db);
+        res.json({ success: true, newStock: product.totalStock });
+    } else res.status(404).json({ success: false });
+});
+
+// ========== ADMIN USER MANAGEMENT (with security fields) ==========
+app.get('/api/admin/users', auth, adminAuth, (req, res) => {
+    const db = readDB();
+    const users = db.users.filter(u => u.role !== 'admin').map(u => ({
+        id: u.id, name: u.name, email: u.email, role: u.role, status: u.status,
+        lastLogin: u.lastLogin, passwordExpiry: u.passwordExpiry,
+        wallet: u.wallet, creditLimit: u.creditLimit, creditUsed: u.creditUsed
+    }));
+    res.json({ success: true, users });
+});
+
+app.put('/api/admin/users/:id/status', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const idx = db.users.findIndex(u => u.id == req.params.id);
+    if (idx !== -1) {
+        db.users[idx].status = req.body.status;
+        writeDB(db);
+        res.json({ success: true });
+    } else res.status(404).json({ success: false });
+});
+
+app.put('/api/admin/users/:id/credit', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const idx = db.users.findIndex(u => u.id == req.params.id);
+    if (idx !== -1) {
+        db.users[idx].creditLimit = req.body.creditLimit;
+        writeDB(db);
+        res.json({ success: true });
+    } else res.status(404).json({ success: false });
+});
+
 // ========== PUBLIC ROUTES ==========
 app.get('/api/products', (req, res) => { const db = readDB(); res.json({ success: true, products: db.products.filter(p => p.isActive !== false) }); });
 app.get('/api/products/:id', (req, res) => { const db = readDB(); const p = db.products.find(p => p.id == req.params.id); res.json({ success: true, product: p }); });
@@ -731,32 +946,13 @@ app.put('/api/admin/banner', auth, adminAuth, (req, res) => { let db = readDB();
 app.post('/api/admin/coupons', auth, adminAuth, (req, res) => { let db = readDB(); db.coupons.push({ id: Date.now(), ...req.body, usedCount: 0 }); writeDB(db); res.json({ success: true }); });
 app.delete('/api/admin/coupons/:id', auth, adminAuth, (req, res) => { let db = readDB(); db.coupons = db.coupons.filter(c => c.id != req.params.id); writeDB(db); res.json({ success: true }); });
 
-app.get('/api/admin/users', auth, adminAuth, (req, res) => { const db = readDB(); res.json({ success: true, users: db.users.filter(u => u.role !== 'admin') }); });
-app.put('/api/admin/users/:id/status', auth, adminAuth, (req, res) => { let db = readDB(); const idx = db.users.findIndex(u => u.id == req.params.id); if (idx !== -1) { db.users[idx].status = req.body.status; writeDB(db); res.json({ success: true }); } else res.status(404).json({ success: false }); });
-app.put('/api/admin/users/:id/credit', auth, adminAuth, (req, res) => { let db = readDB(); const idx = db.users.findIndex(u => u.id == req.params.id); if (idx !== -1) { db.users[idx].creditLimit = req.body.creditLimit; writeDB(db); res.json({ success: true }); } else res.status(404).json({ success: false }); });
-
 app.get('/api/admin/audit', auth, adminAuth, (req, res) => { const db = readDB(); res.json({ success: true, audit: (db.audit || []).reverse() }); });
 app.get('/api/admin/subscribers', auth, adminAuth, (req, res) => { const db = readDB(); res.json({ success: true, subscribers: db.subscribers || [] }); });
 app.post('/api/admin/stores', auth, adminAuth, (req, res) => { let db = readDB(); db.stores.push({ id: Date.now(), ...req.body }); writeDB(db); res.json({ success: true }); });
 app.delete('/api/admin/stores/:id', auth, adminAuth, (req, res) => { let db = readDB(); db.stores = db.stores.filter(s => s.id != req.params.id); writeDB(db); res.json({ success: true }); });
 
-app.post('/api/admin/workers', auth, adminAuth, async (req, res) => { let db = readDB(); if (db.users.find(u => u.email === req.body.email)) return res.status(400).json({ success: false }); db.users.push({ id: Date.now(), name: req.body.name, email: req.body.email, password: await bcrypt.hash(req.body.password, 10), role: req.body.role || 'staff', status: 'active', wallet: 0, addresses: [], createdAt: new Date() }); writeDB(db); res.json({ success: true }); });
+app.post('/api/admin/workers', auth, adminAuth, async (req, res) => { let db = readDB(); if (db.users.find(u => u.email === req.body.email)) return res.status(400).json({ success: false }); db.users.push({ id: Date.now(), name: req.body.name, email: req.body.email, password: await bcrypt.hash(req.body.password, 10), role: req.body.role || 'staff', status: 'active', wallet: 0, addresses: [], createdAt: new Date(), lastLogin: null, passwordLastChanged: new Date(), passwordExpiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), loginAttempts: 0, lockedUntil: null, isFirstLogin: true }); writeDB(db); res.json({ success: true }); });
 app.delete('/api/admin/workers/:id', auth, adminAuth, (req, res) => { let db = readDB(); db.users = db.users.filter(u => u.id != req.params.id); writeDB(db); res.json({ success: true }); });
 
-// ========== STOCK INCREMENT (NOT OVERWRITE) ==========
-app.post('/api/admin/products/:id/stock', auth, adminAuth, (req, res) => {
-    let db = readDB();
-    const { quantity, note } = req.body;
-    const product = db.products.find(p => p.id == req.params.id);
-    if (product) {
-        const oldStock = product.totalStock;
-        product.totalStock += quantity;
-        if (!db.inventoryLogs) db.inventoryLogs = [];
-        db.inventoryLogs.unshift({ productId: product.id, change: quantity, oldStock, newStock: product.totalStock, staff: req.user.name, note, timestamp: new Date() });
-        writeDB(db);
-        res.json({ success: true, newStock: product.totalStock });
-    } else res.status(404).json({ success: false });
-});
-
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => console.log(`✅ Ultimate server running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`✅ Secure server running on port ${PORT}`));
