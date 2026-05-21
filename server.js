@@ -70,7 +70,7 @@ app.post('/api/upload-return-image', upload.array('returnImages', 5), (req, res)
     res.json({ success: true, images: urls });
 });
 
-// ========== EMAIL DISABLED ==========
+// ========== EMAIL DISABLED (Will enable in paid version) ==========
 const sendEmail = async (to, subject, html) => {
     console.log(`📧 [EMAIL] To: ${to}, Subject: ${subject}`);
     return true;
@@ -86,6 +86,7 @@ const initDB = {
     subscribers: [], stores: [], audit: [], coupons: [], wallets: [], refunds: [], reviews: [],
     wishlists: [], resetTokens: [], stockAlerts: [], communicationLogs: [], staffPerformance: [],
     inventoryLogs: [], variants: [], batches: [], returnRequests: [], securityLogs: [],
+    guestOrders: [], abandonedCarts: [],
     settings: {
         lowStockThreshold: 10, cartTimeoutMinutes: 15, orderCancelMinutes: 5,
         maxCODOrder: 5000, allowDiscountStacking: false, maxDiscountPercent: 50,
@@ -114,11 +115,14 @@ let db = readDB();
 if (db.products.length === 0) {
     db.products = [
         { id: 1, name: "Baby Pampers", category: "baby", pricePerUnit: 850, totalStock: 100, unitType: "pack", discount: 0, discountedPrice: 850, imageUrl: "https://placehold.co/200x150", description: "Soft baby diapers", ratings: [], avgRating: 0, isActive: true, minOrderQty: 1, expiryDate: "2026-12-31", batchNo: "BATCH001", storeId: 1 },
-        { id: 2, name: "Panadol 500mg", category: "medicine", pricePerUnit: 120, totalStock: 500, unitType: "strip", discount: 0, discountedPrice: 120, imageUrl: "https://placehold.co/200x150", description: "Fever relief", ratings: [], avgRating: 0, isActive: true, minOrderQty: 1, expiryDate: "2025-12-31", batchNo: "BATCH002", storeId: 1 }
+        { id: 2, name: "Panadol 500mg", category: "medicine", pricePerUnit: 120, totalStock: 500, unitType: "strip", discount: 0, discountedPrice: 120, imageUrl: "https://placehold.co/200x150", description: "Fever relief", ratings: [], avgRating: 0, isActive: true, minOrderQty: 1, expiryDate: "2025-12-31", batchNo: "BATCH002", storeId: 1 },
+        { id: 3, name: "Vitamin C", category: "medicine", pricePerUnit: 299, totalStock: 200, unitType: "bottle", discount: 25, discountedPrice: 224, imageUrl: "https://placehold.co/200x150", description: "Immunity booster", ratings: [], avgRating: 0, isActive: true, minOrderQty: 1, expiryDate: "2026-06-30", batchNo: "BATCH003", storeId: 1 }
     ];
     db.categories = [
         { id: 1, name: "Medicine", icon: "fas fa-capsules", tax: 5, status: "active" },
-        { id: 2, name: "Baby", icon: "fas fa-baby-carriage", tax: 0, status: "active" }
+        { id: 2, name: "Baby", icon: "fas fa-baby-carriage", tax: 0, status: "active" },
+        { id: 3, name: "Skincare", icon: "fas fa-spa", tax: 5, status: "active" },
+        { id: 4, name: "Daily", icon: "fas fa-hand-sparkles", tax: 0, status: "active" }
     ];
     db.stores = [
         { id: 1, name: "LifeMed Mysore", address: "#123 Rajivnagar", city: "Mysore", pincode: "570019", phone: "8214514503", inventory: {} }
@@ -180,6 +184,51 @@ const logSecurityEvent = (userId, action, details, ip) => {
     writeDB(db);
 };
 
+// ========== CART MERGE AFTER LOGIN ==========
+app.post('/api/cart/merge', auth, (req, res) => {
+    let db = readDB();
+    const { localCart } = req.body;
+    
+    if (!localCart || !Array.isArray(localCart) || localCart.length === 0) {
+        return res.json({ success: true, mergedCart: [] });
+    }
+    
+    const userOrders = db.orders.filter(o => o.userId === req.user.id);
+    const purchasedProductIds = new Set();
+    userOrders.forEach(order => {
+        order.items.forEach(item => purchasedProductIds.add(item.id));
+    });
+    
+    const validCart = localCart.filter(item => !purchasedProductIds.has(item.id));
+    const mergedCart = [];
+    
+    for (const item of validCart) {
+        const product = db.products.find(p => p.id === item.id);
+        if (product && product.totalStock >= item.qty && product.isActive !== false) {
+            mergedCart.push({ ...item, price: product.pricePerUnit });
+        }
+    }
+    
+    res.json({ success: true, mergedCart });
+});
+
+// ========== ABANDONED CART SAVE ==========
+app.post('/api/cart/save', (req, res) => {
+    let db = readDB();
+    const { cart, email } = req.body;
+    if (!db.abandonedCarts) db.abandonedCarts = [];
+    
+    const existing = db.abandonedCarts.find(c => c.email === email);
+    if (existing) {
+        existing.cart = cart;
+        existing.updatedAt = new Date();
+    } else {
+        db.abandonedCarts.push({ email, cart, createdAt: new Date(), updatedAt: new Date() });
+    }
+    writeDB(db);
+    res.json({ success: true });
+});
+
 // ========== AUTH ROUTES ==========
 app.post('/api/auth/register', async (req, res) => {
     let db = readDB();
@@ -197,8 +246,18 @@ app.post('/api/auth/register', async (req, res) => {
     };
     db.users.push(user);
     writeDB(db);
-    const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
-    res.json({ success: true, token, user: { id: user.id, name, email, role, wallet: 0, requirePasswordChange: user.isFirstLogin } });
+    
+    // Restore abandoned cart if exists
+    let restoredCart = [];
+    const abandoned = db.abandonedCarts?.find(c => c.email === email);
+    if (abandoned && abandoned.cart) {
+        restoredCart = abandoned.cart;
+        db.abandonedCarts = db.abandonedCarts.filter(c => c.email !== email);
+        writeDB(db);
+    }
+    
+    const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret', { expiresIn: '7d' });
+    res.json({ success: true, token, user: { id: user.id, name, email, role, wallet: 0, requirePasswordChange: user.isFirstLogin }, restoredCart });
 });
 
 app.post('/api/auth/login', async (req, res) => {
@@ -234,21 +293,86 @@ app.post('/api/auth/login', async (req, res) => {
     if (user.status === 'blocked') return res.status(401).json({ success: false, message: 'Account blocked' });
     
     if (user.passwordExpiry && new Date(user.passwordExpiry) < new Date() && user.role !== 'admin') {
-        const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
+        const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret', { expiresIn: '7d' });
         return res.json({ success: true, requirePasswordChange: true, token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     }
     
     if (user.isFirstLogin && user.role !== 'admin') {
-        const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
+        const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret', { expiresIn: '7d' });
         return res.json({ success: true, requirePasswordChange: true, token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     }
     
-    const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
+    // Restore abandoned cart
+    let restoredCart = [];
+    const abandoned = db.abandonedCarts?.find(c => c.email === email);
+    if (abandoned && abandoned.cart) {
+        restoredCart = abandoned.cart;
+        db.abandonedCarts = db.abandonedCarts.filter(c => c.email !== email);
+        writeDB(db);
+    }
+    
+    const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret', { expiresIn: '7d' });
     logSecurityEvent(user.id, 'LOGIN_SUCCESS', 'Successful login', ip);
     res.json({
         success: true, token,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role, wallet: user.wallet || 0, creditLimit: user.creditLimit, creditUsed: user.creditUsed, gstin: user.gstin, lastLogin: user.lastLogin, requirePasswordChange: false }
+        user: { id: user.id, name: user.name, email: user.email, role: user.role, wallet: user.wallet || 0, creditLimit: user.creditLimit, creditUsed: user.creditUsed, gstin: user.gstin, lastLogin: user.lastLogin, requirePasswordChange: false },
+        restoredCart
     });
+});
+
+// ========== GUEST ORDER (No Login Required) ==========
+app.post('/api/guest-order', async (req, res) => {
+    let db = readDB();
+    const { items, totalAmount, address, prescription, couponCode, couponDiscount, email, phone, name, deliverySlot, orderNotes } = req.body;
+    
+    if (!name || !phone || !address) {
+        return res.status(400).json({ success: false, message: 'Name, phone and address required' });
+    }
+    
+    for (const item of items) {
+        const product = db.products.find(p => p.id === item.id);
+        if (!product || !product.isActive) return res.status(400).json({ success: false, message: `${item.name} not available` });
+        if (product.totalStock < item.quantity) return res.status(400).json({ success: false, message: `${product.name} only ${product.totalStock} left` });
+    }
+    
+    let finalAmount = totalAmount;
+    let discountApplied = 0;
+    
+    if (couponDiscount) {
+        finalAmount -= couponDiscount;
+        discountApplied = couponDiscount;
+        const coupon = db.coupons.find(c => c.code === couponCode);
+        if (coupon) coupon.usedCount = (coupon.usedCount || 0) + 1;
+    }
+    
+    for (const item of items) {
+        const p = db.products.find(p => p.id === item.id);
+        if (p) p.totalStock -= item.quantity;
+    }
+    
+    const order = {
+        id: Date.now(), isGuest: true, guestEmail: email, guestName: name, guestPhone: phone,
+        items, totalAmount, couponDiscount: discountApplied, finalAmount,
+        address, orderNotes: orderNotes || '', deliverySlot,
+        orderDate: new Date(), status: 'confirmed',
+        statusHistory: [{ status: 'confirmed', timestamp: new Date(), note: 'Order confirmed' }],
+        cancelDeadline: new Date(Date.now() + db.settings.orderCancelMinutes * 60 * 1000),
+        tracking: { status: 'confirmed', updates: [{ timestamp: new Date(), message: 'Order confirmed' }] }
+    };
+    
+    if (!db.guestOrders) db.guestOrders = [];
+    db.guestOrders.unshift(order);
+    writeDB(db);
+    
+    res.json({ success: true, order });
+});
+
+app.get('/api/guest-orders', (req, res) => {
+    const db = readDB();
+    const { phone } = req.query;
+    if (!phone) return res.json({ success: true, orders: [] });
+    const orders = (db.guestOrders || []).filter(o => o.guestPhone === phone).reverse();
+    res.json({ success: true, orders });
 });
 
 // ========== CHANGE PASSWORD ==========
@@ -424,17 +548,76 @@ app.post('/api/validate-coupon', auth, (req, res) => {
     res.json({ success: true, discount, message: `₹${discount} off applied` });
 });
 
-// ========== ORDER PLACEMENT ==========
+// ========== ORDER PLACEMENT (With Guest Support) ==========
 const orderLocks = new Set();
-app.post('/api/orders', auth, async (req, res) => {
-    const lockKey = `${req.user.id}_${Date.now()}`;
+app.post('/api/orders', async (req, res) => {
+    const { items, totalAmount, address, prescription, couponCode, couponDiscount, useWallet, paymentMethod, deliverySlot, expectedDate, isGuest, guestName, guestPhone, guestEmail, orderNotes } = req.body;
+    
+    // Handle guest order
+    if (isGuest) {
+        let db = readDB();
+        if (!guestName || !guestPhone || !address) {
+            return res.status(400).json({ success: false, message: 'Name, phone and address required' });
+        }
+        
+        for (const item of items) {
+            const product = db.products.find(p => p.id === item.id);
+            if (!product || !product.isActive) return res.status(400).json({ success: false, message: `${item.name} not available` });
+            if (product.totalStock < item.quantity) return res.status(400).json({ success: false, message: `${product.name} only ${product.totalStock} left` });
+        }
+        
+        let finalAmount = totalAmount;
+        let discountApplied = 0;
+        
+        if (couponDiscount) {
+            finalAmount -= couponDiscount;
+            discountApplied = couponDiscount;
+            const coupon = db.coupons.find(c => c.code === couponCode);
+            if (coupon) coupon.usedCount = (coupon.usedCount || 0) + 1;
+        }
+        
+        for (const item of items) {
+            const p = db.products.find(p => p.id === item.id);
+            if (p) p.totalStock -= item.quantity;
+        }
+        
+        const order = {
+            id: Date.now(), isGuest: true, guestName, guestPhone, guestEmail,
+            items, totalAmount, couponDiscount: discountApplied, finalAmount,
+            address, orderNotes: orderNotes || '', deliverySlot, expectedDeliveryDate: expectedDate,
+            orderDate: new Date(), status: 'confirmed',
+            statusHistory: [{ status: 'confirmed', timestamp: new Date(), note: 'Order confirmed' }],
+            cancelDeadline: new Date(Date.now() + db.settings.orderCancelMinutes * 60 * 1000),
+            tracking: { status: 'confirmed', updates: [{ timestamp: new Date(), message: 'Order confirmed' }] }
+        };
+        
+        if (!db.guestOrders) db.guestOrders = [];
+        db.guestOrders.unshift(order);
+        writeDB(db);
+        
+        return res.json({ success: true, order, isGuest: true });
+    }
+    
+    // Handle logged-in user order
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ success: false, message: 'Authentication required' });
+    
+    let user;
+    try {
+        const decoded = jwt.verify(token, 'lifemed_secret');
+        let db = readDB();
+        user = db.users.find(u => u.id === decoded.id);
+        if (!user) return res.status(401).json({ success: false, message: 'User not found' });
+    } catch {
+        return res.status(401).json({ success: false, message: 'Invalid token' });
+    }
+    
+    const lockKey = `${user.id}_${Date.now()}`;
     if (orderLocks.has(lockKey)) return res.status(429).json({ success: false, message: 'Order already processing' });
     orderLocks.add(lockKey);
     setTimeout(() => orderLocks.delete(lockKey), 5000);
     
     let db = readDB();
-    const { items, totalAmount, address, prescription, couponCode, couponDiscount, useWallet, useCredit, paymentMethod, deliverySlot, expectedDate } = req.body;
-    const user = db.users.find(u => u.id === req.user.id);
     const settings = db.settings;
     
     if (paymentMethod === 'cod' && totalAmount > settings.maxCODOrder) {
@@ -452,7 +635,6 @@ app.post('/api/orders', auth, async (req, res) => {
     let finalAmount = totalAmount;
     let discountApplied = 0;
     let walletUsed = 0;
-    let creditUsed = 0;
     
     if (couponDiscount && settings.allowDiscountStacking !== false) {
         finalAmount -= couponDiscount;
@@ -461,11 +643,7 @@ app.post('/api/orders', auth, async (req, res) => {
     if (useWallet && user.wallet > 0) {
         walletUsed = Math.min(user.wallet, finalAmount);
         finalAmount -= walletUsed;
-    }
-    if (useCredit && user.creditLimit && user.creditLimit - user.creditUsed >= finalAmount) {
-        creditUsed = finalAmount;
-        finalAmount = 0;
-        user.creditUsed = (user.creditUsed || 0) + creditUsed;
+        user.wallet -= walletUsed;
     }
     
     const itemsWithTax = items.map(item => {
@@ -477,10 +655,10 @@ app.post('/api/orders', auth, async (req, res) => {
     });
     
     const order = {
-        id: Date.now(), userId: req.user.id, userName: user.name, items: itemsWithTax,
-        totalAmount, couponDiscount: discountApplied, walletUsed, creditUsed, finalAmount,
+        id: Date.now(), userId: user.id, userName: user.name, items: itemsWithTax,
+        totalAmount, couponDiscount: discountApplied, walletUsed, finalAmount,
         paymentMethod, address: address || (user.addresses || []).find(a => a.isDefault),
-        prescription, deliverySlot, expectedDeliveryDate: expectedDate,
+        prescription, deliverySlot, expectedDeliveryDate: expectedDate, orderNotes: orderNotes || '',
         orderDate: new Date(), status: 'confirmed',
         statusHistory: [{ status: 'confirmed', timestamp: new Date(), note: 'Order confirmed' }],
         cancelDeadline: new Date(Date.now() + settings.orderCancelMinutes * 60 * 1000),
@@ -492,7 +670,7 @@ app.post('/api/orders', auth, async (req, res) => {
         if (p) {
             p.totalStock -= item.quantity;
             if (!db.inventoryLogs) db.inventoryLogs = [];
-            db.inventoryLogs.unshift({ productId: item.id, change: -item.quantity, newStock: p.totalStock, staff: req.user.name, timestamp: new Date() });
+            db.inventoryLogs.unshift({ productId: item.id, change: -item.quantity, newStock: p.totalStock, staff: user.name, timestamp: new Date() });
             if (p.totalStock <= settings.autoReorderStock) {
                 await sendEmail('admin@lifemed.com', `Low Stock Alert: ${p.name}`, `Stock is now ${p.totalStock}. Please reorder.`);
             }
@@ -503,23 +681,29 @@ app.post('/api/orders', auth, async (req, res) => {
         const coupon = db.coupons.find(c => c.code === couponCode);
         if (coupon) coupon.usedCount = (coupon.usedCount || 0) + 1;
     }
-    if (walletUsed > 0) user.wallet -= walletUsed;
     
     db.orders.unshift(order);
     if (!db.audit) db.audit = [];
     db.audit.unshift({ timestamp: new Date(), staff: user.name, action: 'PLACE_ORDER', details: `Order #${order.id} - ₹${order.finalAmount}` });
     writeDB(db);
     
-    await sendEmail(user.email, `Order Confirmed #${order.id}`, `<h2>Order Confirmed!</h2><p>Order ID: ${order.id}</p><p>Total: ₹${order.finalAmount}</p><p>Delivery Slot: ${deliverySlot || 'Standard'}</p>`);
+    await sendEmail(user.email, `Order Confirmed #${order.id}`, `<h2>Order Confirmed!</h2><p>Order ID: ${order.id}</p><p>Total: ₹${order.finalAmount}</p><p>Delivery Slot: ${deliverySlot || 'Standard'}</p><p>Order Notes: ${orderNotes || 'None'}</p>`);
     
-    res.json({ success: true, order, walletBalance: user.wallet, creditBalance: user.creditLimit - user.creditUsed });
+    res.json({ success: true, order, walletBalance: user.wallet });
 });
 
 // ========== ORDER STATUS WORKFLOW ==========
 const orderStatusFlow = ['confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered'];
 app.put('/api/admin/orders/:id/status', auth, adminAuth, (req, res) => {
     let db = readDB();
-    const order = db.orders.find(o => o.id == req.params.id);
+    let order = db.orders.find(o => o.id == req.params.id);
+    let isGuest = false;
+    
+    if (!order && db.guestOrders) {
+        order = db.guestOrders.find(o => o.id == req.params.id);
+        isGuest = true;
+    }
+    
     if (order) {
         const currentIndex = orderStatusFlow.indexOf(order.status);
         const newIndex = orderStatusFlow.indexOf(req.body.status);
@@ -533,9 +717,13 @@ app.put('/api/admin/orders/:id/status', auth, adminAuth, (req, res) => {
         if (!db.staffPerformance) db.staffPerformance = [];
         db.staffPerformance.unshift({ staff: req.user.name, action: `ORDER_STATUS_${req.body.status}`, orderId: order.id, timestamp: new Date() });
         
-        const user = db.users.find(u => u.id === order.userId);
-        if (user) {
-            sendEmail(user.email, `Order #${order.id} Status Update`, `<h2>Order Status: ${req.body.status}</h2><p>Your order is now ${req.body.status}</p>`);
+        if (!isGuest) {
+            const user = db.users.find(u => u.id === order.userId);
+            if (user) {
+                sendEmail(user.email, `Order #${order.id} Status Update`, `<h2>Order Status: ${req.body.status}</h2><p>Your order is now ${req.body.status}</p>`);
+            }
+        } else if (order.guestEmail) {
+            sendEmail(order.guestEmail, `Order #${order.id} Status Update`, `<h2>Order Status: ${req.body.status}</h2><p>Your order is now ${req.body.status}</p>`);
         }
         writeDB(db);
         res.json({ success: true });
@@ -548,7 +736,8 @@ app.post('/api/admin/orders/bulk-status', auth, adminAuth, (req, res) => {
     const { orderIds, status } = req.body;
     let count = 0;
     for (const id of orderIds) {
-        const order = db.orders.find(o => o.id == id);
+        let order = db.orders.find(o => o.id == id);
+        if (!order && db.guestOrders) order = db.guestOrders.find(o => o.id == id);
         if (order && order.status !== 'delivered' && order.status !== 'cancelled') {
             order.status = status;
             if (!order.statusHistory) order.statusHistory = [];
@@ -563,57 +752,88 @@ app.post('/api/admin/orders/bulk-status', auth, adminAuth, (req, res) => {
 // ========== ORDER CANCELLATION ==========
 app.post('/api/orders/:id/cancel', auth, (req, res) => {
     let db = readDB();
-    const order = db.orders.find(o => o.id == req.params.id);
+    let order = db.orders.find(o => o.id == req.params.id);
+    let isGuest = false;
+    
+    if (!order && db.guestOrders) {
+        order = db.guestOrders.find(o => o.id == req.params.id);
+        isGuest = true;
+    }
+    
     if (!order) return res.status(404).json({ success: false });
-    if (order.userId !== req.user.id && req.user.role !== 'admin') return res.status(403).json({ success: false });
+    
+    if (!isGuest && order.userId !== req.user.id && req.user.role !== 'admin') return res.status(403).json({ success: false });
+    if (isGuest && req.user.role !== 'admin') return res.status(403).json({ success: false });
+    
+    if (order.status === 'delivered') {
+        return res.status(400).json({ success: false, message: 'Delivered orders cannot be cancelled' });
+    }
+    if (order.status === 'returned') {
+        return res.status(400).json({ success: false, message: 'Returned orders cannot be cancelled' });
+    }
     if (order.status !== 'confirmed') return res.status(400).json({ success: false, message: 'Order cannot be cancelled' });
-    if (new Date() > new Date(order.cancelDeadline) && req.user.role !== 'admin') return res.status(400).json({ success: false, message: 'Cancel window expired' });
+    
+    const hoursSinceOrder = (Date.now() - new Date(order.orderDate)) / (1000 * 60 * 60);
+    if (hoursSinceOrder > 24 && req.user.role !== 'admin') {
+        return res.status(400).json({ success: false, message: 'Order can only be cancelled within 24 hours' });
+    }
     
     order.status = 'cancelled';
     if (!order.statusHistory) order.statusHistory = [];
-    order.statusHistory.unshift({ status: 'cancelled', timestamp: new Date(), note: 'Order cancelled by ' + (req.user.role === 'admin' ? 'admin' : 'customer') });
+    order.statusHistory.unshift({ status: 'cancelled', timestamp: new Date(), note: `Order cancelled by ${req.user.role === 'admin' ? 'admin' : 'customer'}. Reason: ${req.body.reason || 'No reason provided'}` });
     
     for (const item of order.items) {
         const p = db.products.find(p => p.id === item.id);
         if (p) p.totalStock += item.quantity;
     }
-    if (order.walletUsed > 0) {
+    if (!isGuest && order.walletUsed > 0) {
         const user = db.users.find(u => u.id === order.userId);
         if (user) user.wallet += order.walletUsed;
-    }
-    if (order.creditUsed > 0) {
-        const user = db.users.find(u => u.id === order.userId);
-        if (user) user.creditUsed = Math.max(0, (user.creditUsed || 0) - order.creditUsed);
     }
     writeDB(db);
     res.json({ success: true });
 });
 
 // ========== ORDER TRACKING ==========
-app.get('/api/orders/:id/track', auth, (req, res) => {
+app.get('/api/orders/:id/track', (req, res) => {
     const db = readDB();
-    const order = db.orders.find(o => o.id == req.params.id);
-    if (!order || (order.userId !== req.user.id && req.user.role !== 'admin')) return res.status(404).json({ success: false });
+    let order = db.orders.find(o => o.id == req.params.id);
+    if (!order && db.guestOrders) order = db.guestOrders.find(o => o.id == req.params.id);
+    if (!order) return res.status(404).json({ success: false });
     res.json({ success: true, tracking: { status: order.status, history: order.statusHistory || [], estimatedDelivery: order.expectedDeliveryDate } });
 });
 
 // ========== RETURN REQUEST WITH IMAGES ==========
 app.post('/api/return-request', auth, (req, res) => {
     let db = readDB();
-    if (!db.returnRequests) db.returnRequests = [];
-    const existing = db.returnRequests.find(r => r.orderId === req.body.orderId);
-    if (existing && existing.status === 'approved') return res.status(400).json({ success: false, message: 'Return already approved' });
-    if (existing && existing.status === 'pending') return res.status(400).json({ success: false, message: 'Return already requested' });
+    let order = db.orders.find(o => o.id === req.body.orderId);
+    if (!order && db.guestOrders) order = db.guestOrders.find(o => o.id === req.body.orderId);
     
+    if (!order) return res.status(404).json({ success: false });
+    if (!order.isGuest && order.userId !== req.user.id) return res.status(403).json({ success: false });
+    
+    if (order.status !== 'delivered') {
+        return res.status(400).json({ success: false, message: 'Only delivered orders can be returned' });
+    }
+    const daysSinceDelivery = (Date.now() - new Date(order.orderDate)) / (1000 * 60 * 60 * 24);
+    if (daysSinceDelivery > 7) {
+        return res.status(400).json({ success: false, message: 'Return window expired (7 days only)' });
+    }
+    const existingReturn = (db.returnRequests || []).find(r => r.orderId === order.id && (r.status === 'approved' || r.status === 'pending'));
+    if (existingReturn) {
+        return res.status(400).json({ success: false, message: 'Return already ' + existingReturn.status });
+    }
+    
+    if (!db.returnRequests) db.returnRequests = [];
     const returnReq = {
-        id: Date.now(), userId: req.user.id, orderId: req.body.orderId,
-        items: req.body.items, reason: req.body.reason, reasonDetail: req.body.reasonDetail,
+        id: Date.now(), userId: order.userId || null, orderId: order.id,
+        items: req.body.items, reason: req.body.reason, reasonDetail: req.body.reasonDetail || '',
         images: req.body.images || [], amount: req.body.amount,
         status: 'pending', createdAt: new Date()
     };
     db.returnRequests.push(returnReq);
     writeDB(db);
-    res.json({ success: true });
+    res.json({ success: true, message: 'Return request submitted' });
 });
 
 app.get('/api/admin/returns', auth, adminAuth, (req, res) => {
@@ -631,10 +851,10 @@ app.put('/api/admin/returns/:id', auth, adminAuth, (req, res) => {
     returnReq.adminNotes = req.body.notes;
     returnReq.resolvedAt = new Date();
     
-    if (req.body.status === 'approved') {
+    if (req.body.status === 'approved' && returnReq.userId) {
         const user = db.users.find(u => u.id === returnReq.userId);
         if (user) user.wallet = (user.wallet || 0) + returnReq.amount;
-        const order = db.orders.find(o => o.id === returnReq.orderId);
+        let order = db.orders.find(o => o.id === returnReq.orderId);
         if (order) order.status = 'returned';
     }
     writeDB(db);
@@ -692,31 +912,72 @@ app.post('/api/wallet/add', auth, (req, res) => {
     } else res.status(404).json({ success: false });
 });
 
-// ========== SEARCH WITH PAGINATION ==========
+// ========== SEARCH WITH PAGINATION AND SORTING ==========
 app.get('/api/search', (req, res) => {
     const db = readDB();
-    const { q, category, minPrice, maxPrice, page = 1, limit = 20 } = req.query;
+    const { q, category, minPrice, maxPrice, sort, page = 1, limit = 20 } = req.query;
     let products = db.products.filter(p => p.isActive !== false);
+    
     if (q) products = products.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.description?.toLowerCase().includes(q.toLowerCase()));
     if (category && category !== 'all') products = products.filter(p => p.category === category);
     if (minPrice) products = products.filter(p => p.pricePerUnit >= parseFloat(minPrice));
     if (maxPrice) products = products.filter(p => p.pricePerUnit <= parseFloat(maxPrice));
+    
+    // Sorting
+    if (sort === 'price_asc') products.sort((a, b) => a.pricePerUnit - b.pricePerUnit);
+    else if (sort === 'price_desc') products.sort((a, b) => b.pricePerUnit - a.pricePerUnit);
+    else if (sort === 'newest') products.sort((a, b) => b.id - a.id);
+    else if (sort === 'rating') products.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
+    
     const total = products.length;
     const paginated = products.slice((page - 1) * limit, page * limit);
     res.json({ success: true, products: paginated, total, page, totalPages: Math.ceil(total / limit), limit });
 });
 
-// ========== INVOICE WITH GST ==========
-app.get('/api/orders/:id/invoice', auth, (req, res) => {
+// ========== RECENTLY VIEWED PRODUCTS ==========
+app.post('/api/recently-viewed', auth, (req, res) => {
+    let db = readDB();
+    const { productId } = req.body;
+    if (!db.recentlyViewed) db.recentlyViewed = [];
+    let userRecent = db.recentlyViewed.find(r => r.userId === req.user.id);
+    if (!userRecent) {
+        userRecent = { userId: req.user.id, products: [] };
+        db.recentlyViewed.push(userRecent);
+    }
+    userRecent.products = userRecent.products.filter(p => p !== productId);
+    userRecent.products.unshift(productId);
+    if (userRecent.products.length > 10) userRecent.products.pop();
+    writeDB(db);
+    res.json({ success: true });
+});
+
+app.get('/api/recently-viewed', auth, (req, res) => {
     const db = readDB();
-    const order = db.orders.find(o => o.id == req.params.id);
-    if (!order || (order.userId !== req.user.id && req.user.role !== 'admin')) return res.status(404).json({ success: false });
-    const user = db.users.find(u => u.id === order.userId);
+    const userRecent = db.recentlyViewed?.find(r => r.userId === req.user.id);
+    if (!userRecent || !userRecent.products.length) return res.json({ success: true, products: [] });
+    const products = userRecent.products.map(id => db.products.find(p => p.id === id)).filter(p => p);
+    res.json({ success: true, products });
+});
+
+// ========== INVOICE WITH GST ==========
+app.get('/api/orders/:id/invoice', (req, res) => {
+    const db = readDB();
+    let order = db.orders.find(o => o.id == req.params.id);
+    let isGuest = false;
+    if (!order && db.guestOrders) {
+        order = db.guestOrders.find(o => o.id == req.params.id);
+        isGuest = true;
+    }
+    if (!order) return res.status(404).json({ success: false });
+    
+    let user = null;
+    if (!isGuest && order.userId) user = db.users.find(u => u.id === order.userId);
+    
     const invoice = {
         invoiceNo: `INV-${order.id}`, date: order.orderDate,
-        customer: { name: order.userName, gstin: user?.gstin, address: order.address },
-        items: order.items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, taxRate: i.taxRate, taxAmount: i.taxAmount, total: i.total })),
-        subtotal: order.totalAmount, discount: order.couponDiscount, walletUsed: order.walletUsed, total: order.finalAmount, status: order.status
+        customer: { name: isGuest ? order.guestName : user?.name, gstin: user?.gstin, address: order.address },
+        items: order.items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, taxRate: i.taxRate || 0, taxAmount: i.taxAmount || 0, total: i.total || i.price * i.quantity })),
+        subtotal: order.totalAmount, discount: order.couponDiscount, walletUsed: order.walletUsed || 0, total: order.finalAmount || order.totalAmount, status: order.status
     };
     res.json({ success: true, invoice });
 });
@@ -724,11 +985,13 @@ app.get('/api/orders/:id/invoice', auth, (req, res) => {
 // ========== CSV EXPORT ORDERS ==========
 app.get('/api/admin/export-orders', auth, adminAuth, (req, res) => {
     const db = readDB();
-    const orders = db.orders || [];
-    const csv = ['Order ID,Date,Customer,Email,Total,Status,Payment Method'];
+    const orders = [...(db.orders || []), ...(db.guestOrders || [])];
+    const csv = ['Order ID,Date,Customer,Email,Phone,Total,Status,Payment Method'];
     orders.forEach(o => {
-        const user = db.users.find(u => u.id === o.userId);
-        csv.push(`${o.id},${new Date(o.orderDate).toLocaleDateString()},${o.userName},${user?.email || ''},${o.finalAmount},${o.status},${o.paymentMethod}`);
+        const customerName = o.isGuest ? o.guestName : o.userName;
+        const email = o.isGuest ? o.guestEmail || '' : '';
+        const phone = o.isGuest ? o.guestPhone : '';
+        csv.push(`${o.id},${new Date(o.orderDate).toLocaleDateString()},${customerName},${email},${phone},${o.finalAmount || o.totalAmount},${o.status},${o.paymentMethod || 'online'}`);
     });
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=orders.csv');
@@ -820,6 +1083,12 @@ app.post('/api/admin/products/:id/stock', auth, adminAuth, (req, res) => {
     } else res.status(404).json({ success: false });
 });
 
+// ========== ABANDONED CARTS REPORT ==========
+app.get('/api/admin/abandoned-carts', auth, adminAuth, (req, res) => {
+    const db = readDB();
+    res.json({ success: true, carts: db.abandonedCarts || [] });
+});
+
 // ========== ADMIN USER MANAGEMENT ==========
 app.get('/api/admin/users', auth, adminAuth, (req, res) => {
     const db = readDB();
@@ -866,7 +1135,8 @@ app.get('/api/banner', (req, res) => { const db = readDB(); res.json({ success: 
 app.get('/api/stores', (req, res) => { const db = readDB(); res.json({ success: true, stores: db.stores }); });
 app.get('/api/coupons', (req, res) => { const db = readDB(); res.json({ success: true, coupons: db.coupons }); });
 app.get('/api/orders', auth, (req, res) => { const db = readDB(); res.json({ success: true, orders: db.orders.filter(o => o.userId === req.user.id) }); });
-app.get('/api/admin/orders', auth, adminAuth, (req, res) => { const db = readDB(); res.json({ success: true, orders: db.orders || [] }); });
+app.get('/api/guest-orders', (req, res) => { const db = readDB(); const { phone } = req.query; if (!phone) return res.json({ success: true, orders: [] }); res.json({ success: true, orders: (db.guestOrders || []).filter(o => o.guestPhone === phone).reverse() }); });
+app.get('/api/admin/orders', auth, adminAuth, (req, res) => { const db = readDB(); res.json({ success: true, orders: [...(db.orders || []), ...(db.guestOrders || [])] }); });
 app.post('/api/subscribe', (req, res) => { let db = readDB(); const { email } = req.body; if (!db.subscribers) db.subscribers = []; if (db.subscribers.find(s => s.email === email)) return res.status(400).json({ success: false }); db.subscribers.push({ id: Date.now(), email, subscribedAt: new Date() }); writeDB(db); res.json({ success: true }); });
 app.get('/api/admin/settings', auth, adminAuth, (req, res) => { const db = readDB(); res.json({ success: true, settings: db.settings }); });
 app.put('/api/admin/settings', auth, adminAuth, (req, res) => { let db = readDB(); db.settings = { ...db.settings, ...req.body }; writeDB(db); res.json({ success: true }); });
@@ -877,12 +1147,13 @@ app.get('/api/stats', (req, res) => {
     res.json({
         success: true, stats: {
             totalProducts: db.products.filter(p => p.isActive !== false).length,
-            totalOrders: (db.orders || []).length,
+            totalOrders: (db.orders || []).length + (db.guestOrders || []).length,
             totalUsers: db.users.filter(u => u.role !== 'admin').length,
-            totalSales: (db.orders || []).reduce((s, o) => s + (o.finalAmount || 0), 0),
+            totalSales: [...(db.orders || []), ...(db.guestOrders || [])].reduce((s, o) => s + (o.finalAmount || o.totalAmount || 0), 0),
             lowStock: db.products.filter(p => p.totalStock < (db.settings?.lowStockThreshold || 10)).length,
             expiredProducts: db.products.filter(p => p.expiryDate && new Date(p.expiryDate) < new Date()).length,
-            pendingReturns: (db.returnRequests || []).filter(r => r.status === 'pending').length
+            pendingReturns: (db.returnRequests || []).filter(r => r.status === 'pending').length,
+            abandonedCarts: (db.abandonedCarts || []).length
         }
     });
 });
@@ -1049,9 +1320,17 @@ app.use('/api/auth/register', (req, res, next) => {
 
 app.post('/api/orders/:id/cancel', auth, (req, res) => {
     let db = readDB();
-    const order = db.orders.find(o => o.id == req.params.id);
+    let order = db.orders.find(o => o.id == req.params.id);
+    let isGuest = false;
+    
+    if (!order && db.guestOrders) {
+        order = db.guestOrders.find(o => o.id == req.params.id);
+        isGuest = true;
+    }
+    
     if (!order) return res.status(404).json({ success: false });
-    if (order.userId !== req.user.id && req.user.role !== 'admin') return res.status(403).json({ success: false });
+    if (!isGuest && order.userId !== req.user.id && req.user.role !== 'admin') return res.status(403).json({ success: false });
+    if (isGuest && req.user.role !== 'admin') return res.status(403).json({ success: false });
     
     if (order.status === 'delivered') {
         return res.status(400).json({ success: false, message: 'Delivered orders cannot be cancelled' });
@@ -1068,19 +1347,15 @@ app.post('/api/orders/:id/cancel', auth, (req, res) => {
     
     order.status = 'cancelled';
     if (!order.statusHistory) order.statusHistory = [];
-    order.statusHistory.unshift({ status: 'cancelled', timestamp: new Date(), note: 'Order cancelled by ' + (req.user.role === 'admin' ? 'admin' : 'customer') });
+    order.statusHistory.unshift({ status: 'cancelled', timestamp: new Date(), note: `Order cancelled by ${req.user.role === 'admin' ? 'admin' : 'customer'}` });
     
     for (const item of order.items) {
         const p = db.products.find(p => p.id === item.id);
         if (p) p.totalStock += item.quantity;
     }
-    if (order.walletUsed > 0) {
+    if (!isGuest && order.walletUsed > 0) {
         const user = db.users.find(u => u.id === order.userId);
         if (user) user.wallet += order.walletUsed;
-    }
-    if (order.creditUsed > 0) {
-        const user = db.users.find(u => u.id === order.userId);
-        if (user) user.creditUsed = Math.max(0, (user.creditUsed || 0) - order.creditUsed);
     }
     writeDB(db);
     res.json({ success: true });
@@ -1088,9 +1363,12 @@ app.post('/api/orders/:id/cancel', auth, (req, res) => {
 
 app.post('/api/return-request', auth, (req, res) => {
     let db = readDB();
-    const order = db.orders.find(o => o.id === req.body.orderId);
+    let order = db.orders.find(o => o.id === req.body.orderId);
+    if (!order && db.guestOrders) order = db.guestOrders.find(o => o.id === req.body.orderId);
+    
     if (!order) return res.status(404).json({ success: false });
-    if (order.userId !== req.user.id) return res.status(403).json({ success: false });
+    if (!order.isGuest && order.userId !== req.user.id) return res.status(403).json({ success: false });
+    
     if (order.status !== 'delivered') {
         return res.status(400).json({ success: false, message: 'Only delivered orders can be returned' });
     }
@@ -1104,7 +1382,7 @@ app.post('/api/return-request', auth, (req, res) => {
     }
     if (!db.returnRequests) db.returnRequests = [];
     const returnReq = {
-        id: Date.now(), userId: req.user.id, orderId: req.body.orderId,
+        id: Date.now(), userId: order.userId || null, orderId: order.id,
         items: req.body.items, reason: req.body.reason, reasonDetail: sanitize(req.body.reasonDetail || ''),
         images: req.body.images || [], amount: req.body.amount,
         status: 'pending', createdAt: new Date()
