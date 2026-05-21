@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifeMed Admin - Complete Control</title>
+    <title>LifeMed Admin - Secure Panel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -13,7 +13,7 @@
             background: rgba(26, 93, 122, 0.95);
             backdrop-filter: blur(10px);
             color: white;
-            padding: 15px 25px;
+            padding: 12px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -23,6 +23,9 @@
         }
         .logo h2 { font-size: 22px; }
         .logo span { color: #ffd700; }
+        .header-actions { display: flex; gap: 15px; align-items: center; }
+        .header-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .header-btn:hover { background: rgba(255,255,255,0.3); }
         .logout-btn { background: #ff6b6b; padding: 8px 20px; border-radius: 30px; cursor: pointer; border: none; color: white; font-weight: 600; }
         
         .container { display: flex; min-height: calc(100vh - 70px); }
@@ -32,9 +35,10 @@
             backdrop-filter: blur(10px);
             color: white;
             padding: 20px 0;
+            overflow-y: auto;
         }
         .sidebar-item {
-            padding: 14px 25px;
+            padding: 12px 25px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -96,6 +100,7 @@
         }
         .btn-small { padding: 5px 15px; font-size: 12px; margin: 2px; }
         .btn-danger { background: #ff6b6b; }
+        .btn-warning { background: #ffc107; color: #333; }
         
         .data-table {
             background: white;
@@ -114,8 +119,8 @@
             border-radius: 20px;
             font-size: 11px;
         }
-        .status-active { background: #2e7d64; color: white; padding: 4px 12px; border-radius: 20px; }
-        .status-blocked { background: #e76f51; color: white; padding: 4px 12px; border-radius: 20px; }
+        .status-active { background: #2e7d64; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+        .status-blocked { background: #e76f51; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
         
         .section { display: none; animation: fadeIn 0.3s; }
         .section.active { display: block; }
@@ -125,6 +130,7 @@
         .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 20px; padding: 25px; }
         
         .product-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+        .session-timer { font-size: 12px; background: rgba(0,0,0,0.5); padding: 4px 12px; border-radius: 20px; }
         
         @media (max-width: 768px) {
             .sidebar { width: 80px; }
@@ -137,8 +143,11 @@
 
 <div class="header">
     <div class="logo"><h2>LifeMed <span>Health Care</span></h2></div>
-    <div><span><i class="fas fa-user-shield"></i> <span id="adminName">Admin</span></span>
-    <button class="logout-btn" onclick="logout()">Logout</button></div>
+    <div class="header-actions">
+        <button class="header-btn" onclick="showChangePasswordModal()"><i class="fas fa-key"></i> Change Password</button>
+        <span><i class="fas fa-user-shield"></i> <span id="adminName">Admin</span></span>
+        <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
 </div>
 
 <div class="container">
@@ -158,6 +167,7 @@
         <div class="sidebar-item" onclick="showSection('stores')"><i class="fas fa-map-marker-alt"></i> <span>Store Locator</span></div>
         <div class="sidebar-item" onclick="showSection('audit')"><i class="fas fa-history"></i> <span>Audit Log</span></div>
         <div class="sidebar-item" onclick="showSection('lowstock')"><i class="fas fa-exclamation-triangle"></i> <span>Low Stock</span></div>
+        <div class="sidebar-item" onclick="showSection('security')"><i class="fas fa-shield-alt"></i> <span>Security Logs</span></div>
     </div>
 
     <div class="main-content">
@@ -177,7 +187,7 @@
             <div class="form-card"><h2>Welcome to LifeMed Admin</h2><p>Complete control over products, categories, banner, users, orders, and store locations.</p></div>
         </div>
 
-        <!-- Products -->
+        <!-- Products Section -->
         <div id="products" class="section">
             <div class="form-card"><h2>Add Product</h2>
                 <div class="form-group"><label>Name</label><input type="text" id="prodName"></div>
@@ -192,7 +202,7 @@
             <div class="data-table"><h2>All Products</h2><table><thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Stock</th><th>Discount</th><th>Actions</th></tr></thead><tbody id="productsList"></tbody></table></div>
         </div>
 
-        <!-- Doctors -->
+        <!-- Doctors Section -->
         <div id="doctors" class="section">
             <div class="form-card"><h2>Add Doctor</h2>
                 <div class="form-group"><label>Name</label><input type="text" id="docName"></div>
@@ -203,7 +213,7 @@
             <div class="data-table"><h2>All Doctors</h2><table><thead><tr><th>Name</th><th>Specialty</th><th>Fees</th><th>Actions</th></tr></thead><tbody id="doctorsList"></tbody></table></div>
         </div>
 
-        <!-- Lab Tests -->
+        <!-- Lab Tests Section -->
         <div id="labtests" class="section">
             <div class="form-card"><h2>Add Lab Test</h2>
                 <div class="form-group"><label>Name</label><input type="text" id="testName"></div>
@@ -211,10 +221,10 @@
                 <div class="form-group"><label>Discount (%)</label><input type="number" id="testDiscount" value="0"></div>
                 <button class="btn" onclick="addLabTest()">Add Lab Test</button>
             </div>
-            <div class="data-table"><h2>All Lab Tests</h2><tr><thead><tr><th>Name</th><th>Price</th><th>Discounted</th><th>Actions</th></td></thead><tbody id="labTestsList"></tbody></table></div>
+            <div class="data-table"><h2>All Lab Tests</h2><table><thead><tr><th>Name</th><th>Price</th><th>Discounted</th><th>Actions</th></tr></thead><tbody id="labTestsList"></tbody></table></div>
         </div>
 
-        <!-- Categories Management -->
+        <!-- Categories Section -->
         <div id="categories" class="section">
             <div class="form-card"><h2>Add Category</h2>
                 <div class="form-group"><label>Category Name</label><input type="text" id="catName"></div>
@@ -222,10 +232,10 @@
                 <div class="form-group-full"><label>Image URL</label><input type="text" id="catImageUrl"></div>
                 <button class="btn" onclick="addCategory()">Add Category</button>
             </div>
-            <div class="data-table"><h2>All Categories</h2><tr><thead><tr><th>Name</th><th>Icon</th><th>Status</th><th>Actions</th></tr></thead><tbody id="categoriesList"></tbody></table></div>
+            <div class="data-table"><h2>All Categories</h2></table><thead><tr><th>Name</th><th>Icon</th><th>Status</th><th>Actions</th></tr></thead><tbody id="categoriesList"></tbody></table></div>
         </div>
 
-        <!-- Hero Banner Management -->
+        <!-- Banner Section -->
         <div id="banner" class="section">
             <div class="form-card"><h2>Hero Banner Settings</h2>
                 <div class="form-group-full"><label>Banner Title</label><input type="text" id="bannerTitle" placeholder="Up to 30% OFF"></div>
@@ -236,25 +246,43 @@
             </div>
         </div>
 
-        <!-- Orders -->
-        <div id="orders" class="section"><div class="data-table"><h2>Orders</h2></td><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody id="ordersList"></tbody></table></div></div>
+        <!-- Orders Section -->
+        <div id="orders" class="section"><div class="data-table"><h2>Orders</h2><table><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody id="ordersList"></tbody></table></div></div>
 
-        <!-- Appointments -->
-        <div id="appointments" class="section"><div class="data-table"><h2>Appointments</h2><tr><thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody id="appointmentsList"></tbody></table></div></div>
+        <!-- Appointments Section -->
+        <div id="appointments" class="section"><div class="data-table"><h2>Appointments</h2><table><thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody id="appointmentsList"></tbody></table></div></div>
 
-        <!-- Lab Bookings -->
-        <div id="labbookings" class="section"><div class="data-table"><h2>Lab Bookings</h2><tr><thead><tr><th>Patient</th><th>Test</th><th>Status</th><th>Action</th></tr></thead><tbody id="labBookingsList"></tbody></table></div></div>
+        <!-- Lab Bookings Section -->
+        <div id="labbookings" class="section"><div class="data-table"><h2>Lab Bookings</h2><table><thead><tr><th>Patient</th><th>Test</th><th>Status</th><th>Action</th></tr></thead><tbody id="labBookingsList"></tbody></table></div></div>
 
-        <!-- Users -->
-        <div id="users" class="section"><div class="data-table"><h2>All Users</h2><tr><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead><tbody id="usersList"></tbody></table></div></div>
+        <!-- Users Section with Reset Password -->
+        <div id="users" class="section">
+            <div class="form-card"><h2>Add New User</h2>
+                <div class="form-group"><label>Name</label><input type="text" id="newUserName"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="newUserEmail"></div>
+                <div class="form-group"><label>Password</label><input type="password" id="newUserPassword" placeholder="Auto generated"></div>
+                <div class="form-group"><label>Role</label><select id="newUserRole"><option>user</option><option>staff</option></select></div>
+                <button class="btn" onclick="addNewUser()">Add User</button>
+            </div>
+            <div class="data-table"><h2>All Users</h2><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead><tbody id="usersList"></tbody></table></div>
+        </div>
 
-        <!-- Staff -->
-        <div id="workers" class="section"><div class="data-table"><h2>Staff</h2><tr><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></td></thead><tbody id="workersList"></tbody></table></div></div>
+        <!-- Staff Section with Add Staff Form -->
+        <div id="workers" class="section">
+            <div class="form-card"><h2>Add New Staff</h2>
+                <div class="form-group"><label>Name</label><input type="text" id="staffName"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="staffEmail"></div>
+                <div class="form-group"><label>Password</label><input type="password" id="staffPassword" placeholder="Auto generated"></div>
+                <div class="form-group"><label>Role</label><select id="staffRole"><option>staff</option><option>manager</option></select></div>
+                <button class="btn" onclick="addStaff()">Add Staff</button>
+            </div>
+            <div class="data-table"><h2>All Staff</h2><tr><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead><tbody id="workersList"></tbody></table></div>
+        </div>
 
-        <!-- Newsletter Subscribers -->
-        <div id="subscribers" class="section"><div class="data-table"><h2>Newsletter Subscribers</h2><tr><thead><tr><th>Email</th><th>Subscribed Date</th><th>Actions</th></td></thead><tbody id="subscribersList"></tbody></table></div></div>
+        <!-- Subscribers Section -->
+        <div id="subscribers" class="section"><div class="data-table"><h2>Newsletter Subscribers</h2><table><thead><tr><th>Email</th><th>Subscribed Date</th><th>Actions</th></tr></thead><tbody id="subscribersList"></tbody></table></div></div>
 
-        <!-- Store Locator -->
+        <!-- Store Locator Section -->
         <div id="stores" class="section">
             <div class="form-card"><h2>Add Store Location</h2>
                 <div class="form-group"><label>Store Name</label><input type="text" id="storeName"></div>
@@ -264,50 +292,251 @@
                 <div class="form-group"><label>Timings</label><input type="text" id="storeTimings" placeholder="9AM-9PM"></div>
                 <button class="btn" onclick="addStore()">Add Store</button>
             </div>
-            <div class="data-table"><h2>All Stores</h2><tr><thead><tr><th>Name</th><th>Address</th><th>City</th><th>Phone</th><th>Actions</th><tr></thead><tbody id="storesList"></tbody></table></div>
+            <div class="data-table"><h2>All Stores</h2><table><thead><tr><th>Name</th><th>Address</th><th>City</th><th>Phone</th><th>Actions</th></tr></thead><tbody id="storesList"></tbody></table></div>
         </div>
 
-        <!-- Audit Log -->
-        <div id="audit" class="section"><div class="data-table"><h2>Audit Log</h2><tr><thead><tr><th>Time</th><th>Staff</th><th>Action</th><th>Details</th></tr></thead><tbody id="auditList"></tbody></table></div></div>
+        <!-- Audit Log Section -->
+        <div id="audit" class="section"><div class="data-table"><h2>Audit Log</h2></table><thead><tr><th>Time</th><th>Staff</th><th>Action</th><th>Details</th></tr></thead><tbody id="auditList"></tbody></table></div></div>
 
-        <!-- Low Stock -->
-        <div id="lowstock" class="section"><div class="data-table"><h2>Low Stock Alert</h2></table><thead><tr><th>Product</th><th>Stock</th><th>Action</th></tr></thead><tbody id="lowStockList"></tbody></table></div></div>
+        <!-- Low Stock Section -->
+        <div id="lowstock" class="section"><div class="data-table"><h2>Low Stock Alert</h2><tr><thead><tr><th>Product</th><th>Stock</th><th>Action</th></tr></thead><tbody id="lowStockList"></tbody></table></div></div>
+
+        <!-- Security Logs Section -->
+        <div id="security" class="section"><div class="data-table"><h2>Security Logs</h2><table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th><th>IP</th></tr></thead><tbody id="securityLogsList"></tbody></table></div></div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="changePwdModal" class="modal">
+    <div class="modal-content">
+        <h3>Change Password</h3>
+        <div class="form-group-full"><label>Current Password</label><input type="password" id="currentPwd"></div>
+        <div class="form-group-full"><label>New Password</label><input type="password" id="newPwd"></div>
+        <div class="form-group-full"><label>Confirm Password</label><input type="password" id="confirmPwd"></div>
+        <button class="btn" onclick="changePassword()">Update Password</button>
+        <button class="btn btn-danger" onclick="closeChangePwdModal()">Cancel</button>
+    </div>
+</div>
+
+<!-- Reset User Password Modal -->
+<div id="resetPwdModal" class="modal">
+    <div class="modal-content">
+        <h3>Reset User Password</h3>
+        <p>User: <span id="resetUserName"></span></p>
+        <div class="form-group-full"><label>New Password</label><input type="password" id="resetNewPwd" placeholder="Leave empty for auto-generated"></div>
+        <button class="btn" onclick="resetUserPassword()">Reset Password</button>
+        <button class="btn btn-danger" onclick="closeResetPwdModal()">Cancel</button>
     </div>
 </div>
 
 <script>
     const API = 'https://lifemed-healthcare.onrender.com/api';
     let token = localStorage.getItem('adminToken');
-    if (!token) window.location.href = 'login.html';
+    let tokenExpiry = localStorage.getItem('tokenExpiry');
+    let inactivityTimer;
+    
+    // Check token on load
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+    
+    // Check token expiry
+    if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
+        localStorage.clear();
+        alert('Session expired. Please login again.');
+        window.location.href = 'login.html';
+    }
+    
+    // Inactivity timeout (30 minutes)
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            alert('Session timeout due to inactivity. Please login again.');
+            logout();
+        }, 30 * 60 * 1000);
+    }
+    
+    document.addEventListener('mousemove', resetInactivityTimer);
+    document.addEventListener('keypress', resetInactivityTimer);
+    resetInactivityTimer();
+    
     document.getElementById('adminName').innerText = localStorage.getItem('adminName') || 'Admin';
-
+    
     async function fetchAPI(url, options = {}) {
         const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } });
-        if (res.status === 401) { localStorage.clear(); window.location.href = 'login.html'; }
+        if (res.status === 401) {
+            localStorage.clear();
+            alert('Session expired. Please login again.');
+            window.location.href = 'login.html';
+        }
         return await res.json();
     }
-
+    
     function showSection(section) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById(section).classList.add('active');
         document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-        event.target.classList.add('active');
-        if (section === 'dashboard') loadStats();
-        if (section === 'products') { loadProducts(); loadStats(); }
-        if (section === 'doctors') loadDoctors();
-        if (section === 'labtests') loadLabTests();
-        if (section === 'categories') loadCategories();
-        if (section === 'orders') loadOrders();
-        if (section === 'appointments') loadAppointments();
-        if (section === 'labbookings') loadLabBookings();
-        if (section === 'users') loadUsers();
-        if (section === 'workers') loadWorkers();
-        if (section === 'subscribers') loadSubscribers();
-        if (section === 'stores') loadStores();
-        if (section === 'audit') loadAudit();
-        if (section === 'lowstock') loadLowStock();
+        event.target.closest('.sidebar-item').classList.add('active');
+        
+        const loaders = {
+            dashboard: loadStats, products: () => { loadProducts(); loadStats(); },
+            doctors: loadDoctors, labtests: loadLabTests, categories: loadCategories,
+            orders: loadOrders, appointments: loadAppointments, labbookings: loadLabBookings,
+            users: loadUsers, workers: loadWorkers, subscribers: loadSubscribers,
+            stores: loadStores, audit: loadAudit, lowstock: loadLowStock, security: loadSecurityLogs
+        };
+        if (loaders[section]) loaders[section]();
     }
-
+    
+    // ========== CHANGE PASSWORD ==========
+    function showChangePasswordModal() {
+        document.getElementById('changePwdModal').style.display = 'flex';
+    }
+    
+    function closeChangePwdModal() {
+        document.getElementById('changePwdModal').style.display = 'none';
+        document.getElementById('currentPwd').value = '';
+        document.getElementById('newPwd').value = '';
+        document.getElementById('confirmPwd').value = '';
+    }
+    
+    async function changePassword() {
+        const current = document.getElementById('currentPwd').value;
+        const newPwd = document.getElementById('newPwd').value;
+        const confirm = document.getElementById('confirmPwd').value;
+        
+        if (!current || !newPwd) {
+            alert('Please fill all fields');
+            return;
+        }
+        if (newPwd !== confirm) {
+            alert('New passwords do not match');
+            return;
+        }
+        if (newPwd.length < 6) {
+            alert('Password must be at least 6 characters');
+            return;
+        }
+        
+        const res = await fetchAPI(`${API}/auth/change-password`, {
+            method: 'POST',
+            body: JSON.stringify({ currentPassword: current, newPassword: newPwd })
+        });
+        
+        if (res.success) {
+            alert('Password changed successfully!');
+            closeChangePwdModal();
+        } else {
+            alert(res.message || 'Failed to change password');
+        }
+    }
+    
+    // ========== ADD NEW USER ==========
+    async function addNewUser() {
+        const name = document.getElementById('newUserName').value;
+        const email = document.getElementById('newUserEmail').value;
+        const password = document.getElementById('newUserPassword').value || 'User@123';
+        const role = document.getElementById('newUserRole').value;
+        
+        if (!name || !email) {
+            alert('Name and email required');
+            return;
+        }
+        
+        const res = await fetchAPI(`${API}/auth/register`, {
+            method: 'POST',
+            body: JSON.stringify({ name, email, password, role })
+        });
+        
+        if (res.success) {
+            alert('User added successfully!');
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserEmail').value = '';
+            loadUsers();
+        } else {
+            alert(res.message || 'Failed to add user');
+        }
+    }
+    
+    // ========== ADD STAFF ==========
+    async function addStaff() {
+        const name = document.getElementById('staffName').value;
+        const email = document.getElementById('staffEmail').value;
+        const password = document.getElementById('staffPassword').value || 'Staff@123';
+        const role = document.getElementById('staffRole').value;
+        
+        if (!name || !email) {
+            alert('Name and email required');
+            return;
+        }
+        
+        const res = await fetchAPI(`${API}/admin/workers`, {
+            method: 'POST',
+            body: JSON.stringify({ name, email, password, role })
+        });
+        
+        if (res.success) {
+            alert('Staff added successfully!');
+            document.getElementById('staffName').value = '';
+            document.getElementById('staffEmail').value = '';
+            document.getElementById('staffPassword').value = '';
+            loadWorkers();
+        } else {
+            alert(res.message || 'Failed to add staff');
+        }
+    }
+    
+    // ========== RESET USER PASSWORD ==========
+    let resetUserId = null;
+    let resetUserName = null;
+    
+    function showResetPwdModal(userId, userName) {
+        resetUserId = userId;
+        resetUserName = userName;
+        document.getElementById('resetUserName').innerText = userName;
+        document.getElementById('resetPwdModal').style.display = 'flex';
+    }
+    
+    function closeResetPwdModal() {
+        document.getElementById('resetPwdModal').style.display = 'none';
+        document.getElementById('resetNewPwd').value = '';
+    }
+    
+    async function resetUserPassword() {
+        const newPassword = document.getElementById('resetNewPwd').value;
+        
+        const res = await fetchAPI(`${API}/admin/users/${resetUserId}/reset-password`, {
+            method: 'POST',
+            body: JSON.stringify({ newPassword: newPassword || undefined })
+        });
+        
+        if (res.success) {
+            alert(`Password reset successful!${res.tempPassword ? ` Temporary password: ${res.tempPassword}` : ''}`);
+            closeResetPwdModal();
+        } else {
+            alert(res.message || 'Failed to reset password');
+        }
+    }
+    
+    // ========== SECURITY LOGS ==========
+    async function loadSecurityLogs() {
+        const res = await fetchAPI(`${API}/admin/security-logs`);
+        if (res.success && res.logs) {
+            let html = '';
+            res.logs.slice(0, 100).forEach(log => {
+                html += `<tr>
+                    <td>${new Date(log.timestamp).toLocaleString()}</td>
+                    <td>${log.userId || '-'}</td>
+                    <td><span class="badge">${log.action}</span></td>
+                    <td>${log.details || '-'}</td>
+                    <td>${log.ip || '-'}</td>
+                </tr>`;
+            });
+            document.getElementById('securityLogsList').innerHTML = html || '<tr><td colspan="5">No logs found</td></tr>';
+        }
+    }
+    
+    // ========== EXISTING FUNCTIONS (Products, Doctors, etc.) ==========
     async function loadStats() {
         const res = await fetchAPI(`${API}/stats`);
         if (res.success) {
@@ -322,8 +551,7 @@
             document.getElementById('statLowStock').innerText = res.stats.lowStock;
         }
     }
-
-    // Products
+    
     async function addProduct() {
         const product = {
             name: document.getElementById('prodName').value,
@@ -339,7 +567,23 @@
         const res = await fetchAPI(`${API}/admin/products`, { method: 'POST', body: JSON.stringify(product) });
         if (res.success) { alert('Product added!'); loadProducts(); loadStats(); }
     }
-
+    
+    async function loadProducts() {
+        const res = await fetchAPI(`${API}/products`);
+        if (res.success && res.products) {
+            let html = '';
+            res.products.forEach(p => {
+                html += `<tr>
+                    <td><img src="${p.imageUrl || 'https://placehold.co/40x40'}" class="product-img"></td>
+                    <td>${p.name}</td><td>₹${p.pricePerUnit}</td><td>${p.totalStock}</td>
+                    <td>${p.discount || 0}%</td>
+                    <td><button class="btn-small" onclick="editProduct(${p.id})">Edit</button> <button class="btn-small btn-danger" onclick="deleteProduct(${p.id})">Delete</button></td>
+                </tr>`;
+            });
+            document.getElementById('productsList').innerHTML = html;
+        }
+    }
+    
     function editProduct(id) {
         fetchAPI(`${API}/products`).then(res => {
             const p = res.products.find(p => p.id === id);
@@ -354,7 +598,7 @@
             }
         });
     }
-
+    
     async function updateProduct() {
         const id = document.getElementById('editId').value;
         const product = {
@@ -368,31 +612,16 @@
         const res = await fetchAPI(`${API}/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(product) });
         if (res.success) { alert('Updated!'); closeEdit(); loadProducts(); loadStats(); }
     }
-
-    async function loadProducts() {
-        const res = await fetchAPI(`${API}/products`);
-        if (res.success && res.products) {
-            let html = '';
-            res.products.forEach(p => {
-                html += `<tr>
-                    <td><img src="${p.imageUrl || 'https://placehold.co/40x40'}" class="product-img" onerror="this.src='https://placehold.co/40x40'"></td>
-                    <td>${p.name}</td><td>₹${p.pricePerUnit}</td><td>${p.totalStock}</td>
-                    <td>${p.discount || 0}%</td>
-                    <td><button class="btn-small" onclick="editProduct(${p.id})">Edit</button> <button class="btn-small btn-danger" onclick="deleteProduct(${p.id})">Delete</button></td>
-                </tr>`;
-            });
-            document.getElementById('productsList').innerHTML = html;
-        }
-    }
+    
     async function deleteProduct(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' }); loadProducts(); loadStats(); } }
-
-    // Doctors (same as before)
+    
     async function addDoctor() {
         const doctor = { name: document.getElementById('docName').value, specialty: document.getElementById('docSpecialty').value, fees: parseFloat(document.getElementById('docFees').value) };
         if (!doctor.name || !doctor.fees) { alert('Fill fields'); return; }
         const res = await fetchAPI(`${API}/admin/doctors`, { method: 'POST', body: JSON.stringify(doctor) });
         if (res.success) { alert('Doctor added!'); loadDoctors(); loadStats(); }
     }
+    
     async function loadDoctors() {
         const res = await fetchAPI(`${API}/doctors`);
         if (res.success && res.doctors) {
@@ -401,15 +630,16 @@
             document.getElementById('doctorsList').innerHTML = html;
         }
     }
+    
     async function deleteDoctor(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/doctors/${id}`, { method: 'DELETE' }); loadDoctors(); loadStats(); } }
-
-    // Lab Tests
+    
     async function addLabTest() {
         const test = { name: document.getElementById('testName').value, price: parseFloat(document.getElementById('testPrice').value), discount: parseFloat(document.getElementById('testDiscount').value) || 0 };
         if (!test.name || !test.price) { alert('Fill fields'); return; }
         const res = await fetchAPI(`${API}/admin/lab-tests`, { method: 'POST', body: JSON.stringify(test) });
         if (res.success) { alert('Lab test added!'); loadLabTests(); }
     }
+    
     async function loadLabTests() {
         const res = await fetchAPI(`${API}/lab-tests`);
         if (res.success && res.labTests) {
@@ -418,26 +648,27 @@
             document.getElementById('labTestsList').innerHTML = html;
         }
     }
+    
     async function deleteLabTest(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/lab-tests/${id}`, { method: 'DELETE' }); loadLabTests(); } }
-
-    // Categories
+    
     async function addCategory() {
         const cat = { name: document.getElementById('catName').value, icon: document.getElementById('catIcon').value, imageUrl: document.getElementById('catImageUrl').value };
         if (!cat.name) { alert('Enter category name'); return; }
         const res = await fetchAPI(`${API}/admin/categories`, { method: 'POST', body: JSON.stringify(cat) });
         if (res.success) { alert('Category added!'); loadCategories(); loadStats(); }
     }
+    
     async function loadCategories() {
         const res = await fetchAPI(`${API}/categories`);
         if (res.success && res.categories) {
             let html = '';
-            res.categories.forEach(c => { html += `<td><td><i class="${c.icon || 'fas fa-tag'}"></i></td><td>${c.name}</td><td><span class="badge">active</span></td><td><button class="btn-small btn-danger" onclick="deleteCategory(${c.id})">Delete</button></td>`; });
+            res.categories.forEach(c => { html += `<tr><td><i class="${c.icon || 'fas fa-tag'}"></i></td><td>${c.name}</td><td><span class="badge">active</span></td><td><button class="btn-small btn-danger" onclick="deleteCategory(${c.id})">Delete</button></td>`; });
             document.getElementById('categoriesList').innerHTML = html;
         }
     }
+    
     async function deleteCategory(id) { if(confirm('Delete category?')) { await fetchAPI(`${API}/admin/categories/${id}`, { method: 'DELETE' }); loadCategories(); loadStats(); } }
-
-    // Banner
+    
     async function updateBanner() {
         const banner = {
             title: document.getElementById('bannerTitle').value,
@@ -448,35 +679,92 @@
         const res = await fetchAPI(`${API}/admin/banner`, { method: 'PUT', body: JSON.stringify(banner) });
         if (res.success) alert('Banner updated!');
     }
-
-    // Orders, Appointments, LabBookings, Users, Workers, Subscribers, Stores, Audit, LowStock
+    
     async function loadOrders() { const res = await fetchAPI(`${API}/orders`); if (res.success) { let html = ''; res.orders.forEach(o => { html += `<tr><td>#${o.id}</td><td>${o.userName || 'Guest'}</td><td>₹${o.totalAmount}</td><td>${o.status}</td><td>${new Date(o.orderDate).toLocaleDateString()}</td>`; }); document.getElementById('ordersList').innerHTML = html; } }
+    
     async function loadAppointments() { const res = await fetchAPI(`${API}/appointments`); if (res.success) { let html = ''; res.appointments.forEach(a => { html += `<tr><td>${a.patientName}</td><td>${a.doctorName}</td><td>${a.date}</td><td><span class="badge">${a.status}</span></td><td>${a.status === 'pending' ? `<button class="btn-small" onclick="confirmAppt(${a.id})">Confirm</button>` : '-'}</td>`; }); document.getElementById('appointmentsList').innerHTML = html; } }
+    
     async function confirmAppt(id) { await fetchAPI(`${API}/appointments/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'confirmed' }) }); loadAppointments(); }
+    
     async function loadLabBookings() { const res = await fetchAPI(`${API}/lab-bookings`); if (res.success) { let html = ''; res.bookings.forEach(b => { html += `<tr><td>${b.patientName}</td><td>${b.testName}</td><td><span class="badge">${b.status}</span></td><td><button class="btn-small" onclick="processLabBooking(${b.id})">Process</button></td>`; }); document.getElementById('labBookingsList').innerHTML = html; } }
+    
     async function processLabBooking(id) { await fetchAPI(`${API}/lab-bookings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'processing' }) }); loadLabBookings(); }
-    async function loadUsers() { const res = await fetchAPI(`${API}/admin/users`); if (res.success && res.users) { let html = ''; res.users.forEach(u => { if (u.role !== 'admin') { html += `<tr><td>${u.name}</td><td>${u.email}</td><td class="${u.status === 'blocked' ? 'status-blocked' : 'status-active'}">${u.status || 'active'}</td><td><button class="btn-small" onclick="toggleUser(${u.id}, '${u.status || 'active'}')">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button> <button class="btn-small btn-danger" onclick="deleteUser(${u.id})">Delete</button></td>`; } }); document.getElementById('usersList').innerHTML = html; } }
+    
+    async function loadUsers() { 
+        const res = await fetchAPI(`${API}/admin/users`); 
+        if (res.success && res.users) { 
+            let html = ''; 
+            res.users.forEach(u => { 
+                html += `<tr>
+                    <td>${u.name}</td>
+                    <td>${u.email}</td>
+                    <td>${u.role || 'user'}</td>
+                    <td class="${u.status === 'blocked' ? 'status-blocked' : 'status-active'}">${u.status || 'active'}</td>
+                    <td>${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : '-'}</td>
+                    <td>
+                        <button class="btn-small" onclick="toggleUser(${u.id}, '${u.status || 'active'}')">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button>
+                        <button class="btn-small btn-warning" onclick="showResetPwdModal(${u.id}, '${u.name}')">Reset Pwd</button>
+                        <button class="btn-small btn-danger" onclick="deleteUser(${u.id})">Delete</button>
+                    </td>
+                </tr>`;
+            }); 
+            document.getElementById('usersList').innerHTML = html; 
+        } 
+    }
+    
     async function toggleUser(id, cur) { await fetchAPI(`${API}/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: cur === 'blocked' ? 'active' : 'blocked' }) }); loadUsers(); loadStats(); }
     async function deleteUser(id) { if(confirm('Delete user?')) { await fetchAPI(`${API}/admin/users/${id}`, { method: 'DELETE' }); loadUsers(); loadStats(); } }
-    async function loadWorkers() { const res = await fetchAPI(`${API}/admin/workers`); if (res.success && res.workers) { let html = ''; res.workers.forEach(w => { html += `<tr><td>${w.name}</td><td>${w.email}<td><span class="badge">${w.role}</span></td><td><button class="btn-small btn-danger" onclick="deleteWorker(${w.id})">Delete</button></td>`; }); document.getElementById('workersList').innerHTML = html; } }
+    
+    async function loadWorkers() { 
+        const res = await fetchAPI(`${API}/admin/workers`); 
+        if (res.success && res.workers) { 
+            let html = ''; 
+            res.workers.forEach(w => { 
+                html += `<tr>
+                    <td>${w.name}</td>
+                    <td>${w.email}</td>
+                    <td><span class="badge">${w.role}</span></td>
+                    <td class="status-active">active</td>
+                    <td>${w.lastLogin ? new Date(w.lastLogin).toLocaleDateString() : '-'}</td>
+                    <td><button class="btn-small btn-danger" onclick="deleteWorker(${w.id})">Delete</button></td>
+                </tr>`;
+            }); 
+            document.getElementById('workersList').innerHTML = html; 
+        } 
+    }
+    
     async function deleteWorker(id) { if(confirm('Delete staff?')) { await fetchAPI(`${API}/admin/workers/${id}`, { method: 'DELETE' }); loadWorkers(); } }
+    
     async function loadSubscribers() { const res = await fetchAPI(`${API}/admin/subscribers`); if (res.success && res.subscribers) { let html = ''; res.subscribers.forEach(s => { html += `<tr><td>${s.email}</td><td>${new Date(s.subscribedAt).toLocaleDateString()}</td><td><button class="btn-small btn-danger" onclick="deleteSubscriber(${s.id})">Delete</button></td>`; }); document.getElementById('subscribersList').innerHTML = html; } }
     async function deleteSubscriber(id) { await fetchAPI(`${API}/admin/subscribers/${id}`, { method: 'DELETE' }); loadSubscribers(); loadStats(); }
+    
     async function addStore() {
         const store = { name: document.getElementById('storeName').value, address: document.getElementById('storeAddress').value, city: document.getElementById('storeCity').value, phone: document.getElementById('storePhone').value, timings: document.getElementById('storeTimings').value };
         if (!store.name || !store.address) { alert('Fill required fields'); return; }
         const res = await fetchAPI(`${API}/admin/stores`, { method: 'POST', body: JSON.stringify(store) });
         if (res.success) { alert('Store added!'); loadStores(); loadStats(); }
     }
+    
     async function loadStores() { const res = await fetchAPI(`${API}/stores`); if (res.success && res.stores) { let html = ''; res.stores.forEach(s => { html += `<tr><td>${s.name}</td><td>${s.address}</td><td>${s.city}</td><td>${s.phone}</td><td><button class="btn-small btn-danger" onclick="deleteStore(${s.id})">Delete</button></td>`; }); document.getElementById('storesList').innerHTML = html; } }
     async function deleteStore(id) { if(confirm('Delete store?')) { await fetchAPI(`${API}/admin/stores/${id}`, { method: 'DELETE' }); loadStores(); loadStats(); } }
-    async function loadAudit() { const res = await fetchAPI(`${API}/admin/audit`); if (res.success && res.audit) { let html = ''; res.audit.forEach(a => { html += `</td><td>${new Date(a.timestamp).toLocaleString()}</td><td>${a.staff}</td>}<span class="badge">${a.action}</span></td><td>${a.details}</td>`; }); document.getElementById('auditList').innerHTML = html; } }
-    async function loadLowStock() { const res = await fetchAPI(`${API}/low-stock`); if (res.success && res.products) { let html = ''; res.products.forEach(p => { html += `<tr><td>${p.name}</td><td style="color:red">${p.totalStock}</td>}<button class="btn-small" onclick="updateStock(${p.id}, ${p.totalStock})">Add Stock</button></td>`; }); document.getElementById('lowStockList').innerHTML = html; } }
-    async function updateStock(id, cur) { const newStock = prompt('Enter new stock:', cur); if (newStock) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'PUT', body: JSON.stringify({ totalStock: parseInt(newStock) }) }); loadProducts(); loadLowStock(); loadStats(); } }
-
-    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
-
-    loadStats(); loadProducts(); loadDoctors(); loadLabTests(); loadCategories(); loadOrders(); loadAppointments(); loadLabBookings(); loadUsers(); loadWorkers(); loadSubscribers(); loadStores(); loadAudit(); loadLowStock();
+    
+    async function loadAudit() { const res = await fetchAPI(`${API}/admin/audit`); if (res.success && res.audit) { let html = ''; res.audit.forEach(a => { html += `<tr><td>${new Date(a.timestamp).toLocaleString()}</td><td>${a.staff}</td><td><span class="badge">${a.action}</span></td><td>${a.details}</td>`; }); document.getElementById('auditList').innerHTML = html; } }
+    
+    async function loadLowStock() { const res = await fetchAPI(`${API}/low-stock`); if (res.success && res.products) { let html = ''; res.products.forEach(p => { html += `<tr><td>${p.name}</td><td style="color:red">${p.totalStock}</td><td><button class="btn-small" onclick="updateStock(${p.id}, ${p.totalStock})">Add Stock</button></td>`; }); document.getElementById('lowStockList').innerHTML = html; } }
+    
+    async function updateStock(id, cur) { const newStock = prompt('Enter new stock quantity to ADD (not overwrite):', 10); if (newStock && parseInt(newStock) > 0) { await fetchAPI(`${API}/admin/products/${id}/stock`, { method: 'POST', body: JSON.stringify({ quantity: parseInt(newStock) }) }); loadProducts(); loadLowStock(); loadStats(); } }
+    
+    function logout() { 
+        localStorage.clear(); 
+        window.location.href = 'login.html'; 
+    }
+    
+    function closeEdit() { document.getElementById('editModal').style.display = 'none'; }
+    
+    // Initial load
+    loadStats(); loadProducts(); loadDoctors(); loadLabTests(); loadCategories(); 
+    loadOrders(); loadAppointments(); loadLabBookings(); loadUsers(); loadWorkers(); 
+    loadSubscribers(); loadStores(); loadAudit(); loadLowStock(); loadSecurityLogs();
 </script>
 
 <!-- Edit Modal -->
@@ -493,6 +781,5 @@
         <button class="btn" onclick="closeEdit()">Cancel</button>
     </div>
 </div>
-<script> function closeEdit() { document.getElementById('editModal').style.display = 'none'; } </script>
 </body>
 </html>
