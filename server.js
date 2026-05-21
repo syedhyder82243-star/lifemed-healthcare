@@ -159,7 +159,6 @@ const auth = (req, res, next) => {
             req.user.name = user.name;
             req.user.role = user.role;
             req.user.wallet = user.wallet || 0;
-            // Check if password expired
             if (user.passwordExpiry && new Date(user.passwordExpiry) < new Date() && user.role !== 'admin') {
                 return res.status(403).json({ success: false, message: 'Password expired. Please reset.', requirePasswordChange: true });
             }
@@ -210,7 +209,6 @@ app.post('/api/auth/login', async (req, res) => {
     
     if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
     
-    // Check if account is locked
     if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
         return res.status(401).json({ success: false, message: `Account locked. Try after ${new Date(user.lockedUntil).toLocaleTimeString()}` });
     }
@@ -228,7 +226,6 @@ app.post('/api/auth/login', async (req, res) => {
         return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
-    // Reset login attempts on successful login
     user.loginAttempts = 0;
     user.lockedUntil = null;
     user.lastLogin = new Date();
@@ -236,13 +233,11 @@ app.post('/api/auth/login', async (req, res) => {
     
     if (user.status === 'blocked') return res.status(401).json({ success: false, message: 'Account blocked' });
     
-    // Check if password expired
     if (user.passwordExpiry && new Date(user.passwordExpiry) < new Date() && user.role !== 'admin') {
         const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
         return res.json({ success: true, requirePasswordChange: true, token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     }
     
-    // Check if first login - force password change
     if (user.isFirstLogin && user.role !== 'admin') {
         const token = jwt.sign({ id: user.id, role: user.role }, 'lifemed_secret');
         return res.json({ success: true, requirePasswordChange: true, token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
@@ -344,39 +339,6 @@ app.get('/api/admin/security-logs', auth, adminAuth, (req, res) => {
     res.json({ success: true, logs: db.securityLogs || [] });
 });
 
-// ========== FORGOT PASSWORD ==========
-app.post('/api/auth/forgot-password', async (req, res) => {
-    let db = readDB();
-    const user = db.users.find(u => u.email === req.body.email);
-    if (!user) return res.json({ success: true, message: 'If email exists, reset link sent' });
-    
-    const token = crypto.randomBytes(32).toString('hex');
-    db.resetTokens = db.resetTokens || [];
-    db.resetTokens.push({ email: user.email, token, expires: new Date(Date.now() + 3600000) });
-    writeDB(db);
-    
-    await sendEmail(user.email, 'Password Reset', `<a href="https://lifemed-healthcare.onrender.com/reset-password?token=${token}">Reset Password</a>`);
-    res.json({ success: true });
-});
-
-app.post('/api/auth/reset-password', async (req, res) => {
-    let db = readDB();
-    const { token, newPassword } = req.body;
-    const resetEntry = (db.resetTokens || []).find(t => t.token === token && new Date(t.expires) > new Date());
-    if (!resetEntry) return res.status(400).json({ success: false });
-    
-    const user = db.users.find(u => u.email === resetEntry.email);
-    if (user) {
-        user.password = await bcrypt.hash(newPassword, 10);
-        user.passwordLastChanged = new Date();
-        user.passwordExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
-        user.isFirstLogin = false;
-        db.resetTokens = db.resetTokens.filter(t => t.token !== token);
-        writeDB(db);
-        res.json({ success: true });
-    } else res.status(404).json({ success: false });
-});
-
 // ========== ADDRESS MANAGEMENT ==========
 app.get('/api/addresses', auth, (req, res) => {
     const db = readDB();
@@ -462,7 +424,7 @@ app.post('/api/validate-coupon', auth, (req, res) => {
     res.json({ success: true, discount, message: `₹${discount} off applied` });
 });
 
-// ========== ORDER PLACEMENT (with security) ==========
+// ========== ORDER PLACEMENT ==========
 const orderLocks = new Set();
 app.post('/api/orders', auth, async (req, res) => {
     const lockKey = `${req.user.id}_${Date.now()}`;
@@ -858,7 +820,7 @@ app.post('/api/admin/products/:id/stock', auth, adminAuth, (req, res) => {
     } else res.status(404).json({ success: false });
 });
 
-// ========== ADMIN USER MANAGEMENT (with security fields) ==========
+// ========== ADMIN USER MANAGEMENT ==========
 app.get('/api/admin/users', auth, adminAuth, (req, res) => {
     const db = readDB();
     const users = db.users.filter(u => u.role !== 'admin').map(u => ({
@@ -953,6 +915,233 @@ app.delete('/api/admin/stores/:id', auth, adminAuth, (req, res) => { let db = re
 
 app.post('/api/admin/workers', auth, adminAuth, async (req, res) => { let db = readDB(); if (db.users.find(u => u.email === req.body.email)) return res.status(400).json({ success: false }); db.users.push({ id: Date.now(), name: req.body.name, email: req.body.email, password: await bcrypt.hash(req.body.password, 10), role: req.body.role || 'staff', status: 'active', wallet: 0, addresses: [], createdAt: new Date(), lastLogin: null, passwordLastChanged: new Date(), passwordExpiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), loginAttempts: 0, lockedUntil: null, isFirstLogin: true }); writeDB(db); res.json({ success: true }); });
 app.delete('/api/admin/workers/:id', auth, adminAuth, (req, res) => { let db = readDB(); db.users = db.users.filter(u => u.id != req.params.id); writeDB(db); res.json({ success: true }); });
+
+// ========== SECURITY FIXES ==========
+const validateOrderItems = (items, db) => {
+    for (const item of items) {
+        if (item.quantity <= 0 || item.quantity > 100) {
+            return { valid: false, message: 'Invalid quantity' };
+        }
+        const product = db.products.find(p => p.id === item.id);
+        if (!product) {
+            return { valid: false, message: `Product ${item.id} not found` };
+        }
+        const expectedPrice = product.discountedPrice || product.pricePerUnit;
+        if (Math.abs(item.price - expectedPrice) > 1) {
+            return { valid: false, message: `Price mismatch for ${product.name}` };
+        }
+        if (product.totalStock < item.quantity) {
+            return { valid: false, message: `${product.name} only ${product.totalStock} left` };
+        }
+    }
+    return { valid: true };
+};
+
+const usedCouponsInSession = new Set();
+app.use('/api/validate-coupon', (req, res, next) => {
+    const sessionId = req.headers['x-session-id'] || req.user?.id || req.ip;
+    req.couponSessionId = sessionId;
+    next();
+});
+
+const registerLimiter = new Map();
+const walletLimiter = new Map();
+
+const sanitize = (str) => {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, (m) => {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+};
+
+app.use('/api/orders', (req, res, next) => {
+    if (req.method === 'POST' && req.body && req.body.items) {
+        const db = readDB();
+        const validation = validateOrderItems(req.body.items, db);
+        if (!validation.valid) {
+            return res.status(400).json({ success: false, message: validation.message });
+        }
+    }
+    next();
+});
+
+app.use('/api/reviews', (req, res, next) => {
+    if (req.method === 'POST' && req.body && req.body.comment) {
+        req.body.comment = sanitize(req.body.comment);
+    }
+    next();
+});
+
+app.post('/api/validate-coupon', auth, (req, res) => {
+    const db = readDB();
+    const { code, orderTotal } = req.body;
+    const sessionId = req.couponSessionId;
+    
+    if (usedCouponsInSession.has(`${sessionId}_${code}`)) {
+        return res.json({ success: false, message: 'Coupon already applied' });
+    }
+    
+    const coupon = db.coupons.find(c => c.code === code.toUpperCase());
+    if (!coupon) return res.json({ success: false, message: 'Invalid coupon' });
+    if (new Date(coupon.validUntil) < new Date()) return res.json({ success: false, message: 'Coupon expired' });
+    if (orderTotal < coupon.minOrder) return res.json({ success: false, message: `Min order ₹${coupon.minOrder}` });
+    if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) return res.json({ success: false, message: 'Coupon fully used' });
+    
+    const userUsedCoupons = db.orders.filter(o => o.userId === req.user.id && o.couponCode === coupon.code).length;
+    if (coupon.perUserLimit && userUsedCoupons >= coupon.perUserLimit) return res.json({ success: false, message: 'You have already used this coupon' });
+    
+    let discount = coupon.type === 'percentage' ? (orderTotal * coupon.discount / 100) : coupon.discount;
+    discount = Math.min(discount, orderTotal);
+    
+    usedCouponsInSession.add(`${sessionId}_${code}`);
+    setTimeout(() => usedCouponsInSession.delete(`${sessionId}_${code}`), 60000);
+    
+    res.json({ success: true, discount, message: `₹${discount} off applied` });
+});
+
+app.post('/api/wallet/add', auth, (req, res) => {
+    let db = readDB();
+    const { amount } = req.body;
+    const userId = req.user.id;
+    const now = Date.now();
+    
+    if (walletLimiter.has(userId)) {
+        const { count, firstRequest } = walletLimiter.get(userId);
+        if (now - firstRequest < 3600000 && count >= 10) {
+            return res.status(429).json({ success: false, message: 'Too many wallet transactions (max 10 per hour)' });
+        }
+        walletLimiter.set(userId, { count: count + 1, firstRequest });
+    } else {
+        walletLimiter.set(userId, { count: 1, firstRequest: now });
+    }
+    
+    if (!amount || amount <= 0 || amount > 10000) {
+        return res.status(400).json({ success: false, message: 'Amount must be between ₹1 and ₹10,000' });
+    }
+    
+    const user = db.users.find(u => u.id === userId);
+    if (user) {
+        user.wallet = (user.wallet || 0) + amount;
+        writeDB(db);
+        res.json({ success: true, balance: user.wallet });
+    } else {
+        res.status(404).json({ success: false });
+    }
+});
+
+app.use('/api/auth/register', (req, res, next) => {
+    const ip = req.ip;
+    const now = Date.now();
+    if (registerLimiter.has(ip)) {
+        const { count, firstRequest } = registerLimiter.get(ip);
+        if (now - firstRequest < 3600000 && count >= 5) {
+            return res.status(429).json({ success: false, message: 'Too many registration attempts (max 5 per hour)' });
+        }
+        registerLimiter.set(ip, { count: count + 1, firstRequest });
+    } else {
+        registerLimiter.set(ip, { count: 1, firstRequest: now });
+    }
+    next();
+});
+
+app.post('/api/orders/:id/cancel', auth, (req, res) => {
+    let db = readDB();
+    const order = db.orders.find(o => o.id == req.params.id);
+    if (!order) return res.status(404).json({ success: false });
+    if (order.userId !== req.user.id && req.user.role !== 'admin') return res.status(403).json({ success: false });
+    
+    if (order.status === 'delivered') {
+        return res.status(400).json({ success: false, message: 'Delivered orders cannot be cancelled' });
+    }
+    if (order.status === 'returned') {
+        return res.status(400).json({ success: false, message: 'Returned orders cannot be cancelled' });
+    }
+    if (order.status !== 'confirmed') return res.status(400).json({ success: false, message: 'Order cannot be cancelled' });
+    
+    const hoursSinceOrder = (Date.now() - new Date(order.orderDate)) / (1000 * 60 * 60);
+    if (hoursSinceOrder > 24 && req.user.role !== 'admin') {
+        return res.status(400).json({ success: false, message: 'Order can only be cancelled within 24 hours' });
+    }
+    
+    order.status = 'cancelled';
+    if (!order.statusHistory) order.statusHistory = [];
+    order.statusHistory.unshift({ status: 'cancelled', timestamp: new Date(), note: 'Order cancelled by ' + (req.user.role === 'admin' ? 'admin' : 'customer') });
+    
+    for (const item of order.items) {
+        const p = db.products.find(p => p.id === item.id);
+        if (p) p.totalStock += item.quantity;
+    }
+    if (order.walletUsed > 0) {
+        const user = db.users.find(u => u.id === order.userId);
+        if (user) user.wallet += order.walletUsed;
+    }
+    if (order.creditUsed > 0) {
+        const user = db.users.find(u => u.id === order.userId);
+        if (user) user.creditUsed = Math.max(0, (user.creditUsed || 0) - order.creditUsed);
+    }
+    writeDB(db);
+    res.json({ success: true });
+});
+
+app.post('/api/return-request', auth, (req, res) => {
+    let db = readDB();
+    const order = db.orders.find(o => o.id === req.body.orderId);
+    if (!order) return res.status(404).json({ success: false });
+    if (order.userId !== req.user.id) return res.status(403).json({ success: false });
+    if (order.status !== 'delivered') {
+        return res.status(400).json({ success: false, message: 'Only delivered orders can be returned' });
+    }
+    const daysSinceDelivery = (Date.now() - new Date(order.orderDate)) / (1000 * 60 * 60 * 24);
+    if (daysSinceDelivery > 7) {
+        return res.status(400).json({ success: false, message: 'Return window expired (7 days only)' });
+    }
+    const existingReturn = (db.returnRequests || []).find(r => r.orderId === order.id && (r.status === 'approved' || r.status === 'pending'));
+    if (existingReturn) {
+        return res.status(400).json({ success: false, message: 'Return already ' + existingReturn.status });
+    }
+    if (!db.returnRequests) db.returnRequests = [];
+    const returnReq = {
+        id: Date.now(), userId: req.user.id, orderId: req.body.orderId,
+        items: req.body.items, reason: req.body.reason, reasonDetail: sanitize(req.body.reasonDetail || ''),
+        images: req.body.images || [], amount: req.body.amount,
+        status: 'pending', createdAt: new Date()
+    };
+    db.returnRequests.push(returnReq);
+    writeDB(db);
+    res.json({ success: true, message: 'Return request submitted' });
+});
+
+const suspiciousActivities = [];
+function logSuspicious(userId, action, details, ip) {
+    suspiciousActivities.unshift({ userId, action, details, ip, timestamp: new Date() });
+    if (suspiciousActivities.length > 1000) suspiciousActivities.pop();
+    console.log(`⚠️ SUSPICIOUS: ${action} by ${userId || 'unknown'} from ${ip}`);
+}
+
+app.get('/api/admin/suspicious-logs', auth, adminAuth, (req, res) => {
+    res.json({ success: true, logs: suspiciousActivities });
+});
+
+app.use('/api/orders', (req, res, next) => {
+    if (req.method === 'POST' && req.body && req.body.items) {
+        const db = readDB();
+        for (const item of req.body.items) {
+            const product = db.products.find(p => p.id === item.id);
+            if (product) {
+                const expectedPrice = product.discountedPrice || product.pricePerUnit;
+                if (Math.abs(item.price - expectedPrice) > 1) {
+                    logSuspicious(req.user?.id, 'PRICE_TAMPERING_ATTEMPT', `Product: ${product.name}, Expected: ${expectedPrice}, Sent: ${item.price}`, req.ip);
+                }
+            }
+        }
+    }
+    next();
+});
+
+console.log('✅ All security features active');
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => console.log(`✅ Secure server running on port ${PORT}`));
