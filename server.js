@@ -1421,5 +1421,83 @@ app.use('/api/orders', (req, res, next) => {
 
 console.log('✅ All security features active');
 
+// ========== MISSING ADMIN APIS ==========
+
+// Admin Orders
+app.get('/api/admin/orders', auth, adminAuth, (req, res) => {
+    const db = readDB();
+    const orders = [...(db.orders || []), ...(db.guestOrders || [])];
+    res.json({ success: true, orders: orders.reverse() });
+});
+
+// Appointments
+app.get('/api/appointments', (req, res) => {
+    const db = readDB();
+    res.json({ success: true, appointments: db.appointments || [] });
+});
+
+app.put('/api/appointments/:id/status', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const idx = (db.appointments || []).findIndex(a => a.id == req.params.id);
+    if (idx !== -1) {
+        db.appointments[idx].status = req.body.status;
+        writeDB(db);
+    }
+    res.json({ success: true });
+});
+
+// Lab Tests
+app.get('/api/lab-tests', (req, res) => {
+    const db = readDB();
+    res.json({ success: true, labTests: db.labTests || [] });
+});
+
+app.post('/api/admin/lab-tests', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const test = { id: Date.now(), ...req.body, discountedPrice: req.body.price - (req.body.price * (req.body.discount || 0) / 100) };
+    if (!db.labTests) db.labTests = [];
+    db.labTests.push(test);
+    writeDB(db);
+    res.json({ success: true });
+});
+
+app.delete('/api/admin/lab-tests/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.labTests = (db.labTests || []).filter(t => t.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
+
+// Lab Bookings
+app.get('/api/lab-bookings', (req, res) => {
+    const db = readDB();
+    res.json({ success: true, bookings: db.labBookings || [] });
+});
+
+app.put('/api/lab-bookings/:id/status', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    const idx = (db.labBookings || []).findIndex(b => b.id == req.params.id);
+    if (idx !== -1) {
+        db.labBookings[idx].status = req.body.status;
+        writeDB(db);
+    }
+    res.json({ success: true });
+});
+
+// Admin Subscribers
+app.get('/api/admin/subscribers', auth, adminAuth, (req, res) => {
+    const db = readDB();
+    res.json({ success: true, subscribers: db.subscribers || [] });
+});
+
+app.delete('/api/admin/subscribers/:id', auth, adminAuth, (req, res) => {
+    let db = readDB();
+    db.subscribers = (db.subscribers || []).filter(s => s.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
+});
+
+console.log('✅ Admin APIs added');
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => console.log(`✅ Secure server running on port ${PORT}`));
