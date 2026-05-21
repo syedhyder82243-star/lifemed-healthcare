@@ -43,7 +43,6 @@
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 12px 20px; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; color: #999; transition: 0.3s; }
         .nav-item.active { color: #1a5d0d; }
-        .nav-item:hover { color: #1a5d0d; transform: translateY(-3px); }
         .nav-item i { font-size: 22px; }
         .nav-item span { font-size: 11px; }
         
@@ -69,6 +68,9 @@
         
         .orders-section, .profile-section { display: none; }
         .orders-section.active, .profile-section.active { display: block; }
+        .btn { background: #1a5d0d; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .btn-danger { background: #ff4444; }
+        .badge { background: #ffd700; color: #333; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -82,8 +84,8 @@
         </div>
     </div>
     <div class="welcome-text">
-        <span>Welcome back,</span>
-        <div class="user-name" id="userName">Customer</div>
+        <span>Welcome,</span>
+        <div class="user-name" id="userName">Guest</div>
     </div>
 </div>
 
@@ -142,8 +144,19 @@
 
 <div class="notification" id="notification"></div>
 
+<!-- Login Required Modal -->
+<div id="loginRequiredModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1001; justify-content:center; align-items:center">
+    <div style="background:white; width:90%; max-width:350px; border-radius:20px; padding:25px; text-align:center">
+        <i class="fas fa-lock" style="font-size:40px; color:#1a5d0d; margin-bottom:15px"></i>
+        <h3>Login Required</h3>
+        <p style="margin:15px 0">Please login to continue</p>
+        <button onclick="location.href='/login.html'" style="background:#1a5d0d; color:white; border:none; padding:12px; width:100%; border-radius:8px">Login Now</button>
+        <button onclick="closeLoginRequired()" style="background:#ccc; border:none; padding:12px; width:100%; border-radius:8px; margin-top:10px">Cancel</button>
+    </div>
+</div>
+
 <!-- Change Password Modal -->
-<div id="changePwdModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1001; justify-content:center; align-items:center">
+<div id="changePwdModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1002; justify-content:center; align-items:center">
     <div style="background:white; width:90%; max-width:350px; border-radius:20px; padding:25px">
         <h3>Change Password</h3>
         <input type="password" id="currentPwd" placeholder="Current Password" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px">
@@ -161,28 +174,33 @@
     let products = [];
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     
-    if (!token) { window.location.href = 'login.html'; }
-    
-    async function fetchAPI(url, options = {}) {
-        const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } });
-        if (res.status === 401) { localStorage.clear(); window.location.href = 'login.html'; }
-        return await res.json();
-    }
-    
-    async function loadUser() {
-        const res = await fetchAPI(`${API}/auth/profile`);
-        if (res.success) {
-            currentUser = res.user;
-            document.getElementById('userName').innerHTML = currentUser.name;
-            document.getElementById('profileName').innerHTML = currentUser.name;
-            document.getElementById('profileEmail').innerHTML = currentUser.email;
-            loadWallet();
-        }
+    // Check if user is logged in
+    async function checkAuth() {
+        if (!token) return false;
+        try {
+            const res = await fetch(`${API}/auth/profile`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
+                    currentUser = data.user;
+                    document.getElementById('userName').innerHTML = currentUser.name;
+                    document.getElementById('profileName').innerHTML = currentUser.name;
+                    document.getElementById('profileEmail').innerHTML = currentUser.email;
+                    await loadWallet();
+                    return true;
+                }
+            }
+        } catch(e) {}
+        return false;
     }
     
     async function loadWallet() {
-        const res = await fetchAPI(`${API}/wallet`);
-        if (res.success) document.getElementById('walletBalance').innerHTML = `₹${res.balance}`;
+        if (!token) return;
+        try {
+            const res = await fetch(`${API}/wallet`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.success) document.getElementById('walletBalance').innerHTML = `₹${data.balance}`;
+        } catch(e) {}
     }
     
     async function loadHeroBanner() {
@@ -222,7 +240,7 @@
         container.innerHTML = productsList.map(p => `
             <div class="product-card" onclick="addToCart(${p.id})">
                 ${p.discount ? `<div class="discount-badge">-${p.discount}%</div>` : ''}
-                <img src="${p.imageUrl || 'https://placehold.co/150'}" class="product-image">
+                <img src="${p.imageUrl || 'https://placehold.co/150'}" class="product-image" onerror="this.src='https://placehold.co/150'">
                 <div class="product-info">
                     <div class="product-title">${p.name}</div>
                     <div><span class="product-price">₹${p.price}</span>${p.originalPrice ? `<span class="original-price">₹${p.originalPrice}</span>` : ''}</div>
@@ -302,9 +320,17 @@
         setTimeout(() => { notif.style.display = 'none'; }, 2000);
     }
     
+    function showLoginRequired() {
+        document.getElementById('loginRequiredModal').style.display = 'flex';
+    }
+    
+    function closeLoginRequired() {
+        document.getElementById('loginRequiredModal').style.display = 'none';
+    }
+    
     async function checkout() {
         if (cart.length === 0) { showNotification('Cart is empty!'); return; }
-        if (!currentUser) { location.href = '/login.html'; return; }
+        if (!token || !currentUser) { showLoginRequired(); return; }
         
         const order = {
             items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
@@ -312,39 +338,52 @@
             paymentMethod: 'online'
         };
         
-        const res = await fetchAPI(`${API}/orders`, { method: 'POST', body: JSON.stringify(order) });
-        if (res.success) {
-            showNotification('Order placed successfully!');
-            cart = [];
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartUI();
-            toggleCart();
-            loadOrders();
-        } else {
-            showNotification(res.message || 'Order failed');
+        try {
+            const res = await fetch(`${API}/orders`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(order)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showNotification('Order placed successfully!');
+                cart = [];
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartUI();
+                toggleCart();
+                if (currentUser) loadOrders();
+            } else {
+                showNotification(data.message || 'Order failed');
+            }
+        } catch(e) {
+            showNotification('Order failed');
         }
     }
     
     async function loadOrders() {
-        const res = await fetchAPI(`${API}/orders`);
-        if (res.success && res.orders) {
-            const container = document.getElementById('ordersList');
-            if (res.orders.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:40px">No orders yet</div>';
-            } else {
-                container.innerHTML = res.orders.map(o => `
-                    <div class="store-info" style="margin-bottom:10px">
-                        <i class="fas fa-receipt"></i>
-                        <div style="flex:1">
-                            <h4>Order #${o.id}</h4>
-                            <p>Total: ₹${o.finalAmount || o.totalAmount}</p>
-                            <p>Status: <span class="badge">${o.status}</span></p>
-                            <p>Date: ${new Date(o.orderDate).toLocaleDateString()}</p>
+        if (!token || !currentUser) return;
+        try {
+            const res = await fetch(`${API}/orders`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.success && data.orders) {
+                const container = document.getElementById('ordersList');
+                if (data.orders.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding:40px">No orders yet</div>';
+                } else {
+                    container.innerHTML = data.orders.map(o => `
+                        <div class="store-info" style="margin-bottom:10px">
+                            <i class="fas fa-receipt"></i>
+                            <div style="flex:1">
+                                <h4>Order #${o.id}</h4>
+                                <p>Total: ₹${o.finalAmount || o.totalAmount}</p>
+                                <p>Status: <span class="badge">${o.status}</span></p>
+                                <p>Date: ${new Date(o.orderDate).toLocaleDateString()}</p>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `).join('');
+                }
             }
-        }
+        } catch(e) {}
     }
     
     function showHome() {
@@ -356,6 +395,7 @@
     }
     
     async function showOrders() {
+        if (!token || !currentUser) { showLoginRequired(); return; }
         document.getElementById('homeSection').style.display = 'none';
         document.getElementById('ordersSection').classList.add('active');
         document.getElementById('profileSection').classList.remove('active');
@@ -365,6 +405,7 @@
     }
     
     function showProfile() {
+        if (!token || !currentUser) { showLoginRequired(); return; }
         document.getElementById('homeSection').style.display = 'none';
         document.getElementById('ordersSection').classList.remove('active');
         document.getElementById('profileSection').classList.add('active');
@@ -373,11 +414,15 @@
     }
     
     function showChangePassword() {
+        if (!token || !currentUser) { showLoginRequired(); return; }
         document.getElementById('changePwdModal').style.display = 'flex';
     }
     
     function closeChangePwd() {
         document.getElementById('changePwdModal').style.display = 'none';
+        document.getElementById('currentPwd').value = '';
+        document.getElementById('newPwd').value = '';
+        document.getElementById('confirmPwd').value = '';
     }
     
     async function changePassword() {
@@ -388,26 +433,35 @@
         if (!current || !newPwd) { showNotification('Fill all fields'); return; }
         if (newPwd !== confirm) { showNotification('Passwords do not match'); return; }
         
-        const res = await fetchAPI(`${API}/auth/change-password`, {
-            method: 'POST',
-            body: JSON.stringify({ currentPassword: current, newPassword: newPwd })
-        });
-        
-        if (res.success) {
-            showNotification('Password changed!');
-            closeChangePwd();
-        } else {
-            showNotification(res.message || 'Failed');
+        try {
+            const res = await fetch(`${API}/auth/change-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ currentPassword: current, newPassword: newPwd })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showNotification('Password changed!');
+                closeChangePwd();
+            } else {
+                showNotification(data.message || 'Failed');
+            }
+        } catch(e) {
+            showNotification('Failed to change password');
         }
     }
     
     function logout() {
         localStorage.clear();
-        window.location.href = 'login.html';
+        token = null;
+        currentUser = null;
+        document.getElementById('userName').innerHTML = 'Guest';
+        showHome();
+        showNotification('Logged out');
     }
     
-    document.addEventListener('DOMContentLoaded', () => {
-        loadUser();
+    document.addEventListener('DOMContentLoaded', async () => {
+        await checkAuth();
         loadProducts();
         loadHeroBanner();
         updateCartUI();
