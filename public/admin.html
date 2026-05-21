@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LifeMed Admin - Complete Control</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #0f2b3d 0%, #1a5d7a 100%); min-height: 100vh; }
@@ -211,7 +210,7 @@
                 <div class="form-group"><label>Available Slots</label><input type="text" id="docSlots" placeholder="Mon/Wed/Fri 10AM-6PM"></div>
                 <button class="btn" onclick="addDoctor()">Add Doctor</button>
             </div>
-            <div class="data-table"><h2>All Doctors</h2><table><thead><td><th>Name</th><th>Specialty</th><th>Exp</th><th>Fees</th><th>Rating</th><th>Actions</th></tr></thead><tbody id="doctorsList"></tbody></table></div>
+            <div class="data-table"><h2>All Doctors</h2><tr><thead><tr><th>Name</th><th>Specialty</th><th>Exp</th><th>Fees</th><th>Rating</th><th>Actions</th></tr></thead><tbody id="doctorsList"></tbody></table></div>
         </div>
 
         <!-- Lab Tests -->
@@ -220,11 +219,9 @@
                 <div class="form-group"><label>Name</label><input type="text" id="testName"></div>
                 <div class="form-group"><label>Price</label><input type="number" id="testPrice"></div>
                 <div class="form-group"><label>Discount (%)</label><input type="number" id="testDiscount" value="0"></div>
-                <div class="form-group"><label>Preparation</label><input type="text" id="testPrep" placeholder="Fasting required?"></div>
-                <div class="form-group"><label>Report Time</label><input type="text" id="testReportTime" placeholder="24 hours"></div>
                 <button class="btn" onclick="addLabTest()">Add Lab Test</button>
             </div>
-            <div class="data-table"><h2>All Lab Tests</h2></table><thead><tr><th>Name</th><th>Price</th><th>Discounted</th><th>Preparation</th><th>Actions</th></tr></thead><tbody id="labTestsList"></tbody></table></div>
+            <div class="data-table"><h2>All Lab Tests</h2><tr><thead><tr><th>Name</th><th>Price</th><th>Discounted</th><th>Actions</th></tr></thead><tbody id="labTestsList"></tbody></table></div>
         </div>
 
         <!-- Categories -->
@@ -251,9 +248,9 @@
 
         <!-- Orders -->
         <div id="orders" class="section">
-            <div class="data-table"><h2>Orders <button class="btn-small" onclick="exportOrders()">Export CSV</button></h2>
+            <div class="data-table"><h2>Orders</h2>
                 <table><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-                <tbody id="ordersList"></tbody></table>
+                <tbody id="ordersList"></tbody>
             </div>
         </div>
 
@@ -268,14 +265,14 @@
         <!-- Lab Bookings -->
         <div id="labbookings" class="section">
             <div class="data-table"><h2>Lab Bookings</h2>
-                <table><thead><tr><th>Patient</th><th>Test</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+                <tr><thead><tr><th>Patient</th><th>Test</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody id="labBookingsList"></tbody>
             </div>
         </div>
 
         <!-- Users -->
         <div id="users" class="section">
-            <div class="form-card"><h2>Add New User</h2>
+            <div class="form-card"><h2>Add User</h2>
                 <div class="form-group"><label>Name</label><input type="text" id="newUserName"></div>
                 <div class="form-group"><label>Email</label><input type="email" id="newUserEmail"></div>
                 <div class="form-group"><label>Password</label><input type="password" id="newUserPassword" placeholder="Auto"></div>
@@ -283,7 +280,7 @@
                 <button class="btn" onclick="addNewUser()">Add User</button>
             </div>
             <div class="data-table"><h2>All Users</h2>
-                <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+                <tr><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody id="usersList"></tbody>
             </div>
         </div>
@@ -294,11 +291,11 @@
                 <div class="form-group"><label>Name</label><input type="text" id="staffName"></div>
                 <div class="form-group"><label>Email</label><input type="email" id="staffEmail"></div>
                 <div class="form-group"><label>Password</label><input type="password" id="staffPassword" placeholder="Auto"></div>
-                <div class="form-group"><label>Role</label><select id="staffRole"><option>staff</option><option>manager</option><option>delivery</option></select></div>
+                <div class="form-group"><label>Role</label><select id="staffRole"><option>staff</option><option>manager</option></select></div>
                 <button class="btn" onclick="addStaff()">Add Staff</button>
             </div>
             <div class="data-table"><h2>All Staff</h2>
-                </table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+                <tr><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody id="workersList"></tbody>
             </div>
         </div>
@@ -306,12 +303,12 @@
         <!-- Subscribers -->
         <div id="subscribers" class="section">
             <div class="data-table"><h2>Newsletter Subscribers</h2>
-                <table><thead><tr><th>Email</th><th>Subscribed Date</th><th>Actions</th></tr></thead>
+                <table><thead><tr><th>Email</th><th>Date</th><th>Actions</th></tr></thead>
                 <tbody id="subscribersList"></tbody>
             </div>
         </div>
 
-        <!-- Store Locator -->
+        <!-- Stores -->
         <div id="stores" class="section">
             <div class="form-card"><h2>Add Store</h2>
                 <div class="form-group"><label>Name</label><input type="text" id="storeName"></div>
@@ -354,7 +351,7 @@
         <!-- Low Stock -->
         <div id="lowstock" class="section">
             <div class="data-table"><h2>Low Stock Alert</h2>
-                <table><thead><tr><th>Product</th><th>Stock</th><th>Action</th></tr></thead>
+                <tr><thead><tr><th>Product</th><th>Stock</th><th>Action</th></tr></thead>
                 <tbody id="lowStockList"></tbody>
             </div>
         </div>
@@ -362,7 +359,7 @@
         <!-- Security Logs -->
         <div id="security" class="section">
             <div class="data-table"><h2>Security Logs</h2>
-                <table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>IP</th></tr></thead>
+                <tr><thead><tr><th>Time</th><th>User</th><th>Action</th><th>IP</th></tr></thead>
                 <tbody id="securityLogsList"></tbody>
             </div>
         </div>
@@ -373,9 +370,9 @@
 <div id="changePwdModal" class="modal">
     <div class="modal-content">
         <h3>Change Password</h3>
-        <div class="form-group-full"><label>Current</label><input type="password" id="currentPwd"></div>
-        <div class="form-group-full"><label>New</label><input type="password" id="newPwd"></div>
-        <div class="form-group-full"><label>Confirm</label><input type="password" id="confirmPwd"></div>
+        <input type="password" id="currentPwd" placeholder="Current Password" style="width:100%; padding:10px; margin:5px 0">
+        <input type="password" id="newPwd" placeholder="New Password" style="width:100%; padding:10px; margin:5px 0">
+        <input type="password" id="confirmPwd" placeholder="Confirm Password" style="width:100%; padding:10px; margin:5px 0">
         <button class="btn" onclick="changePassword()">Update</button>
         <button class="btn btn-danger" onclick="closeChangePwd()">Cancel</button>
     </div>
@@ -385,7 +382,7 @@
     <div class="modal-content">
         <h3>Reset User Password</h3>
         <p>User: <span id="resetUserName"></span></p>
-        <div class="form-group-full"><label>New Password</label><input type="password" id="resetNewPwd"></div>
+        <input type="password" id="resetNewPwd" placeholder="New Password" style="width:100%; padding:10px; margin:10px 0">
         <button class="btn" onclick="resetUserPassword()">Reset</button>
         <button class="btn btn-danger" onclick="closeResetPwd()">Cancel</button>
     </div>
@@ -393,47 +390,78 @@
 
 <script>
     const API = 'https://lifemed-healthcare.onrender.com/api';
-    let token = localStorage.getItem('adminToken');
+    let token = localStorage.getItem('token');
     let resetUserId = null, resetUserName = null;
     
-    if (!token) window.location.href = 'login.html';
-    document.getElementById('adminName').innerText = localStorage.getItem('adminName') || 'Admin';
+    // Check if logged in
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+    
+    // Get user info from localStorage
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    document.getElementById('adminName').innerText = userData.name || 'Admin';
     
     async function fetchAPI(url, options = {}) {
-        const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } });
-        if (res.status === 401) { localStorage.clear(); window.location.href = 'login.html'; }
-        return await res.json();
+        try {
+            const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } });
+            if (res.status === 401) {
+                localStorage.clear();
+                window.location.href = 'login.html';
+                return { success: false };
+            }
+            return await res.json();
+        } catch(e) {
+            console.error('API Error:', e);
+            return { success: false, message: 'Network error' };
+        }
     }
     
     function showSection(section) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(section).classList.add('active');
+        const targetSection = document.getElementById(section);
+        if (targetSection) targetSection.classList.add('active');
+        
         document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-        event.target.closest('.sidebar-item').classList.add('active');
+        if (event && event.target) {
+            const clickedItem = event.target.closest('.sidebar-item');
+            if (clickedItem) clickedItem.classList.add('active');
+        }
         
         const loaders = {
-            dashboard: () => { loadStats(); },
-            products: loadProducts, doctors: loadDoctors, labtests: loadLabTests,
-            categories: loadCategories, orders: loadOrders, appointments: loadAppointments,
-            labbookings: loadLabBookings, users: loadUsers, workers: loadWorkers,
-            subscribers: loadSubscribers, stores: loadStores, coupons: loadCoupons,
-            audit: loadAudit, lowstock: loadLowStock, security: loadSecurityLogs
+            dashboard: loadStats,
+            products: () => { loadProducts(); loadStats(); },
+            doctors: loadDoctors,
+            labtests: loadLabTests,
+            categories: loadCategories,
+            orders: loadOrders,
+            appointments: loadAppointments,
+            labbookings: loadLabBookings,
+            users: loadUsers,
+            workers: loadWorkers,
+            subscribers: loadSubscribers,
+            stores: loadStores,
+            coupons: loadCoupons,
+            audit: loadAudit,
+            lowstock: loadLowStock,
+            security: loadSecurityLogs
         };
         if (loaders[section]) loaders[section]();
     }
     
+    // Dashboard
     async function loadStats() {
         const res = await fetchAPI(`${API}/stats`);
         if (res.success) {
-            document.getElementById('statProducts').innerText = res.stats.totalProducts;
-            document.getElementById('statDoctors').innerText = res.stats.totalDoctors;
-            document.getElementById('statOrders').innerText = res.stats.totalOrders;
-            document.getElementById('statAppointments').innerText = res.stats.totalAppointments;
-            document.getElementById('statUsers').innerText = res.stats.totalUsers;
-            document.getElementById('statCategories').innerText = res.stats.totalCategories;
-            document.getElementById('statSubscribers').innerText = res.stats.totalSubscribers;
-            document.getElementById('statStores').innerText = res.stats.totalStores;
-            document.getElementById('statLowStock').innerText = res.stats.lowStock;
+            document.getElementById('statProducts').innerText = res.stats.totalProducts || 0;
+            document.getElementById('statDoctors').innerText = res.stats.totalDoctors || 0;
+            document.getElementById('statOrders').innerText = res.stats.totalOrders || 0;
+            document.getElementById('statAppointments').innerText = res.stats.totalAppointments || 0;
+            document.getElementById('statUsers').innerText = res.stats.totalUsers || 0;
+            document.getElementById('statCategories').innerText = res.stats.totalCategories || 0;
+            document.getElementById('statSubscribers').innerText = res.stats.totalSubscribers || 0;
+            document.getElementById('statStores').innerText = res.stats.totalStores || 0;
+            document.getElementById('statLowStock').innerText = res.stats.lowStock || 0;
         }
     }
     
@@ -447,12 +475,9 @@
             unitType: document.getElementById('prodUnit').value,
             discount: parseFloat(document.getElementById('prodDiscount').value) || 0,
             discountedPrice: parseFloat(document.getElementById('prodPrice').value) - (parseFloat(document.getElementById('prodPrice').value) * parseFloat(document.getElementById('prodDiscount').value) / 100),
-            imageUrl: document.getElementById('prodImageUrl').value || '',
-            batchNo: document.getElementById('prodBatch').value,
-            expiryDate: document.getElementById('prodExpiry').value,
-            prescriptionRequired: document.getElementById('prodPrescription').checked
+            imageUrl: document.getElementById('prodImageUrl').value || ''
         };
-        if (!product.name || !product.pricePerUnit) { alert('Fill fields'); return; }
+        if (!product.name || !product.pricePerUnit) { alert('Fill all fields'); return; }
         const res = await fetchAPI(`${API}/admin/products`, { method: 'POST', body: JSON.stringify(product) });
         if (res.success) { alert('Product added!'); loadProducts(); loadStats(); }
     }
@@ -467,27 +492,23 @@
                     <td>${p.name}${p.expiryDate && new Date(p.expiryDate) < new Date() ? ' <span class="badge" style="background:#ff6b6b">Expired</span>' : ''}</td>
                     <td>₹${p.pricePerUnit}</td><td style="${p.totalStock < 10 ? 'color:#ff6b6b' : ''}">${p.totalStock}</td>
                     <td>${p.batchNo || '-'}</td>
-                    <td style="${p.expiryDate && new Date(p.expiryDate) < new Date() ? 'color:#ff6b6b' : ''}">${p.expiryDate ? new Date(p.expiryDate).toLocaleDateString() : '-'}</td>
+                    <td>${p.expiryDate ? new Date(p.expiryDate).toLocaleDateString() : '-'}</td>
                     <td>${p.prescriptionRequired ? '<i class="fas fa-prescription-bottle"></i>' : '-'}</td>
-                    <td><button class="btn-small" onclick="editProduct(${p.id})">Edit</button> <button class="btn-small btn-danger" onclick="deleteProduct(${p.id})">Delete</button></td>
+                    <td><button class="btn-small btn-danger" onclick="deleteProduct(${p.id})">Delete</button></td>
                 </tr>`;
             });
             document.getElementById('productsList').innerHTML = html;
         }
     }
     
-    async function deleteProduct(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' }); loadProducts(); loadStats(); } }
-    function editProduct(id) { alert('Edit feature - implement'); }
+    async function deleteProduct(id) { if(confirm('Delete product?')) { await fetchAPI(`${API}/admin/products/${id}`, { method: 'DELETE' }); loadProducts(); loadStats(); } }
     
     // Doctors
     async function addDoctor() {
         const doctor = {
             name: document.getElementById('docName').value,
             specialty: document.getElementById('docSpecialty').value,
-            qualification: document.getElementById('docQualification').value,
-            experience: parseInt(document.getElementById('docExperience').value) || 0,
-            fees: parseFloat(document.getElementById('docFees').value),
-            availableSlots: document.getElementById('docSlots').value
+            fees: parseFloat(document.getElementById('docFees').value)
         };
         if (!doctor.name || !doctor.fees) { alert('Fill fields'); return; }
         const res = await fetchAPI(`${API}/admin/doctors`, { method: 'POST', body: JSON.stringify(doctor) });
@@ -503,7 +524,6 @@
                     <td>${d.name}${d.qualification ? `, ${d.qualification}` : ''}</td>
                     <td>${d.specialty}</td>
                     <td>${d.experience || 0} yrs</td><td>₹${d.fees}</td>
-                    <td>${'★'.repeat(Math.floor(d.rating || 0))}${'☆'.repeat(5 - Math.floor(d.rating || 0))}</td>
                     <td><button class="btn-small btn-danger" onclick="deleteDoctor(${d.id})">Delete</button></td>
                 </tr>`;
             });
@@ -518,9 +538,7 @@
         const test = {
             name: document.getElementById('testName').value,
             price: parseFloat(document.getElementById('testPrice').value),
-            discount: parseFloat(document.getElementById('testDiscount').value) || 0,
-            preparation: document.getElementById('testPrep').value,
-            reportTime: document.getElementById('testReportTime').value
+            discount: parseFloat(document.getElementById('testDiscount').value) || 0
         };
         if (!test.name || !test.price) { alert('Fill fields'); return; }
         const res = await fetchAPI(`${API}/admin/lab-tests`, { method: 'POST', body: JSON.stringify(test) });
@@ -536,7 +554,6 @@
                     <td>${t.name}</td>
                     <td>₹${t.price}</td>
                     <td>₹${t.discountedPrice || t.price}</td>
-                    <td>${t.preparation || '-'}</td>
                     <td><button class="btn-small btn-danger" onclick="deleteLabTest(${t.id})">Delete</button></td>
                 </tr>`;
             });
@@ -544,11 +561,11 @@
         }
     }
     
-    async function deleteLabTest(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/lab-tests/${id}`, { method: 'DELETE' }); loadLabTests(); } }
+    async function deleteLabTest(id) { if(confirm('Delete lab test?')) { await fetchAPI(`${API}/admin/lab-tests/${id}`, { method: 'DELETE' }); loadLabTests(); } }
     
     // Categories
     async function addCategory() {
-        const cat = { name: document.getElementById('catName').value, icon: document.getElementById('catIcon').value, imageUrl: document.getElementById('catImageUrl').value };
+        const cat = { name: document.getElementById('catName').value, icon: document.getElementById('catIcon').value };
         if (!cat.name) { alert('Enter name'); return; }
         const res = await fetchAPI(`${API}/admin/categories`, { method: 'POST', body: JSON.stringify(cat) });
         if (res.success) { alert('Category added!'); loadCategories(); loadStats(); }
@@ -570,7 +587,7 @@
         }
     }
     
-    async function deleteCategory(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/categories/${id}`, { method: 'DELETE' }); loadCategories(); loadStats(); } }
+    async function deleteCategory(id) { if(confirm('Delete category?')) { await fetchAPI(`${API}/admin/categories/${id}`, { method: 'DELETE' }); loadCategories(); loadStats(); } }
     
     // Banner
     async function updateBanner() {
@@ -591,20 +608,24 @@
             let html = '';
             res.orders.forEach(o => {
                 html += `<tr>
-                    <td>#${o.id}</td><td>${o.userName || 'Guest'}</td>
+                    <td>#${o.id}</td><td>${o.userName || 'Guest'}${o.isGuest ? ' (Guest)' : ''}</td>
                     <td>₹${o.finalAmount || o.totalAmount}</td>
                     <td><span class="${o.status === 'delivered' ? 'status-active' : o.status === 'cancelled' ? 'status-blocked' : 'status-pending'}">${o.status}</span></td>
                     <td>${new Date(o.orderDate).toLocaleDateString()}</td>
-                    <td><button class="btn-small" onclick="updateOrderStatus(${o.id})">Update</button> <button class="btn-small btn-danger" onclick="cancelOrder(${o.id})">Cancel</button></td>
+                    <td><button class="btn-small" onclick="updateOrderStatus(${o.id})">Update</button></td>
                 </tr>`;
             });
             document.getElementById('ordersList').innerHTML = html;
         }
     }
     
-    async function updateOrderStatus(id) { let s = prompt('Status: confirmed, packed, shipped, out_for_delivery, delivered'); if(s) { await fetchAPI(`${API}/admin/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: s }) }); loadOrders(); } }
-    async function cancelOrder(id) { if(confirm('Cancel order?')) { await fetchAPI(`${API}/orders/${id}/cancel`, { method: 'POST' }); loadOrders(); } }
-    function exportOrders() { window.location.href = `${API}/admin/export-orders?token=${token}`; }
+    async function updateOrderStatus(id) { 
+        const status = prompt('Enter status: confirmed, packed, shipped, out_for_delivery, delivered, cancelled');
+        if(status) { 
+            await fetchAPI(`${API}/admin/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }); 
+            loadOrders(); 
+        } 
+    }
     
     // Appointments
     async function loadAppointments() {
@@ -622,7 +643,11 @@
             document.getElementById('appointmentsList').innerHTML = html;
         }
     }
-    async function confirmAppt(id) { await fetchAPI(`${API}/appointments/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'confirmed' }) }); loadAppointments(); }
+    
+    async function confirmAppt(id) { 
+        await fetchAPI(`${API}/appointments/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'confirmed' }) }); 
+        loadAppointments(); 
+    }
     
     // Lab Bookings
     async function loadLabBookings() {
@@ -632,7 +657,6 @@
             res.bookings.forEach(b => {
                 html += `<tr>
                     <td>${b.patientName}</td><td>${b.testName}</td>
-                    <td>${new Date(b.createdAt).toLocaleDateString()}</td>
                     <td><span class="${b.status === 'completed' ? 'status-active' : 'status-pending'}">${b.status}</span></td>
                     <td><button class="btn-small" onclick="processBooking(${b.id})">Process</button></td>
                 </tr>`;
@@ -640,18 +664,20 @@
             document.getElementById('labBookingsList').innerHTML = html;
         }
     }
-    async function processBooking(id) { await fetchAPI(`${API}/lab-bookings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'processing' }) }); loadLabBookings(); }
+    
+    async function processBooking(id) { 
+        await fetchAPI(`${API}/lab-bookings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'processing' }) }); 
+        loadLabBookings(); 
+    }
     
     // Users
     async function addNewUser() {
-        const user = {
-            name: document.getElementById('newUserName').value,
-            email: document.getElementById('newUserEmail').value,
-            password: document.getElementById('newUserPassword').value || 'User@123',
-            role: document.getElementById('newUserRole').value
-        };
-        if (!user.name || !user.email) { alert('Fill fields'); return; }
-        const res = await fetchAPI(`${API}/auth/register`, { method: 'POST', body: JSON.stringify(user) });
+        const name = document.getElementById('newUserName').value;
+        const email = document.getElementById('newUserEmail').value;
+        const password = document.getElementById('newUserPassword').value || 'User@123';
+        const role = document.getElementById('newUserRole').value;
+        if (!name || !email) { alert('Fill required fields'); return; }
+        const res = await fetchAPI(`${API}/auth/register`, { method: 'POST', body: JSON.stringify({ name, email, password, role }) });
         if (res.success) { alert('User added!'); loadUsers(); }
     }
     
@@ -664,30 +690,32 @@
                     <td>${u.name}</td><td>${u.email}</td>
                     <td>${u.role}</td>
                     <td class="${u.status === 'blocked' ? 'status-blocked' : 'status-active'}">${u.status}</td>
-                    <td>${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : '-'}</td>
                     <td>
                         <button class="btn-small" onclick="toggleUser(${u.id}, '${u.status}')">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button>
                         <button class="btn-small btn-warning" onclick="showResetPwdModal(${u.id}, '${u.name}')">Reset Pwd</button>
                         <button class="btn-small btn-danger" onclick="deleteUser(${u.id})">Delete</button>
                     </td>
-                </tr>`;
+                <tr>`;
             });
             document.getElementById('usersList').innerHTML = html;
         }
     }
-    async function toggleUser(id, cur) { await fetchAPI(`${API}/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: cur === 'blocked' ? 'active' : 'blocked' }) }); loadUsers(); }
-    async function deleteUser(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/users/${id}`, { method: 'DELETE' }); loadUsers(); } }
+    
+    async function toggleUser(id, cur) { 
+        await fetchAPI(`${API}/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: cur === 'blocked' ? 'active' : 'blocked' }) }); 
+        loadUsers(); 
+    }
+    
+    async function deleteUser(id) { if(confirm('Delete user?')) { await fetchAPI(`${API}/admin/users/${id}`, { method: 'DELETE' }); loadUsers(); } }
     
     // Staff
     async function addStaff() {
-        const staff = {
-            name: document.getElementById('staffName').value,
-            email: document.getElementById('staffEmail').value,
-            password: document.getElementById('staffPassword').value || 'Staff@123',
-            role: document.getElementById('staffRole').value
-        };
-        if (!staff.name || !staff.email) { alert('Fill fields'); return; }
-        const res = await fetchAPI(`${API}/admin/workers`, { method: 'POST', body: JSON.stringify(staff) });
+        const name = document.getElementById('staffName').value;
+        const email = document.getElementById('staffEmail').value;
+        const password = document.getElementById('staffPassword').value || 'Staff@123';
+        const role = document.getElementById('staffRole').value;
+        if (!name || !email) { alert('Fill fields'); return; }
+        const res = await fetchAPI(`${API}/admin/workers`, { method: 'POST', body: JSON.stringify({ name, email, password, role }) });
         if (res.success) { alert('Staff added!'); loadWorkers(); }
     }
     
@@ -700,13 +728,13 @@
                     <td>${w.name}</td><td>${w.email}</td>
                     <td><span class="badge">${w.role}</span></td>
                     <td class="status-active">active</td>
-                    <td>${w.lastLogin ? new Date(w.lastLogin).toLocaleDateString() : '-'}</td>
                     <td><button class="btn-small btn-danger" onclick="deleteWorker(${w.id})">Delete</button></td>
                 </tr>`;
             });
             document.getElementById('workersList').innerHTML = html;
         }
     }
+    
     async function deleteWorker(id) { if(confirm('Delete staff?')) { await fetchAPI(`${API}/admin/workers/${id}`, { method: 'DELETE' }); loadWorkers(); } }
     
     // Subscribers
@@ -723,7 +751,8 @@
             document.getElementById('subscribersList').innerHTML = html;
         }
     }
-    async function deleteSubscriber(id) { await fetchAPI(`${API}/admin/subscribers/${id}`, { method: 'DELETE' }); loadSubscribers(); loadStats(); }
+    
+    async function deleteSubscriber(id) { await fetchAPI(`${API}/admin/subscribers/${id}`, { method: 'DELETE' }); loadSubscribers(); }
     
     // Stores
     async function addStore() {
@@ -736,7 +765,7 @@
         };
         if (!store.name || !store.address) { alert('Fill fields'); return; }
         const res = await fetchAPI(`${API}/admin/stores`, { method: 'POST', body: JSON.stringify(store) });
-        if (res.success) { alert('Store added!'); loadStores(); loadStats(); }
+        if (res.success) { alert('Store added!'); loadStores(); }
     }
     
     async function loadStores() {
@@ -745,14 +774,16 @@
             let html = '';
             res.stores.forEach(s => {
                 html += `<tr>
-                    <td>${s.name}</td><td>${s.address}</td><td>${s.city}</td><td>${s.phone}</td>
+                    <td>${s.name}</td><td>${s.address}</td>
+                    <td>${s.city}</td><td>${s.phone}</td>
                     <td><button class="btn-small btn-danger" onclick="deleteStore(${s.id})">Delete</button></td>
                 </tr>`;
             });
             document.getElementById('storesList').innerHTML = html;
         }
     }
-    async function deleteStore(id) { if(confirm('Delete store?')) { await fetchAPI(`${API}/admin/stores/${id}`, { method: 'DELETE' }); loadStores(); loadStats(); } }
+    
+    async function deleteStore(id) { if(confirm('Delete store?')) { await fetchAPI(`${API}/admin/stores/${id}`, { method: 'DELETE' }); loadStores(); } }
     
     // Coupons
     async function createCoupon() {
@@ -762,7 +793,6 @@
             type: 'percentage',
             minOrder: parseFloat(document.getElementById('couponMinOrder').value) || 0,
             maxUses: parseInt(document.getElementById('couponMaxUses').value) || 100,
-            perUserLimit: 1,
             validUntil: document.getElementById('couponValidUntil').value + 'T23:59:59.999Z'
         };
         if (!coupon.code || !coupon.discount) { alert('Fill fields'); return; }
@@ -780,12 +810,13 @@
                     <td>₹${c.minOrder}</td><td>${c.usedCount || 0}/${c.maxUses || '∞'}</td>
                     <td>${new Date(c.validUntil).toLocaleDateString()}</td>
                     <td><button class="btn-small btn-danger" onclick="deleteCoupon(${c.id})">Delete</button></td>
-                </tr>`;
+                <tr>`;
             });
             document.getElementById('couponsList').innerHTML = html;
         }
     }
-    async function deleteCoupon(id) { if(confirm('Delete?')) { await fetchAPI(`${API}/admin/coupons/${id}`, { method: 'DELETE' }); loadCoupons(); } }
+    
+    async function deleteCoupon(id) { if(confirm('Delete coupon?')) { await fetchAPI(`${API}/admin/coupons/${id}`, { method: 'DELETE' }); loadCoupons(); } }
     
     // Audit
     async function loadAudit() {
@@ -816,6 +847,7 @@
             document.getElementById('lowStockList').innerHTML = html;
         }
     }
+    
     function reorderStock(id) { alert(`Reorder request sent for product ID: ${id}`); }
     
     // Security Logs
@@ -824,80 +856,50 @@
         if (res.success && res.logs) {
             let html = '';
             res.logs.slice(0, 50).forEach(l => {
-                html += `<tr>
+                html += `<td>
                     <td>${new Date(l.timestamp).toLocaleString()}</td><td>${l.userId || '-'}</td>
-                    }</td>
-                    <td><td><span<span class="badge">${l.action}</span></td><td>${l.ip || '-'}</td>
-                 class="badge">${l.action}</span></td><td>${l.ip || '-'}</td>
+                    <td><span class="badge">${l.action}</span></td><td>${l.ip || '-'}</td>
                 </tr>`;
-</tr>`;
             });
-            document.getElementById('securityLog            });
-            document.getElementById('securityLogsList').innersList').innerHTML = html;
-HTML = html;
-        }
-    }
+            document.getElementById('securityLogsList').innerHTML = html;
         }
     }
     
-    // Password Functions    
     // Password Functions
-    function show
-    function showChangePasswordModal()ChangePasswordModal() { document.getElementById(' { document.getElementById('changePwdModalchangePwdModal').style.display =').style.display = 'flex'; }
- 'flex'; }
-    function closeChange    function closeChangePwd() {Pwd() { document.getElementById('change document.getElementById('changePwdModal').PwdModal').style.display = 'style.display = 'none'; }
-   none'; }
+    function showChangePasswordModal() { document.getElementById('changePwdModal').style.display = 'flex'; }
+    function closeChangePwd() { document.getElementById('changePwdModal').style.display = 'none'; }
+    
     async function changePassword() {
-        const async function changePassword() {
-        const current = document.getElementById current = document.getElementById('currentPwd').value;
-       ('currentPwd').value;
-        const newPwd const newPwd = = document.getElementById('newPwd').value;
-        const confirm = document.getElementById document.getElementById('newPwd').value;
-        const confirm = document.getElementById('confirmPwd('confirmPwd').value;
-       ').value;
-        if (!current || if (!current || !newPwd !newPwd) { alert(') { alert('Fill fields'); returnFill fields'); return; }
-        if (newPwd !==; }
-        if (newPwd !== confirm) { alert('Passwords confirm) { alert('Passwords do not match'); return; }
-        do not match'); return; }
-        const res = await const res = await fetchAPI(`${API fetchAPI(`${API}/auth/change}/auth/change-password`, {-password`, { method: ' method: 'POSTPOST', body: JSON', body: JSON.stringify({ currentPassword.stringify({ currentPassword: current, newPassword: newP: current, newPassword: newPwd }) });
-       wd }) });
-        if (res.success if (res.success) {) { alert('Password changed!'); closeChangePwd alert('Password changed!'); closeChangePwd(); } else alert(); } else alert(res.message);
-(res.message);
+        const current = document.getElementById('currentPwd').value;
+        const newPwd = document.getElementById('newPwd').value;
+        const confirm = document.getElementById('confirmPwd').value;
+        if (!current || !newPwd) { alert('Fill all fields'); return; }
+        if (newPwd !== confirm) { alert('Passwords do not match'); return; }
+        const res = await fetchAPI(`${API}/auth/change-password`, { method: 'POST', body: JSON.stringify({ currentPassword: current, newPassword: newPwd }) });
+        if (res.success) { alert('Password changed!'); closeChangePwd(); } else { alert(res.message || 'Failed'); }
     }
     
-       }
-    
-    function showResetPwdModal(id function show, name) { resetUserId = id; resetUserName = name; document.getElementById('resetUserName').innerResetPwdModal(id, name) { resetUserId = id; resetUserName = name; document.getElementById('resetUserName').innerText = name;Text = name; document.getElementById('reset document.getElementById('resetPwdModal').style.display = 'PwdModal').flex'; }
-   style.display = 'flex'; }
-    function closeResetP function closeResetPwd() { document.getElementById('resetPwd() { document.getElementById('resetPwdModal').style.display = 'nonewdModal').style.display = 'none'; }
-    async'; }
-    async function resetUserPassword function resetUserPassword() {
-        const() {
-        const newPwd = newPwd = document.getElementById('reset document.getElementById('resetNewPwd').NewPwd').value;
-        constvalue;
-        const res = await fetch res = await fetchAPI(`${API}/API(`${API}/admin/users/${resetadmin/users/${resetUserId}/resetUserId}/reset-password`, { method-password`, { method: 'POST',: 'POST', body: JSON.stringify body: JSON.stringify({ newPassword:({ newPassword: newPwd || undefined }) });
- newPwd ||        if (res.success undefined }) });
-        if (res.success) { alert) { alert(`Password reset!${(`Password reset!${res.tempPasswordres.tempPassword ? ` Temp: ? ` Temp: ${res.temp ${res.tempPassword}` : ''}`); closeResetPassword}` : ''}`); closeResetPwd(); }Pwd(); } else alert(res.message else alert(res.message);
+    function showResetPwdModal(id, name) { 
+        resetUserId = id; 
+        resetUserName = name; 
+        document.getElementById('resetUserName').innerText = name; 
+        document.getElementById('resetPwdModal').style.display = 'flex'; 
     }
     
-);
+    function closeResetPwd() { document.getElementById('resetPwdModal').style.display = 'none'; }
+    
+    async function resetUserPassword() {
+        const newPwd = document.getElementById('resetNewPwd').value;
+        const res = await fetchAPI(`${API}/admin/users/${resetUserId}/reset-password`, { method: 'POST', body: JSON.stringify({ newPassword: newPwd || undefined }) });
+        if (res.success) { alert(`Password reset!${res.tempPassword ? ` Temp: ${res.tempPassword}` : ''}`); closeResetPwd(); } else { alert(res.message || 'Failed'); }
     }
     
-    function logout() { localStorage.clear();    function logout() { localStorage.clear(); window.location.href window.location.href = 'login.html'; }
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
     
-    = 'login.html'; }
-    
-    // Initial Load // Initial Load
-    loadStats
-    loadStats(); loadProducts();(); loadProducts(); loadDo loadDoctors(); loadLabTests(); loadCategories(); 
-    loadOrders(); loadAppointments();ctors(); loadLabTests(); loadCategories(); 
-    loadOrders(); loadAppointments(); loadLabBookings loadLabBookings(); loadUsers();(); loadUsers(); loadWorkers(); 
-    loadSub loadWorkers(); 
-    loadSubscribers(); loadStscribers(); loadStores(); loadCouores(); loadCoupons(); loadAudpons(); loadAudit(); loadLowStock(); loadSecurityLogs();
-</script>
-</bodyit(); loadLowStock(); loadSecurityLogs();
+    // Initial load
+    loadStats(); loadProducts(); loadDoctors(); loadLabTests(); loadCategories(); 
+    loadOrders(); loadAppointments(); loadLabBookings(); loadUsers(); loadWorkers(); 
+    loadSubscribers(); loadStores(); loadCoupons(); loadAudit(); loadLowStock(); loadSecurityLogs();
 </script>
 </body>
-</html>
->
 </html>
