@@ -56,10 +56,12 @@
         .cart-item-title { font-weight: 600; }
         .cart-item-price { color: #1a5d0d; font-weight: 600; }
         .cart-item-quantity { display: flex; gap: 10px; margin-top: 5px; align-items: center; }
-        .qty-btn { background: #f0f0f0; border: none; width: 25px; height: 25px; border-radius: 5px; cursor: pointer; }
+        .qty-btn { background: #f0f0f0; border: none; width: 25px; height: 25px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .qty-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .remove-btn { color: #ff4444; cursor: pointer; font-size: 12px; }
         .cart-total { padding: 15px; border-top: 2px solid #eee; font-weight: 700; font-size: 18px; }
         .checkout-btn { background: #1a5d0d; color: white; width: calc(100% - 30px); margin: 15px; padding: 15px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .checkout-btn:disabled { background: #ccc; cursor: not-allowed; }
         .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
         .overlay.show { display: block; }
         
@@ -73,13 +75,11 @@
         .btn-danger { background: #ff4444; }
         .btn-warning { background: #ffc107; color: #333; }
         .badge { background: #ffd700; color: #333; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
-        .order-card { background: white; border-radius: 15px; margin-bottom: 10px; overflow: hidden; }
-        .review-modal, .return-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1002; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; padding: 25px; max-height: 80%; overflow-y: auto; }
-        .star-rating { display: flex; gap: 5px; margin: 10px 0; }
-        .star { font-size: 30px; cursor: pointer; color: #ddd; }
-        .star.active { color: #ffc107; }
-        textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; }
+        .error-msg { color: #ff4444; font-size: 12px; margin-top: 5px; display: none; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1002; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 350px; border-radius: 20px; padding: 25px; }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -132,7 +132,6 @@
     <div style="padding:0 15px">
         <div class="store-info" style="margin:0 0 15px 0"><i class="fas fa-user"></i><div><h4 id="profileName"></h4><p id="profileEmail"></p></div></div>
         <div class="store-info" style="margin:0 0 15px 0"><i class="fas fa-wallet"></i><div><h4>Wallet Balance</h4><p id="walletBalance">₹0</p><button class="btn-warning" style="margin-top:5px; padding:5px 10px; font-size:12px" onclick="addWallet()">Add Money</button></div></div>
-        <div class="store-info" style="margin:0 0 15px 0"><i class="fas fa-map-marker-alt"></i><div><h4>Addresses</h4><button class="btn-warning" style="margin-top:5px; padding:5px 10px; font-size:12px" onclick="showAddAddress()">Add Address</button><div id="addressList"></div></div></div>
         <button class="btn" style="width:100%; margin-bottom:10px" onclick="showChangePassword()">🔐 Change Password</button>
         <button class="btn btn-danger" style="width:100%" onclick="logout()">🚪 Logout</button>
     </div>
@@ -149,81 +148,44 @@
     <div class="cart-header"><h3>Your Cart</h3><i class="fas fa-times" onclick="toggleCart()" style="cursor:pointer"></i></div>
     <div id="cartItems"></div>
     <div class="cart-total" id="cartTotal">Total: ₹0</div>
-    <input type="text" id="couponCode" placeholder="Coupon Code" style="width:calc(100% - 30px); margin:0 15px; padding:10px; border:1px solid #ddd; border-radius:8px">
-    <button class="checkout-btn" onclick="applyCoupon()">Apply Coupon</button>
-    <button class="checkout-btn" onclick="checkout()">Checkout →</button>
+    <button class="checkout-btn" id="checkoutBtn" onclick="showCheckoutModal()">Checkout →</button>
 </div>
 
 <div class="notification" id="notification"></div>
 
 <!-- Login Required Modal -->
-<div id="loginRequiredModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1001; justify-content:center; align-items:center">
-    <div style="background:white; width:90%; max-width:350px; border-radius:20px; padding:25px; text-align:center">
-        <i class="fas fa-lock" style="font-size:40px; color:#1a5d0d; margin-bottom:15px"></i>
+<div id="loginRequiredModal" class="modal">
+    <div class="modal-content" style="text-align:center">
+        <i class="fas fa-lock" style="font-size:40px; color:#1a5d0d"></i>
         <h3>Login Required</h3>
-        <p style="margin:15px 0">Please login to continue</p>
-        <button onclick="location.href='/login.html'" style="background:#1a5d0d; color:white; border:none; padding:12px; width:100%; border-radius:8px">Login Now</button>
-        <button onclick="closeLoginRequired()" style="background:#ccc; border:none; padding:12px; width:100%; border-radius:8px; margin-top:10px">Cancel</button>
+        <p>Please login to continue</p>
+        <button onclick="location.href='/login.html'" style="background:#1a5d0d; color:white; border:none; padding:10px; width:100%; border-radius:8px">Login Now</button>
+        <button onclick="closeLoginRequired()" style="background:#ccc; border:none; padding:10px; width:100%; border-radius:8px; margin-top:10px">Cancel</button>
+    </div>
+</div>
+
+<!-- Checkout Modal -->
+<div id="checkoutModal" class="modal">
+    <div class="modal-content">
+        <h3>Checkout</h3>
+        <input type="text" id="checkoutName" placeholder="Full Name *">
+        <input type="tel" id="checkoutPhone" placeholder="Phone Number *">
+        <textarea id="checkoutAddress" rows="2" placeholder="Complete Address *"></textarea>
+        <div id="checkoutError" class="error-msg"></div>
+        <button onclick="placeOrder()" style="background:#1a5d0d; color:white; border:none; padding:10px; width:100%; border-radius:8px; margin-top:10px">Place Order</button>
+        <button onclick="closeCheckoutModal()" style="background:#ccc; border:none; padding:10px; width:100%; border-radius:8px; margin-top:5px">Cancel</button>
     </div>
 </div>
 
 <!-- Change Password Modal -->
-<div id="changePwdModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1002; justify-content:center; align-items:center">
-    <div style="background:white; width:90%; max-width:350px; border-radius:20px; padding:25px">
+<div id="changePwdModal" class="modal">
+    <div class="modal-content">
         <h3>Change Password</h3>
-        <input type="password" id="currentPwd" placeholder="Current Password" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px">
-        <input type="password" id="newPwd" placeholder="New Password" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px">
-        <input type="password" id="confirmPwd" placeholder="Confirm Password" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px">
-        <button onclick="changePassword()" style="background:#1a5d0d; color:white; border:none; padding:10px; width:100%; border-radius:8px; margin-top:10px">Update</button>
+        <input type="password" id="currentPwd" placeholder="Current Password">
+        <input type="password" id="newPwd" placeholder="New Password">
+        <input type="password" id="confirmPwd" placeholder="Confirm Password">
+        <button onclick="changePassword()" style="background:#1a5d0d; color:white; border:none; padding:10px; width:100%; border-radius:8px">Update</button>
         <button onclick="closeChangePwd()" style="background:#ccc; border:none; padding:10px; width:100%; border-radius:8px; margin-top:5px">Cancel</button>
-    </div>
-</div>
-
-<!-- Add Address Modal -->
-<div id="addressModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1002; justify-content:center; align-items:center">
-    <div style="background:white; width:90%; max-width:350px; border-radius:20px; padding:25px">
-        <h3>Add Address</h3>
-        <input type="text" id="addrName" placeholder="Full Name" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px">
-        <input type="text" id="addrStreet" placeholder="Street Address" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px">
-        <input type="text" id="addrCity" placeholder="City" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px">
-        <input type="text" id="addrPincode" placeholder="Pincode" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px">
-        <input type="text" id="addrPhone" placeholder="Phone" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px">
-        <button onclick="addAddress()" style="background:#1a5d0d; color:white; border:none; padding:10px; width:100%; border-radius:8px">Save Address</button>
-        <button onclick="closeAddressModal()" style="background:#ccc; border:none; padding:10px; width:100%; border-radius:8px; margin-top:5px">Cancel</button>
-    </div>
-</div>
-
-<!-- Review Modal -->
-<div id="reviewModal" class="review-modal">
-    <div class="modal-content">
-        <h3>Rate Product</h3>
-        <div class="star-rating" id="starRating">
-            <span class="star" data-rating="1">★</span>
-            <span class="star" data-rating="2">★</span>
-            <span class="star" data-rating="3">★</span>
-            <span class="star" data-rating="4">★</span>
-            <span class="star" data-rating="5">★</span>
-        </div>
-        <textarea id="reviewComment" rows="3" placeholder="Write your review..."></textarea>
-        <button onclick="submitReview()" style="background:#1a5d0d; color:white; border:none; padding:10px; width:100%; border-radius:8px">Submit Review</button>
-        <button onclick="closeReviewModal()" style="background:#ccc; border:none; padding:10px; width:100%; border-radius:8px; margin-top:5px">Cancel</button>
-    </div>
-</div>
-
-<!-- Return Modal -->
-<div id="returnModal" class="return-modal">
-    <div class="modal-content">
-        <h3>Return Order</h3>
-        <select id="returnReason" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:8px">
-            <option value="Damaged">Damaged Product</option>
-            <option value="Wrong Item">Wrong Item Received</option>
-            <option value="Expired">Product Expired</option>
-            <option value="Not Needed">No Longer Needed</option>
-            <option value="Other">Other</option>
-        </select>
-        <textarea id="returnDetail" rows="3" placeholder="Additional details..."></textarea>
-        <button onclick="submitReturn()" style="background:#1a5d0d; color:white; border:none; padding:10px; width:100%; border-radius:8px">Submit Return Request</button>
-        <button onclick="closeReturnModal()" style="background:#ccc; border:none; padding:10px; width:100%; border-radius:8px; margin-top:5px">Cancel</button>
     </div>
 </div>
 
@@ -232,23 +194,25 @@
     let token = localStorage.getItem('token');
     let currentUser = null;
     let products = [];
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    let selectedProductId = null;
-    let selectedOrderId = null;
-    let currentRating = 0;
+    let cart = [];
+    
+    // Load cart from localStorage
+    function loadCart() {
+        const savedCart = localStorage.getItem('cart');
+        if (savedCart) {
+            cart = JSON.parse(savedCart);
+        } else {
+            cart = [];
+        }
+        updateCartUI();
+    }
+    
+    function saveCart() {
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartUI();
+    }
     
     if (!token) { document.getElementById('userName').innerHTML = 'Guest'; }
-    
-    // Initialize star rating
-    document.querySelectorAll('#starRating .star').forEach(star => {
-        star.addEventListener('click', function() {
-            currentRating = parseInt(this.dataset.rating);
-            document.querySelectorAll('#starRating .star').forEach(s => {
-                if(parseInt(s.dataset.rating) <= currentRating) s.classList.add('active');
-                else s.classList.remove('active');
-            });
-        });
-    });
     
     async function fetchAPI(url, options = {}) {
         if (!token) return { success: false, message: 'Not authenticated' };
@@ -269,52 +233,12 @@
                     document.getElementById('profileName').innerHTML = currentUser.name;
                     document.getElementById('profileEmail').innerHTML = currentUser.email;
                     await loadWallet();
-                    await loadAddresses();
                     return true;
                 }
             }
         } catch(e) { console.log(e); }
         document.getElementById('userName').innerHTML = 'Guest';
         return false;
-    }
-    
-    async function loadAddresses() {
-        if (!token) return;
-        const res = await fetchAPI(`${API}/addresses`);
-        if (res.success && res.addresses) {
-            const container = document.getElementById('addressList');
-            container.innerHTML = res.addresses.map(a => `
-                <div style="border:1px solid #ddd; border-radius:8px; padding:10px; margin-top:10px">
-                    <p><strong>${a.name}</strong></p>
-                    <p>${a.street}, ${a.city} - ${a.pincode}</p>
-                    <p>${a.phone}</p>
-                    ${a.isDefault ? '<span class="badge">Default</span>' : '<button onclick="setDefaultAddress('+a.id+')" style="background:#ffc107; border:none; padding:5px 10px; border-radius:5px; margin-top:5px">Set Default</button>'}
-                </div>
-            `).join('');
-        }
-    }
-    
-    async function setDefaultAddress(id) {
-        await fetchAPI(`${API}/addresses/${id}/default`, { method: 'PUT' });
-        loadAddresses();
-        showNotification('Default address set');
-    }
-    
-    async function addAddress() {
-        const address = {
-            name: document.getElementById('addrName').value,
-            street: document.getElementById('addrStreet').value,
-            city: document.getElementById('addrCity').value,
-            pincode: document.getElementById('addrPincode').value,
-            phone: document.getElementById('addrPhone').value
-        };
-        if (!address.name || !address.street) { showNotification('Fill required fields'); return; }
-        const res = await fetchAPI(`${API}/addresses`, { method: 'POST', body: JSON.stringify(address) });
-        if (res.success) {
-            showNotification('Address added');
-            closeAddressModal();
-            loadAddresses();
-        }
     }
     
     async function loadWallet() {
@@ -324,11 +248,13 @@
     }
     
     async function addWallet() {
-        let amount = prompt('Enter amount to add:', '100');
-        if (amount && amount > 0) {
+        if (!token) { showLoginRequired(); return; }
+        let amount = prompt('Enter amount to add (₹1 - ₹10,000):', '100');
+        if (amount && amount > 0 && amount <= 10000) {
             const res = await fetchAPI(`${API}/wallet/add`, { method: 'POST', body: JSON.stringify({ amount: parseInt(amount) }) });
             if (res.success) { showNotification(`₹${amount} added to wallet`); loadWallet(); }
-        }
+            else showNotification(res.message || 'Failed');
+        } else if (amount > 10000) { showNotification('Max ₹10,000 per transaction'); }
     }
     
     async function loadHeroBanner() {
@@ -353,9 +279,9 @@
             }
         } catch(e) {
             products = [
-                { id: 1, name: 'Baby Pampers', pricePerUnit: 850, originalPrice: 999, discount: 15, imageUrl: 'https://placehold.co/150', avgRating: 4.5 },
-                { id: 2, name: 'Panadol', pricePerUnit: 120, originalPrice: 150, discount: 20, imageUrl: 'https://placehold.co/150', avgRating: 4.2 },
-                { id: 3, name: 'Vitamin C', pricePerUnit: 299, originalPrice: 399, discount: 25, imageUrl: 'https://placehold.co/150', avgRating: 4.8 }
+                { id: 1, name: 'Baby Pampers', pricePerUnit: 850, originalPrice: 999, discount: 15, imageUrl: 'https://placehold.co/150', totalStock: 100 },
+                { id: 2, name: 'Panadol', pricePerUnit: 120, originalPrice: 150, discount: 20, imageUrl: 'https://placehold.co/150', totalStock: 50 },
+                { id: 3, name: 'Vitamin C', pricePerUnit: 299, originalPrice: 399, discount: 25, imageUrl: 'https://placehold.co/150', totalStock: 30 }
             ];
             displayProducts(products, 'productGrid');
             displayProducts(products, 'recommendedGrid');
@@ -372,45 +298,35 @@
                 <div class="product-info">
                     <div class="product-title">${p.name}</div>
                     <div><span class="product-price">₹${p.pricePerUnit}</span>${p.originalPrice ? `<span class="original-price">₹${p.originalPrice}</span>` : ''}</div>
-                    <div style="font-size:12px; color:#ffc107">${'★'.repeat(Math.floor(p.avgRating || 0))}${'☆'.repeat(5-Math.floor(p.avgRating || 0))}</div>
+                    <div style="font-size:11px; color:#666;">Stock: ${p.totalStock}</div>
                     <button class="add-to-cart" onclick="event.stopPropagation(); addToCart(${p.id})"><i class="fas fa-cart-plus"></i> Add</button>
-                    <button class="btn-warning" style="margin-top:5px; width:100%; padding:5px; font-size:12px" onclick="event.stopPropagation(); showReviewModal(${p.id})"><i class="fas fa-star"></i> Rate</button>
                 </div>
             </div>
         `).join('');
     }
     
-    function showReviewModal(productId) {
-        if (!token) { showLoginRequired(); return; }
-        selectedProductId = productId;
-        currentRating = 0;
-        document.querySelectorAll('#starRating .star').forEach(s => s.classList.remove('active'));
-        document.getElementById('reviewComment').value = '';
-        document.getElementById('reviewModal').style.display = 'flex';
-    }
-    
-    async function submitReview() {
-        if (currentRating === 0) { showNotification('Please select rating'); return; }
-        const comment = document.getElementById('reviewComment').value;
-        const res = await fetchAPI(`${API}/reviews`, {
-            method: 'POST',
-            body: JSON.stringify({ productId: selectedProductId, rating: currentRating, comment })
-        });
-        if (res.success) {
-            showNotification('Review submitted!');
-            closeReviewModal();
-            loadProducts();
-        }
-    }
-    
-    async function addToCart(productId) {
+    function addToCart(productId) {
         const product = products.find(p => p.id == productId);
-        if (!product) return;
+        if (!product) { showNotification('Product not found'); return; }
+        
+        // Check stock
+        if (product.totalStock <= 0) {
+            showNotification('Sorry, this product is out of stock!');
+            return;
+        }
+        
         const existing = cart.find(item => item.id == productId);
-        if (existing) { existing.quantity++; }
-        else { cart.push({ ...product, quantity: 1, price: product.pricePerUnit }); }
-        localStorage.setItem('cart', JSON.stringify(cart));
-        updateCartUI();
+        if (existing) {
+            // Check if adding more than available stock
+            if (existing.quantity + 1 > product.totalStock) {
+                showNotification(`Only ${product.totalStock} items available in stock`);
+                return;
+            }
+            existing.quantity++;
+        } else {
+            cart.push({ ...product, quantity: 1, price: product.pricePerUnit });
+        }
+        saveCart();
         showNotification('Added to cart!');
     }
     
@@ -422,22 +338,29 @@
         if (cartItemsContainer) {
             if (cart.length === 0) {
                 cartItemsContainer.innerHTML = '<div style="padding:20px;text-align:center">Cart is empty</div>';
+                document.getElementById('checkoutBtn').disabled = true;
+                document.getElementById('checkoutBtn').style.opacity = '0.5';
             } else {
-                cartItemsContainer.innerHTML = cart.map(item => `
+                document.getElementById('checkoutBtn').disabled = false;
+                document.getElementById('checkoutBtn').style.opacity = '1';
+                cartItemsContainer.innerHTML = cart.map(item => {
+                    const product = products.find(p => p.id == item.id);
+                    const maxStock = product ? product.totalStock : 999;
+                    return `
                     <div class="cart-item">
                         <img src="${item.imageUrl || 'https://placehold.co/60'}" class="cart-item-image">
                         <div class="cart-item-details">
                             <div class="cart-item-title">${item.name}</div>
                             <div class="cart-item-price">₹${item.price}</div>
                             <div class="cart-item-quantity">
-                                <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
+                                <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)" ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
                                 <span>${item.quantity}</span>
-                                <button class="qty-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+                                <button class="qty-btn" onclick="updateQuantity(${item.id}, 1)" ${item.quantity >= maxStock ? 'disabled' : ''}>+</button>
                                 <span class="remove-btn" onclick="removeFromCart(${item.id})">Remove</span>
                             </div>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             }
         }
         
@@ -448,36 +371,24 @@
     function updateQuantity(id, change) {
         const item = cart.find(i => i.id == id);
         if (item) {
-            item.quantity += change;
-            if (item.quantity <= 0) { cart = cart.filter(i => i.id != id); }
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartUI();
+            const product = products.find(p => p.id == id);
+            const newQty = item.quantity + change;
+            
+            if (newQty < 1) {
+                cart = cart.filter(i => i.id != id);
+            } else if (product && newQty > product.totalStock) {
+                showNotification(`Only ${product.totalStock} items available in stock`);
+                return;
+            } else {
+                item.quantity = newQty;
+            }
+            saveCart();
         }
     }
     
     function removeFromCart(id) {
         cart = cart.filter(i => i.id != id);
-        localStorage.setItem('cart', JSON.stringify(cart));
-        updateCartUI();
-    }
-    
-    let couponDiscount = 0;
-    async function applyCoupon() {
-        const code = document.getElementById('couponCode').value;
-        if (!code || !token) { showNotification('Login to apply coupon'); return; }
-        const total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-        const res = await fetchAPI(`${API}/validate-coupon`, {
-            method: 'POST',
-            body: JSON.stringify({ code, orderTotal: total })
-        });
-        if (res.success) {
-            couponDiscount = res.discount;
-            showNotification(`Coupon applied! ₹${couponDiscount} off`);
-            const newTotal = total - couponDiscount;
-            document.getElementById('cartTotal').innerHTML = `Total: ₹${newTotal} (Saved ₹${couponDiscount})`;
-        } else {
-            showNotification(res.message);
-        }
+        saveCart();
     }
     
     function toggleCart() {
@@ -500,25 +411,50 @@
         document.getElementById('loginRequiredModal').style.display = 'none';
     }
     
-    async function checkout() {
+    function showCheckoutModal() {
         if (cart.length === 0) { showNotification('Cart is empty!'); return; }
         if (!token || !currentUser) { showLoginRequired(); return; }
+        document.getElementById('checkoutModal').style.display = 'flex';
+    }
+    
+    function closeCheckoutModal() {
+        document.getElementById('checkoutModal').style.display = 'none';
+        document.getElementById('checkoutError').style.display = 'none';
+    }
+    
+    async function placeOrder() {
+        const name = document.getElementById('checkoutName').value.trim();
+        const phone = document.getElementById('checkoutPhone').value.trim();
+        const address = document.getElementById('checkoutAddress').value.trim();
+        
+        if (!name || !phone || !address) {
+            document.getElementById('checkoutError').innerHTML = 'Please fill all fields';
+            document.getElementById('checkoutError').style.display = 'block';
+            return;
+        }
+        
+        if (cart.length === 0) {
+            showNotification('Cart is empty!');
+            closeCheckoutModal();
+            return;
+        }
         
         const order = {
             items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
             totalAmount: cart.reduce((s, i) => s + (i.price * i.quantity), 0),
             paymentMethod: 'online',
-            couponDiscount: couponDiscount
+            shippingAddress: address,
+            phoneNumber: phone,
+            userName: name
         };
         
         const res = await fetchAPI(`${API}/orders`, { method: 'POST', body: JSON.stringify(order) });
         if (res.success) {
             showNotification('Order placed successfully!');
             cart = [];
-            couponDiscount = 0;
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartUI();
+            saveCart();
             toggleCart();
+            closeCheckoutModal();
             if (currentUser) loadOrders();
             loadWallet();
         } else {
@@ -535,54 +471,17 @@
                 container.innerHTML = '<div style="text-align:center; padding:40px">No orders yet</div>';
             } else {
                 container.innerHTML = res.orders.map(o => `
-                    <div class="order-card">
-                        <div class="store-info" style="margin:0; border-radius:0">
-                            <i class="fas fa-receipt"></i>
-                            <div style="flex:1">
-                                <h4>Order #${o.id}</h4>
-                                <p>Total: ₹${o.finalAmount || o.totalAmount}</p>
-                                <p>Status: <span class="badge">${o.status}</span></p>
-                                <p>Date: ${new Date(o.orderDate).toLocaleDateString()}</p>
-                                ${o.status === 'delivered' ? `<button class="btn-warning" style="margin-top:5px; padding:5px 10px" onclick="showReturnModal(${o.id})">Return Order</button>` : ''}
-                                ${o.status === 'confirmed' ? `<button class="btn-danger" style="margin-top:5px; padding:5px 10px" onclick="cancelOrder(${o.id})">Cancel Order</button>` : ''}
-                            </div>
+                    <div class="store-info" style="margin-bottom:10px">
+                        <i class="fas fa-receipt"></i>
+                        <div style="flex:1">
+                            <h4>Order #${o.id}</h4>
+                            <p>Total: ₹${o.finalAmount || o.totalAmount}</p>
+                            <p>Status: <span class="badge">${o.status}</span></p>
+                            <p>Date: ${new Date(o.orderDate).toLocaleDateString()}</p>
                         </div>
                     </div>
                 `).join('');
             }
-        }
-    }
-    
-    async function cancelOrder(orderId) {
-        if (!confirm('Are you sure you want to cancel this order?')) return;
-        const res = await fetchAPI(`${API}/orders/${orderId}/cancel`, { method: 'POST' });
-        if (res.success) {
-            showNotification('Order cancelled');
-            loadOrders();
-            loadWallet();
-        } else {
-            showNotification(res.message || 'Cannot cancel');
-        }
-    }
-    
-    function showReturnModal(orderId) {
-        if (!token) { showLoginRequired(); return; }
-        selectedOrderId = orderId;
-        document.getElementById('returnModal').style.display = 'flex';
-    }
-    
-    async function submitReturn() {
-        const reason = document.getElementById('returnReason').value;
-        const detail = document.getElementById('returnDetail').value;
-        const res = await fetchAPI(`${API}/return-request`, {
-            method: 'POST',
-            body: JSON.stringify({ orderId: selectedOrderId, reason, reasonDetail: detail, amount: 0 })
-        });
-        if (res.success) {
-            showNotification('Return request submitted');
-            closeReturnModal();
-        } else {
-            showNotification(res.message || 'Failed');
         }
     }
     
@@ -613,15 +512,6 @@
         event.target.closest('.nav-item').classList.add('active');
     }
     
-    function showAddAddress() {
-        if (!token || !currentUser) { showLoginRequired(); return; }
-        document.getElementById('addressModal').style.display = 'flex';
-    }
-    
-    function closeAddressModal() {
-        document.getElementById('addressModal').style.display = 'none';
-    }
-    
     function showChangePassword() {
         if (!token || !currentUser) { showLoginRequired(); return; }
         document.getElementById('changePwdModal').style.display = 'flex';
@@ -632,14 +522,6 @@
         document.getElementById('currentPwd').value = '';
         document.getElementById('newPwd').value = '';
         document.getElementById('confirmPwd').value = '';
-    }
-    
-    function closeReviewModal() {
-        document.getElementById('reviewModal').style.display = 'none';
-    }
-    
-    function closeReturnModal() {
-        document.getElementById('returnModal').style.display = 'none';
     }
     
     async function changePassword() {
@@ -669,7 +551,7 @@
         token = null;
         currentUser = null;
         cart = [];
-        localStorage.setItem('cart', JSON.stringify(cart));
+        saveCart();
         document.getElementById('userName').innerHTML = 'Guest';
         showHome();
         showNotification('Logged out');
@@ -677,10 +559,10 @@
     }
     
     document.addEventListener('DOMContentLoaded', async () => {
+        loadCart();
         await checkAuth();
         loadProducts();
         loadHeroBanner();
-        updateCartUI();
     });
 </script>
 </body>
